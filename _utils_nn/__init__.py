@@ -3,7 +3,7 @@ from _utils_import import DLUtils
 from _utils import (
     Dict,
     class_instance_from_class_path,
-    class_path_from_class_instance
+    class_instance_from_class_path
 )
 
 # a lightweight wrapper
@@ -77,7 +77,7 @@ def dict_to_module(ModuleDict):
     assert isinstance(ModuleDict, dict)
     ModuleDict = Dict(ModuleDict)
     ClassPath = ModuleDict._class_path
-    module = class_path_from_class_instance(ClassPath)
+    module = class_instance_from_class_path(ClassPath)
     assert isinstance(module, Module)
     module.FromDict(ModuleDict)
     return module

@@ -1,18 +1,17 @@
-if __name__=="__main__":
-    import sys, os, pathlib
-    DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
-    DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
-    DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + "/"
-    DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + "/"
-    sys.path += [
-        DirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent
-    ]
-
-    from _utils_file import (
-        get_dir_path_of_file_path,
-        get_file_path_without_suffix,
-    )
-    from _utils_torch.utils import print_torch_module
+import sys, os, pathlib
+DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
+DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
+DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + "/"
+DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + "/"
+sys.path += [
+    DirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent
+]
+from _utils_file import (
+    get_dir_path_of_file_path,
+    get_file_path_without_suffix,
+)
+from _utils_torch.utils import print_torch_module
+def test_mlp():
     import sys, os, pathlib
     DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
     DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
@@ -26,8 +25,8 @@ if __name__=="__main__":
     # example usage:
     model = MLP().init(10, 20, 30, 40).build()
     print(model)
-    dir_path_current = get_dir_path_of_file_path(__file__)
-    save_file_path = get_file_path_without_suffix(__file__) + "-model.dat"
+    base_dir_path = get_dir_path_of_file_path(__file__)
+    save_file_path = base_dir_path + "mlp.dat"
     model_2 = model.to_file(save_file_path).from_file(save_file_path)
     print(model_2)
     # mlp.register_parameter(
@@ -35,3 +34,19 @@ if __name__=="__main__":
     # ) # => KeyError: 'parameter name can\'t contain "."'
     #     # use this rule to exclude parameters
     print_torch_module(model_2)
+
+def test_parallel_mlp():
+    from _utils_torch.mlp import ParallelMLP, torch
+    model = ParallelMLP(10, 20, 30, mlp_num=10, nonlinear_func="relu").build()
+    import _utils_math
+    input_example = torch.from_numpy(_utils_math.sample_from_gaussian_01((64, 10))).float() # (batch_size, input_size)
+    output_example = model(input_example) # (batch_size, mlp_num, output_size)
+    print_torch_module(model)
+    base_dir_path = get_dir_path_of_file_path(__file__)
+    save_file_path = base_dir_path + "mlp.dat"
+    model_2 = model.to_file(save_file_path).from_file(save_file_path)
+    print_torch_module(model_2)
+
+if __name__=="__main__":
+    test_parallel_mlp()
+    a = 1

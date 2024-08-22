@@ -22,13 +22,13 @@ def GetScriptDirPath(__File__=None, EndWithSlash=True):
     return script_dir_pathlib
 GetCurrentScriptDirPath = GetScriptDirPath
 
-def class_instance_from_class_path(Instance):
+def class_path_from_class_instance(Instance):
     cls = Instance.__class__
     module = cls.__module__
     qualname = cls.__qualname__
     return f"{module}.{qualname}"
 
-def class_path_from_class_instance(ClassPath: str, **KwArgs):
+def class_instance_from_class_path(ClassPath: str, **KwArgs):
     import importlib
     # split the class_path into module path and class name
     ModulePath, ClassName = ClassPath.rsplit('.', 1)

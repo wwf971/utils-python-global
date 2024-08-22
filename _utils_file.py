@@ -1,5 +1,5 @@
 # all dir_path returned end with / or \\.
-
+import os
 from pathlib import Path
 from _utils_import import pickle
 
@@ -16,6 +16,35 @@ def dir_exist(dir_path):
 def check_dir_exist(dir_path):
     assert dir_exist(dir_path)
     return dir_path
+
+def list_all_file_name(dir_path):
+    file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+    return file_name_list
+
+def list_all_dir_name(dir_path):
+    dir_name_list = [f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
+    return dir_name_list
+
+def list_all_file_path(dir_path):
+    if not dir_path.endswith("/") or dir_path.endswith("\\"):
+        dir_path += "/"
+    return [dir_path + file_name for file_name in list_all_file_name(dir_path)]
+
+def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=None, **kwargs):
+    if dir_path_rel is None: # root
+        dir_path_current = check_dir_exist(dir_path_current)
+        dir_path_rel = ""
+    if verbose:
+        print(dir_path_current)
+    for FileName in list_all_file_name(dir_path_current):
+        func(dir_path_current=dir_path_current, FileName=FileName, dir_path_rel=dir_path_rel, **kwargs)
+    if recur:
+        for dir_name in list_all_dir_name(dir_path_current):
+            visit_tree(
+                dir_path_current=dir_path_current + dir_name, func=func,
+                dir_path_rel=dir_path_rel + dir_name + "/",
+                **kwargs
+            )
 
 def create_dir_if_non_exist(dir_path):
     dir_path_obj = Path(dir_path)

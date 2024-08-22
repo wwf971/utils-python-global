@@ -13,15 +13,24 @@ def print_torch_module(model: torch.nn.Module, pipe_out=None):
         import _utils_io
         pipe_out = _utils_io.PipeOut()
     ParamDict = dict(model.named_parameters())
-    for name, Param in ParamDict.items():
-        if "." in name: # Param belongs to one of child modules.
-            continue
-        pipe_out.print("param: %s.\t%s."%(name, list(Param.shape)))
-    SubModuleDict = dict(model.named_children()) # list direct submodule of the module
-    for name, SubModule in SubModuleDict.items():
-        pipe_out.print("SubModule: %s. class: %s"%(
-            name,
-            SubModule._get_name() # torch.nn.Linear ==> name
-        ))
-        with pipe_out.increased_indent():
-            print_torch_module(SubModule, pipe_out=pipe_out)
+
+    from _utils import class_path_from_class_instance
+    pipe_out.print("model: %s"%(class_path_from_class_instance(model)))
+    with pipe_out.increased_indent():
+        for name, Param in ParamDict.items():
+            if "." in name: # Param belongs to one of child modules.
+                continue
+            pipe_out.print("param: %s.\t%s."%(name, list(Param.shape)))
+        SubModuleDict = dict(model.named_children()) # list direct submodule of the module
+        for name, SubModule in SubModuleDict.items():
+            pipe_out.print("SubModule: %s. class: %s"%(
+                name,
+                SubModule._get_name() # torch.nn.Linear ==> name
+            ))
+            with pipe_out.increased_indent():
+                print_torch_module(SubModule, pipe_out=pipe_out)
+
+def check_tensor_shape(tensor, *shape):
+    assert len(tensor.size()) == len(shape)
+    for dimension_index, dimension_size in enumerate(shape):
+        assert tensor.size(dimension_index) == dimension_size

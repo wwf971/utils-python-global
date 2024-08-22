@@ -158,6 +158,8 @@ if TYPE_CHECKING:
     import numpy as np
     import scipy
     import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
     import psutil
     import matplotlib as mpl
     from matplotlib import pyplot as plt
@@ -167,6 +169,8 @@ else:
     np = LazyImport("numpy")
     scipy = LazyImport("scipy")
     torch = LazyImport("torch")
+    nn = LazyFromImport("torch", "nn")
+    F = LazyImport("torch.nn.functional")
     psutil = LazyImport("psutil")
     mpl = LazyImport("matplotlib")
     plt = LazyImport("matplotlib.pyplot")
