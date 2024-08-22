@@ -1,198 +1,195 @@
-import DLUtils
+import numpy as np
 import torch
 import torch.nn as nn
-
-import DLUtils
-import torch
 from _utils import (
     Dict,
-    NpArrayToTorchTensor,
     TorchTensorToNpArray,
-    GetScriptDirPath,
-    GetCurrentScriptDirPath,
-    get_file_path_without_suffix,
     class_path_from_class_instance,
     class_instance_from_class_path,
 )
+from .utils import (
+    np_array_to_torch_tensor
+)
+import _utils_file
 
-import numpy as np
-
+# a lightweight wrapper of torch.nn.Module
 class TorchModuleWrapper(nn.Module):
-    def __init__(self, *Args, **KwArgs):
+    """
+    
+    """
+    def __init__(self, *args, **kwargs):
         super().__init__()
         self.config = Dict()
-        if len(Args) + len(KwArgs) > 0:
-            self.Init(*Args, **KwArgs)
-    def Init(self):
+        if len(args) + len(kwargs) > 0:
+            self.init(*args, **kwargs)
+    def init(self):
         self._HasInit = True
         return self
-    def Build(self):
-        for Name, Child in dict(self.named_children()).items():
-            if isinstance(Child, TorchModule):
-                Child.Build()
+    def build(self):
+        for name, child in dict(self.named_children()).items():
+            if isinstance(child, TorchModuleWrapper):
+                child.build()
+            elif isinstance(child, torch.nn.Module):
+                build_torch_module(child)
             else:
-                assert isinstance(Child, torch.nn.Module)
-                BuildTorchModule(Child)
+                raise TypeError
         return self
     def GetClassPath(self):
         return class_instance_from_class_path(self)
-    def AddParam(self, Name, Param, **ParamDict):
+    def AddParam(self, name, Param, **ParamDict):
         if isinstance(Param, np.ndarray):
             Param = torch.from_numpy(Param).float() # dtype=float32
         self.register_parameter(
-            Name, torch.nn.Parameter(Param)
+            name, torch.nn.Parameter(Param)
         )
         if len(ParamDict) > 0:
             self.AddParams(ParamDict)
         return self
     def AddParams(self, **ParamDict):
         """add many pairs of params to torch module"""
-        for Name, Param in ParamDict.items():
-            self.AddParam(Name, Param)
-    def AddBuffer(self, Name, Value: torch.Tensor, **BufferDict):
-        self.register_buffer(Name, Value)
+        for name, Param in ParamDict.items():
+            self.AddParam(name, Param)
+    def AddBuffer(self, name, Value: torch.Tensor, **BufferDict):
+        self.register_buffer(name, Value)
         if len(BufferDict) > 0:
             self.AddBuffers(**BufferDict)
         return self
     def AddBuffers(self, **BufferDict):
-        for Name, Param in BufferDict.items():
-            self.AddBuffer(Name, Param)
+        for name, Param in BufferDict.items():
+            self.AddBuffer(name, Param)
         return self
-    def AddSubModule(self, Name=None, Module=None, **SubModuleDict):
-        if len(SubModuleDict) > 0:
-            assert Name is None and Module is None
-            for SubModuleName, SubModule in SubModuleDict.items():
-                self.AddSubModule(SubModuleName, SubModule)
+    def add_submodule(self, name=None, submodule=None, **submodule_dict):
+        if len(submodule_dict) > 0:
+            assert name is None and submodule is None
+            for submodule_name, SubModule in submodule_dict.items():
+                self.add_submodule(submodule_name, SubModule)
             return
-        # self.add_module(Name, Module)
-        if isinstance(Module, TorchModule):
-            self.add_module(Name, Module)
+        if isinstance(submodule, TorchModuleWrapper):
+            self.add_module(name, submodule)
         else:
-            assert isinstance(Module, torch.nn.Module)
-            self.add_module(Name, Module)
-
-        # setattr(self, Name, Module)
+            assert isinstance(submodule, torch.nn.Module)
+            self.add_module(name, submodule)
+        # setattr(self, name, Module)
             # torch will check if Module is subclass of torch.nn.Module
         return self
-    AddModule = AddChild = AddSubModule
-    def AddSubModules(self, **ModuleDict):
-        for Name, Child in ModuleDict.items():
-            self.AddChild(Name, Child)
+    def add_submodules(self, **module_dict):
+        for name, child in module_dict.items():
+            self.add_submodule(name, child)
         return self
-    AddModules = AddChildren = AddSubModules
-    def GetSubModule(self, SubModuleName):
-        assert SubModuleName in self.GetChildrenNameList()
-        return getattr(self, SubModuleName)
-    def AddTorchModule(self, Name, ModuleClass, **KwArgs):
-        Module = ModuleClass(**KwArgs)
-        Module.config = {
-            "init_args": KwArgs
+    def get_submodule(self, submodule_name):
+        assert submodule_name in self.get_child_name_list()
+        return getattr(self, submodule_name)
+    def add_torch_module(self, name, torch_module_class, **kwargs):
+        torch_module = torch_module_class(**kwargs)
+        torch_module.config = {
+            "init_args": kwargs
         }
-        self.add_module(Name, Module)
+        self.add_module(name, torch_module)
         return self
-    def AddModuleList(self, Name, *ModulesList, **ModulesDict):
-        if len(ModulesList) > 0:
-            # ModuleName will be like "1", "2", ...
-            assert len(ModulesList) == 0
-            self.AddChild(
-                Name,
-                ModuleList().Init(
-                    *ModulesList
+    def AddModuleList(self, name, *module_list, **module_dict):
+        if len(module_list) > 0:
+            # Modulename will be like "1", "2", ...
+            assert len(module_list) == 0
+            self.add_submodule(
+                name,
+                ModuleList().init(
+                    *module_list
                 )
             )
-        elif len(ModulesDict) > 0:
-            assert len(ModulesList) == 0
-            self.AddChild(
-                Name,
-                ModuleList().Init(
-                    **ModulesDict
+        elif len(module_dict) > 0:
+            assert len(module_list) == 0
+            self.add_submodule(
+                name,
+                ModuleList().init(
+                    **module_dict
                 )
             )
         else:
             raise Exception()
         return self
-    def GetParamDict(self):
-        ParamDict = GetTorchModuleParamDict(self)
+    def get_param_dict(self):
+        ParamDict = get_torch_module_param_dict(self)
         return ParamDict
-    def LoadParamDict(self, ParamDict):
-        LoadTorchModuleParamDict(self, ParamDict)
-    def GetBufferDict(self):
-        BufferDict = GetTorchModuleBufferDict(self)
-        return BufferDict
-    def LoadBufferDict(self, BufferDict):
-        LoadTorchModuleBufferDict(self, BufferDict)
-    def GetChildrenNameList(self):
-        ChildNameList = []
-        for Name, SubModule in dict(self.named_children()).items():
-            if "." in Name:
+    def load_param_dict(self, ParamDict):
+        load_torch_module_param_dict(self, ParamDict)
+    def get_buffer_dict(self):
+        buffer_dict = get_torch_module_buffer_dict(self)
+        return buffer_dict
+    def load_buffer_dict(self, BufferDict):
+        load_torch_module_buffer_dict(self, BufferDict)
+    def get_child_name_list(self):
+        ChildnameList = []
+        for name, SubModule in dict(self.named_children()).items():
+            if "." in name:
                 continue
             else:
-                ChildNameList.append(Name)
-        return ChildNameList
-    def GetChildrenDict(self):
+                ChildnameList.append(name)
+        return ChildnameList
+    def get_submodule_dict(self):
         # get a dict of submodules
-        ChildrenDict = {}
-        for Name, Child in dict(self.named_children()).items():
-            if "." in Name:
+        submodule_dict = {}
+        for name, child in dict(self.named_children()).items():
+            if "." in name:
                 continue
-            if isinstance(Child, TorchModule):
-                ChildrenDict[Name] = Child.GetModuleDict()
+            if isinstance(child, TorchModuleWrapper):
+                submodule_dict[name] = child.get_module_dict()
             else:
-                assert isinstance(Child, torch.nn.Module)
-                ChildrenDict[Name] = GetTorchModuleDict(Child)
-        return ChildrenDict
-    def LoadChildrenDict(self, ChildrenDict: dict):
+                assert isinstance(child, torch.nn.Module)
+                submodule_dict[name] = get_torch_module_dict(child)
+        return submodule_dict
+    def load_submodule_dict(self, submodule_dict: dict):
         # load submodules
-        ChildrenDict = Dict(ChildrenDict)
-        for Name, ChildDict in ChildrenDict.items():
-            ChildDict = Dict(ChildDict)
-            ChildClassPath = ChildDict._class_path
-            if "init_args" in ChildDict.config:
-                InitArgs = ChildDict.config["init_args"]
+        submodule_dict = Dict(submodule_dict)
+        for name, child_dict in submodule_dict.items():
+            child_dict = Dict(child_dict)
+            child_class_path = child_dict._class_path
+            if "init_args" in child_dict.config:
+                init_args = child_dict.config["init_args"]
             else:
-                InitArgs = {}
-            Child = class_path_from_class_instance(
-                ChildClassPath,
-                **InitArgs
+                init_args = {}
+            child = class_path_from_class_instance(
+                child_class_path,
+                **init_args
             )
-            if isinstance(Child, TorchModule):
-                Child.LoadModuleDict(ChildDict)
+            # recur
+            if isinstance(child, TorchModuleWrapper):
+                child.load_submodule_dict(child_dict.submodules)
             else:
-                assert isinstance(Child, torch.nn.Module)
-                LoadTorchModuleDict(Child, ChildDict)
-            self.AddChild(Name, Child)
+                assert isinstance(child, torch.nn.Module)
+                init_torch_module_from_dict(child, child_dict)
+            self.add_submodule(name, child)
         return self
-    def GetModuleDict(self):
+    def get_module_dict(self):
         self.config._class_path = self.GetClassPath() # for debug
         return {
             "config": self.config.to_dict(),    
-            "param": self.GetParamDict(),
-            "buffer": self.GetBufferDict(),
-            "children": self.GetChildrenDict(), # submodules
+            "param": self.get_param_dict(),
+            "buffer": self.get_buffer_dict(),
+            "submodules": self.get_submodule_dict(), # submodules
             "_class_path": self.GetClassPath()
         }
-    def LoadFromDict(self, ModuleDict: dict, LoadChildrenDict=True):
-        ModuleDict = Dict(ModuleDict)
-        self.config = Dict(ModuleDict.config)
-        self.LoadParamDict(ModuleDict.param)
-        self.LoadBufferDict(ModuleDict.buffer)
-        if LoadChildrenDict:
-            self.LoadChildrenDict(ModuleDict.children)
+    def from_dict(self, module_dict: dict, load_submodule_dict=True):
+        module_dict = Dict(module_dict)
+        self.config = Dict(module_dict.config)
+        self.load_param_dict(module_dict.param)
+        self.load_buffer_dict(module_dict.buffer)
+        if load_submodule_dict:
+            self.load_submodule_dict(module_dict.submodules)
         return self
-    LoadModuleDict = FromDict = LoadFromDict
-    def ToFile(self, FilePath):
-        FilePath = DLUtils.file.EnsureFileDir(FilePath)
-        ModuleDict = self.GetModuleDict()
-        DLUtils.file.ObjToBinaryFile(ModuleDict, FilePath)
+    def to_file(self, file_path):
+        file_path = _utils_file.create_dir_for_file_path(file_path)
+        self_module_dict = self.get_module_dict()
+        import DLUtils
+        DLUtils.file.ObjToBinaryFile(self_module_dict, file_path)
         return self
-    def FromFile(self, FilePath):
+    def from_file(self, file_path):
         if hasattr(self, "config"):
             delattr(self, "config")
-        FilePath = DLUtils.file.CheckFileExists(FilePath)
-        ModuleDict = DLUtils.file.BinaryFileToObj(FilePath)
-        self.LoadModuleDict(ModuleDict, LoadChildrenDict=True)
+        file_path = _utils_file.create_dir_for_file_path(file_path)
+        module_dict = _utils_file.from_file(file_path)
+        self.from_dict(module_dict, load_submodule_dict=True)
         return self
-    def Clear(self):
+    def clear(self):
         if hasattr(self, "config"):
             delattr(self, "config")
         if hasattr(self, ""):
@@ -206,50 +203,37 @@ class TorchModuleWrapper(nn.Module):
     #     return PrintTorchModule(self)
 TorchModule = TorchModuleWrapper
 
-def PrintModuleParam(model: torch.nn.Module, OutPipe=None):
+def print_module_param(model: torch.nn.Module, stdout=None):
     # print(model)
-    if OutPipe is None:
-        OutPipe = DLUtils.GetLibOutPipeWriter()
+    if stdout is None:
+        import _utils_io
+        stdout = _utils_io.PipeOut()
     ParamDict = dict(model.named_parameters())
     TrainParamList = []
     for name, value in ParamDict.items():
         TrainParamList.append(name)
-        OutPipe.print("Param: %s.\t%s."%(name, value.shape))
+        stdout.print("param: %s.\t%s."%(name, value.shape))
     return TrainParamList
 
-def PrintTorchModule(model: torch.nn.Module, OutPipe=None):
-    if OutPipe is None:
-        OutPipe = DLUtils.GetLibOutPipeWriter()
-    ParamDict = dict(model.named_parameters())
-    for Name, Param in ParamDict.items():
-        if "." in Name: # Param belongs to one of child modules.
-            continue
-        OutPipe.print("param: %s.\t%s."%(Name, list(Param.shape)))
-    SubModuleDict = dict(model.named_children()) # list direct submodule of the module
-    for Name, SubModule in SubModuleDict.items():
-        OutPipe.print("SubModule: %s. class: %s"%(
-            Name,
-            SubModule._get_name() # torch.nn.Linear ==> name
-        ))
-        with OutPipe.IncreasedIndent():
-            PrintTorchModule(SubModule, OutPipe=OutPipe)
 
-def ListSubModule(model: torch.nn.Module, OutPipe=None):
-    if OutPipe is None:
-        OutPipe = DLUtils.GetLibOutPipeWriter()
-    SubModuleDict = dict(model.named_children()) # list direct submodule of the module
-    for Name, SubModule in SubModuleDict.items():
-        OutPipe.print("%s %s"%(Name, SubModule))    
+
+def print_torch_module_submodule(model: torch.nn.Module, pipe_out=None):
+    if pipe_out is None:
+        import _utils_io
+        pipe_out = _utils_io.PipeOut()
+    submodule_dict = dict(model.named_children()) # list direct submodule of the module
+    for name, child in submodule_dict.items():
+        pipe_out.print("%s %s"%(name, child))    
     return
 
-def TorchModuleParamNum(Module: torch.nn.Module):
-    ParamNum = sum(p.numel() for p in Module.parameters())
+def get_torch_module_param_num(Module: torch.nn.Module):
+    param_num = sum(p.numel() for p in Module.parameters())
     # print(f"Total number of parameters: {total_params}")
-    return ParamNum
+    return param_num
 
-def GetTorchModuleConfig(Module: torch.nn.Module):
-    if hasattr(Module, "config"):
-        config = Module.config
+def get_torch_module_config(module: torch.nn.Module):
+    if hasattr(module, "config"):
+        config = module.config
         if isinstance(config, Dict):
             return config.to_dict()
         else:
@@ -267,140 +251,141 @@ def GetTorchModuleConfig(Module: torch.nn.Module):
         #     return config
         return config.to_dict()
 
+def load_torch_module_param_dict(Module: torch.nn.Module, ParamDict):
+    for name, np_array in ParamDict.items():
+        assert isinstance(np_array, np.ndarray)
+        tensor = np_array_to_torch_tensor(np_array)
+        Module.register_parameter(name, nn.Parameter(tensor))
 
-def LoadTorchModuleParamDict(Module: torch.nn.Module, ParamDict):
-    for Name, NpArray in ParamDict.items():
-        assert isinstance(NpArray, np.ndarray)
-        Tensor = NpArrayToTorchTensor(NpArray)
-        Module.register_parameter(Name, nn.Parameter(Tensor))
+def load_torch_module_buffer_dict(Module: torch.nn.Module, BufferDict):
+    for name, np_array in BufferDict.items():
+        assert isinstance(np_array, np.ndarray)
+        Tensor = np_array_to_torch_tensor(np_array)
+        Module.register_buffer(name, Tensor)
 
-def GetTorchModuleBufferDict(Module: torch.nn.Module):
-    BufferDict = {}
-    for Name, Tensor in dict(Module.named_buffers()).items():
-        assert isinstance(Tensor, torch.Tensor)
-        if "." in Name:
+def get_torch_module_buffer_dict(Module: torch.nn.Module):
+    buffer_dict = {}
+    for name, tensor in dict(Module.named_buffers()).items():
+        assert isinstance(tensor, torch.Tensor)
+        if "." in name:
             continue
-        BufferDict[Name] = Tensor.cpu().detach().numpy()
-    return BufferDict
+        buffer_dict[name] = tensor.cpu().detach().numpy()
+    return buffer_dict
 
-def LoadTorchModuleBufferDict(Module: torch.nn.Module, BufferDict):
-    for Name, NpArray in BufferDict.items():
-        assert isinstance(NpArray, np.ndarray)
-        Tensor = NpArrayToTorchTensor(NpArray)
-        Module.register_buffer(Name, Tensor)
-
-def GetTorchModuleChildrenDict(Module: torch.nn.Module):
-    ChildrenDict = {}
-    for Name, Child in dict(Module.named_children()).items():
-        if "." in Name:
+def get_torch_module_param_dict(Module: torch.nn.Module):
+    param_dict = {}
+    for name, tensor in dict(Module.named_parameters()).items():
+        if "." in name:
             continue
-        ChildrenDict[Name] = GetTorchModuleDict(Child)
-    return ChildrenDict
+        param_dict[name] = TorchTensorToNpArray(tensor)
+    return param_dict
 
-def Torchmodule_to_dict(Module: torch.nn.Module):
-    ModuleDict = {
-        "config": GetTorchModuleConfig(Module),
-        "param": GetTorchModuleParamDict(Module),
-        "buffer": GetTorchModuleBufferDict(Module),
-        "children": GetTorchModuleChildrenDict(Module),
+def get_torch_module_submodule_dict(module: torch.nn.Module):
+    submodule_dict = {}
+    for name, child in dict(module.named_children()).items():
+        if "." in module: # not direct submodule
+            continue
+        submodule_dict[module] = get_torch_module_dict(module)
+    return submodule_dict
+
+def get_torch_module_dict(Module: torch.nn.Module):
+    module_dict = {
+        "config": get_torch_module_config(Module),
+        "param": get_torch_module_param_dict(Module),
+        "buffer": get_torch_module_buffer_dict(Module),
+        "submodules": get_torch_module_submodule_dict(Module),
         "_class_path": class_instance_from_class_path(Module)
     }
-    return ModuleDict
-GetTorchModuleDict = Torchmodule_to_dict
+    return module_dict
 
-def BuildTorchModule(Module: torch.nn.Module, OutPipe=None):
-    for Name, Child in dict(Module.named_children()).items():
-        if "." in Name:
+def build_torch_module(module: torch.nn.Module, OutPipe=None):
+    for name, submodule in dict(module.named_children()).items():
+        if "." in name:
             continue
-        if isinstance(Child, TorchModuleWrapper):
-            Child.Build()
+        if isinstance(module, TorchModuleWrapper):
+            module.build()
+        elif isinstance(module, torch.nn.Module):
+            build_torch_module(submodule)
         else:
-            BuildTorchModule(Child)
+            raise TypeError
 
-def TorchModuleToFile(Module: torch.nn.Module, FilePath, OutPipe=None):
-    DLUtils.file.ObjToBinaryFile(GetTorchModuleDict(Module), FilePath)
+def torch_module_to_file(Module: torch.nn.Module, FilePath, OutPipe=None):
+    _utils_file.to_file(get_torch_module_dict(Module), FilePath)
     return
 
-def InitTorchModule(ModuleClass, **KwArgs):
-    Module = ModuleClass(**KwArgs)
-    Module.config = {
-        "init_args": KwArgs
+def torch_module_from_file(file_path):
+    file_path = _utils_file.create_dir_for_file_path(file_path)
+    module_dict = _utils_file.from_file(file_path)
+    return create_torch_module_from_dict(module_dict)
+
+def create_torch_module(module_class, **kwargs):
+    module = module_class(**kwargs)
+    module.config = {
+        "init_args": kwargs
     }
-    return Module
+    return module
 
-def LoadTorchModuleChildrenDict(Module: torch.nn.Module, ChildrenDict):
-    # load submodules
-    for Name, ChildDict in ChildrenDict.items():
-        ChildClassPath = ChildDict._class_path
-        if "init_args" in ChildDict.config:
-            InitArgs = ChildDict.config["init_args"]
-        else:
-            InitArgs = {}
-        Child = class_path_from_class_instance(ChildClassPath, **InitArgs)
-        LoadTorchModuleDict(ChildDict)
-        Module.add_module(Name, Child)
-    return Module
+def create_torch_module_from_dict(module_dict: dict):
+    assert isinstance(module_dict, dict)
+    module_dict = Dict(module_dict)
+    class_path = module_dict._class_path
 
-def LoadTorchModuleDict(Module, ModuleDict: dict, LoadChildrenDict=True):
-    ModuleDict = Dict(ModuleDict)
-    Module.config = Dict(ModuleDict.config)
-    LoadTorchModuleParamDict(Module, ModuleDict.param)
-    LoadTorchModuleBufferDict(Module, ModuleDict.buffer)
-    if LoadChildrenDict:
-        LoadTorchModuleChildrenDict(Module, ModuleDict.children)
-    return Module
-
-def GetTorchModuleParamDict(Module: torch.nn.Module):
-    ParamDict = {}
-    for Name, Tensor in dict(Module.named_parameters()).items():
-        if "." in Name:
-            continue
-        ParamDict[Name] = TorchTensorToNpArray(Tensor)
-    return ParamDict
-
-def LoadTorchModuleFromDict(ModuleDict: dict):
-    assert isinstance(ModuleDict, dict)
-    ModuleDict = Dict(ModuleDict)
-    ClassPath = ModuleDict._class_path
-
-    Module = class_path_from_class_instance(ClassPath)
-    if isinstance(Module, TorchModuleWrapper):
-        Module.LoadModuleDict(ModuleDict)
-    elif isinstance(Module, torch.nn.Module):
-        LoadTorchModuleDict(Module, ModuleDict)
+    module = class_path_from_class_instance(class_path)
+    if isinstance(module, TorchModuleWrapper):
+        module.from_dict(module_dict)
+    elif isinstance(module, torch.nn.Module):
+        init_torch_module_from_dict(module, module_dict) # init after create
     else:
         raise Exception()
     # ClassObj = Class()
     # assert isinstance(ClassObj, DLUtils.torch.TorchModuleWrapper)
-    return Module
+    return module
 
-def LoadTorchModuleFromFile(FilePath):
-    FilePath = DLUtils.CheckFileExists(FilePath)
-    ModuleDict = DLUtils.file.BinaryFileToObj(FilePath)
-    return LoadTorchModuleFromDict(ModuleDict)
+def init_torch_module_from_dict(module: torch.nn.Module, module_dict: dict, load_submodule_dict=True):
+    module_dict = Dict(module_dict)
+    module.config = Dict(module_dict.config)
+    load_torch_module_param_dict(module, module_dict.param)
+    load_torch_module_buffer_dict(module, module_dict.buffer)
+    if load_submodule_dict:
+        create_torch_module_submodule_from_dict(module, module_dict.submodules)
+    return module
+
+def create_torch_module_submodule_from_dict(parent_module: torch.nn.Module, submodule_dict):
+    # load submodules
+    for name, child_dict in submodule_dict.items():
+        child_class_path = submodule_dict._class_path
+        if "init_args" in submodule_dict.config:
+            init_args = submodule_dict.config["init_args"]
+        else:
+            init_args = {}
+        child = class_path_from_class_instance(child_class_path, **init_args)
+        create_torch_module_from_dict(child_dict) # recur
+        parent_module.add_module(name, child)
+    return parent_module
+
 
 class ModuleList(TorchModuleWrapper):
-    def Init(self, *ModulesList, **ModulesDict):
-        if len(ModulesList) > 0:
-            assert len(ModulesDict) == 0
-            for Index, Module in enumerate(ModulesList):
-                self.AddChild(
+    def init(self, *module_list, **module_dict):
+        if len(module_list) > 0:
+            assert len(module_dict) == 0
+            for Index, Module in enumerate(module_list):
+                self.add_submodule(
                     "%d"%Index, Module
                 )
-        elif len(ModulesDict) > 0:
-            assert len(ModulesList) == 0
-            for Name, Module in ModulesDict.items():
-                self.AddChild(
-                    Name, Module
+        elif len(module_dict) > 0:
+            assert len(module_list) == 0
+            for name, Module in module_dict.items():
+                self.add_submodule(
+                    name, Module
                 )
         return self
-    def Build(self):
-        self.ModuleList = []
-        for Name, Child in self.named_children():
-            self.ModuleList.append(Child)
-        return super().Build()
+    def build(self):
+        self.module_list = []
+        for name, child in self.named_children():
+            self.module_list.append(child)
+        return super().build()
     def forward(self, x):
         y = x
-        for Child in self.ModuleList:
-            y = Child(y)
+        for submodule in self.module_list:
+            y = submodule(y)
         return y

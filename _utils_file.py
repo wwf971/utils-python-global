@@ -1,9 +1,14 @@
+# all dir_path returned end with / or \\.
+
 from pathlib import Path
+from _utils_import import pickle
+
 def file_exist(file_path):
     return Path(file_path).is_file()
 
 def check_file_exist(file_path):
     assert file_exist(file_path)
+    return file_path
 
 def dir_exist(dir_path):
     return Path(dir_path).is_dir()
@@ -15,12 +20,21 @@ def check_dir_exist(dir_path):
 def create_dir_if_non_exist(dir_path):
     dir_path_obj = Path(dir_path)
     dir_path_obj.mkdir(parents=True, exist_ok=True)
-    return
+    return dir_path_obj.__str__() + "/"
+
+def create_dir_for_file_path(file_path):
+    dir_path_obj = Path(file_path).parent
+    dir_path_obj.mkdir(parents=True, exist_ok=True)
+    return file_path
 
 def remove_file(file_path):
     assert file_exist(file_path)
     file_path_obj = Path(file_path)
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
+
+def get_dir_path_of_file_path(file_path):
+    dir_path_obj = Path(file_path).parent
+    return dir_path_obj.__str__() + "/"
 
 def get_file_name_and_suffix(file_name):
     import re
@@ -38,3 +52,15 @@ def get_file_path_without_suffix(file_path):
 
 def current_script_path_without_suffix(script_file_path):
     return get_file_path_without_suffix(script_file_path)
+
+
+def to_file(obj, file_path):
+    file_path = create_dir_for_file_path(file_path)
+    with open(file_path, "wb") as f:
+        pickle.dump(obj, f)
+
+def from_file(file_path):
+    file_path = check_file_exist(file_path)    
+    with open(file_path, 'rb') as f:
+        obj = pickle.load(f, encoding='bytes')
+    return obj

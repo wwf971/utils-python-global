@@ -51,24 +51,28 @@ class Dict(dict):
     A subclass of dict that allows attribute-style access.
     """
     def __init__(self,
-            _dict: dict = None,
+            source: dict = None,
             # allow_missing_attr=False,
-            **Dict
+            **kwargs
         ):
         # self.allow_missing_attr = allow_missing_attr
         """
             If allow_missing_attr == True, empty Dict object will be created and returned
                 when trying to get a non-existent attribute
         """
-        if _dict is not None:
-            assert len(Dict) == 0
-            if not isinstance(_dict, dict):
-                raise TypeError("Expect a dictionary")
-            self.from_dict(_dict)
+        if source is not None:
+            assert len(kwargs) == 0
+            if isinstance(source, dict):
+                self.from_dict(source)
+            elif isinstance(source, NameSpace):
+                pass
+            else:
+                raise TypeError
+
         
-        if len(Dict) > 0:
-            assert _dict is None
-            self.from_dict(Dict)
+        if len(kwargs) > 0:
+            assert source is None
+            self.from_dict(kwargs)
     def __getattr__(self, key):
         try:
             return self[key]

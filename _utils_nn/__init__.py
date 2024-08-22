@@ -14,10 +14,10 @@ class Module():
         self.submodules = Dict()
         if len(Args) + len(KwArgs) > 0:
             self.Init(*Args, **KwArgs)
-    def AddSubModule(self, Name=None, SubModule=None, **SubModuleDict):
+    def add_submodule(self, Name=None, SubModule=None, **SubModuleDict):
         if len(SubModuleDict) > 0:
             for _Name, _SubModule in SubModuleDict.items():
-                self.AddSubModule(_Name, _SubModule)
+                self.add_submodule(_Name, _SubModule)
             assert Name is None and SubModule is None
         else:
             self.submodules[Name] = SubModule
@@ -39,25 +39,25 @@ class Module():
         self.param[Name] = Value
         setattr(self, Name, Value)
         return self
-    def FromFile(self, FilePath):
+    def from_file(self, FilePath):
         FilePath = DLUtils.file.CheckFileExists(FilePath)
         ModuleDict = DLUtils.file.BinaryFileToObj(ModuleDict)
-    def ToFile(self, FilePath):
+    def to_file(self, FilePath):
         FilePath = DLUtils.EnsureFileDir(FilePath)
         ModuleDict = self.ToDict()
         DLUtils.file.ObjToBinaryFile(ModuleDict, FilePath)
         return self
-    def FromDict(self, ModuleDict: dict):
+    def from_dict(self, ModuleDict: dict):
         self.config = ModuleDict["config"]
         self.param = ModuleDict["param"]
         for Name, SubModuleDict in ModuleDict["submodules"].items():
-            self.AddSubModule(
+            self.add_submodule(
                 Name, dict_to_module(SubModuleDict)
             )
         for Name, Value in self.param.items():
             setattr(self, Name, Value) # mount param to self
         return self
-    def ToDict(self):
+    def to_dict(self):
         for Name in self.param.keys():
             self.param[Name] = getattr(self, Name) # collect param from self
         return {
@@ -91,3 +91,6 @@ def file_to_module(FilePath):
 
 def module_to_dict(module: Module):
     return module.ToDict()
+
+if __name__ == "__main__":
+    import _utils_file

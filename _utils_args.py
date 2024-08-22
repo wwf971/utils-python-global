@@ -13,7 +13,7 @@ import argparse
 class CustomArgumentParser(argparse.ArgumentParser):
 	def add_bool_arg(self, arg_name: str, default: bool=False, help=None):
 		if arg_name.startswith("--"):
-			arg_name.lstrip("-")
+			arg_name = arg_name.lstrip("--")
 		if default:
 			self.add_argument('--' + arg_name, nargs="?", const=True, type=str2bool, default=True, help=help)
 		else:

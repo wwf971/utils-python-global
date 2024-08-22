@@ -17,20 +17,19 @@ LAZY_IMPORT = True
 import time
 import importlib
 def ImportModule(SubModuleStr: str):
-
     SubModule = importlib.import_module(SubModuleStr)
     return SubModule
 def ImportSubModuleFromPathList(SubModulePathList: list):
     assert len(SubModulePathList) > 1
     SubModule = importlib.import_module(".".join(SubModulePathList))
     return SubModule
-def LazyImport(ModuleStr, FuncAfterImport=None):
+def LazyImport(ModuleStr, FuncAfterImport=None, PrintStackAtFirstImport=False):
     """
     import a => LazyImport("a") # lazy import module
     import a.b => LazyImport("a.b") # lazy import submodule
     module, submodule
     """
-    return _LazyImport(ModuleStr, ImportMode="Module", FuncAfterImport=FuncAfterImport)
+    return _LazyImport(ModuleStr, ImportMode="Module", FuncAfterImport=FuncAfterImport, PrintStackAtFirstImport=PrintStackAtFirstImport)
 def FromImport(ModuleStr: str, VarStr: str):
     """
     from a.b import c as d => d = FromImport("a.b", "c")
@@ -50,7 +49,8 @@ class _LazyImport(object):
         VarName: str = None, 
         RaiseOnImportFailure: bool=True,
         ImportMode="Import", # "Import", "FromImport"
-        FuncAfterImport=None
+        FuncAfterImport=None,
+        PrintStackAtFirstImport=False
     ):
         self.ModuleName = ModuleName
         self.RaiseOnImportFailure = RaiseOnImportFailure
@@ -75,6 +75,7 @@ class _LazyImport(object):
         else:
             raise Exception()
         self.FuncAfterImport = FuncAfterImport
+        self.PrintStackAtFirstImport = PrintStackAtFirstImport
     def _ImportModule(self):
         # assert not self.IsModuleImported
         import importlib
@@ -92,12 +93,18 @@ class _LazyImport(object):
         self.Module = Module
         if self.FuncAfterImport is not None:
             self.FuncAfterImport(Module)
+        if self.PrintStackAtFirstImport:
+            import traceback
+            traceback.print_stack()
         return Module
     def _ImportSubModule(self):
         Module = ImportSubModuleFromPathList(self.SubModulePathList)
         self.Module = Module
         if self.FuncAfterImport is not None:
             self.FuncAfterImport(Module)
+        if self.PrintStackAtFirstImport:
+            import traceback
+            traceback.print_stack()
         return Module
     def _FromImport(self):
         Module = self.ImportModule()
@@ -134,7 +141,7 @@ else:
         # lazy import
         print("Import DLUtils(Lazy).", end=" ")
         TimeStart = time.time()
-        DLUtils = LazyImport("DLUtils")
+        DLUtils = LazyImport("DLUtils", PrintStackAtFirstImport=False)
         TimeEnd = time.time()
         TimeImport = TimeEnd - TimeStart
         print("Finished. Time: %.3fs"%(TimeImport))
@@ -147,31 +154,21 @@ else:
         TimeImport = TimeEnd - TimeStart
         print("Finished. Time: %.3fs"%(TimeImport))
 
-import time
-print("Import DLUtils.", end=" ")
-TimeStart = time.time()
-import DLUtils
-TimeEnd = time.time()
-print("Finished. Time: %.3fs"%(TimeEnd-TimeStart))
-
-LazyNumpy = LazyImport("numpy")
-def GetLazyNumpy():
-    return LazyNumpy
-LazyScipy = LazyImport("scipy")
-def GetLazyScipy():
-    return LazyScipy
-LazyTorch = LazyImport("torch")
-def GetLazyTorch():
-    return LazyTorch
-LazyPsUtil = LazyImport("psutil")
-def GetLazyPsUtil():
-    return LazyPsUtil
-LazyMatplotlib = LazyImport("matplotlib")
-def GetLazyMatplotlib():
-    return LazyMatplotlib
-LazyPlt = LazyFromImport("matplotlib", "plt")
-def GetLazyPlt():
-    return LazyPlt
-LazyPILImage = LazyImport("PIL.Image")
-def GetLazyPILImage():
-    return LazyPILImage
+if TYPE_CHECKING:
+    import numpy as np
+    import scipy
+    import torch
+    import psutil
+    import matplotlib as mpl
+    from matplotlib import pyplot as plt
+    from PIL import Image as Im
+    import pickle
+else:
+    np = LazyImport("numpy")
+    scipy = LazyImport("scipy")
+    torch = LazyImport("torch")
+    psutil = LazyImport("psutil")
+    mpl = LazyImport("matplotlib")
+    plt = LazyImport("matplotlib.pyplot")
+    Im = LazyImport("PIL.Image")
+    pickle = LazyImport("pickle")

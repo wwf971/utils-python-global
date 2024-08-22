@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy as np
 else:
-    np = DLUtils.GetLazyNumpy()
+    from DLUtils import np
 if TYPE_CHECKING:
     import pynvml
 else:
-    pynvml = DLUtils.LazyImport("pynvml")
+    pynvml = _utils_import.LazyImport("pynvml")
 
 def ReturnGPUDevice(GPUIndex, ReturnType="str"):
     if ReturnType in ["str"]:
@@ -23,21 +23,22 @@ def get_gpu_free_memory(gpu_index):
     info = pynvml.nvmlDeviceGetMemoryInfo(handle)
     return info.free
 
-def GetGPUWithLargestAvailableMemory(Verbose=False, ReturnType="str", OutPipe=None):
-    GPUNum = DLUtils.torch.GPUNum()
+def get_gpu_with_largest_available_memory(Verbose=False, ReturnType="str", OutPipe=None):
+    import torch
+    gpu_num = torch.cuda.device_count()
     MemoryFreeLargestIndex = -1
     MemoryFreeLargest = -1
-    for GPUIndex in range(GPUNum):
-        MemoryFree = get_gpu_free_memory(GPUIndex)
+    for gpu_index in range(gpu_num):
+        MemoryFree = get_gpu_free_memory(gpu_index)
         if Verbose:
-            print("GPU%d MemoryAvailable: %d"%(GPUIndex, MemoryFree), file=OutPipe, flush=True)
+            print("GPU%d MemoryAvailable: %d"%(gpu_index, MemoryFree), file=OutPipe, flush=True)
         if MemoryFree > MemoryFreeLargest:
-            MemoryFreeLargestIndex = GPUIndex
+            MemoryFreeLargestIndex = gpu_index
             MemoryFreeLargest = MemoryFree
     if Verbose:
-        print("GPU%d has largest available memory %d"%(MemoryFreeLargestIndex, MemoryFreeLargest), file=OutPipe, flush=True)
+        print("gpu-%d has largest available memory %d"%(MemoryFreeLargestIndex, MemoryFreeLargest), file=OutPipe, flush=True)
     return ReturnGPUDevice(MemoryFreeLargestIndex, ReturnType=ReturnType)
-GetGPUWithLargestFreeMemory = GetGPUWithLargestAvailableMemory
+get_gpu_with_largest_free_memory = get_gpu_with_largest_available_memory
 
 try:
     import nvidia_smi # pip install nvidia-ml-py3

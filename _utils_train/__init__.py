@@ -26,7 +26,7 @@ class FloatLog:
         # collections.deque: FIFO(first-in-first-out) queue with max length.
         self.float_list = collections.deque([], maxlen=buf_size)
         self.batch_size_list = collections.deque([], maxlen=buf_size)
-    def Append(self, data: float, batch_size: int):
+    def append(self, data: float, batch_size: int):
         self.float_list.append(data)
         self.batch_size_list.append(batch_size)
         return self
@@ -44,7 +44,7 @@ class IntLog: # AccuracyAlongEpochBatchTrain
         # collections.deque: FIFO(first-in-first-out) queue with max length.
         self.int_list = collections.deque([], maxlen=buf_size)
         self.batch_size_list = collections.deque([], maxlen=buf_size)
-    def Append(self, data: float, batch_size: int):
+    def append(self, data: float, batch_size: int):
         self.int_list.append(data)
         self.batch_size_list.append(batch_size)
         return self
@@ -53,25 +53,25 @@ class IntLog: # AccuracyAlongEpochBatchTrain
         sample_num = 0
         int_sum = 0.0
         for index in range(len(self.int_list)):
-            float_sum += self.int_list[index]
+            int_sum += self.int_list[index]
             sample_num += self.batch_size_list[index]
         return int_sum / sample_num
 
 class TriggerFuncAtEveryFixedInterval:
-    def __init__(self, Interval, Func, *Args, **KwArgs):
+    def __init__(self, interval, Func, *Args, **kwargs):
         self.Args = Args
-        self.KwArgs = KwArgs
-        self.Reset()
+        self.kwargs = kwargs
+        self.reset()
         self.Func = Func
-        self.Interval = Interval
-    def Reset(self):
-        self.Count = 0
-    def Tick(self):
-        self.Count += 1
-        if self.Count >= self.Interval:
-            Result = self.Func(*self.Args, **self.KwArgs)
-            self.Reset()
-            return Result
+        self.interval = interval
+    def reset(self):
+        self.count = 0
+    def tick(self):
+        self.count += 1
+        if self.count >= self.interval:
+            result = self.Func(*self.Args, **self.kwargs)
+            self.reset()
+            return result
         else:
-            Result = None
-        return Result
+            result = None
+        return result

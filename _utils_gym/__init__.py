@@ -1,8 +1,7 @@
 
+from .video import VideoRecorder
 
-from .gym_video_recorder import VideoRecorder
-
-def GetEnv(EnvName, Seed=None, RenderMode="rgb_array"):
+def get_env(EnvName, Seed=None, RenderMode="rgb_array"):
     """
     RenderMode: 决定了env.render()的返回值.
         "rgb_array": 返回值
@@ -14,17 +13,12 @@ def GetEnv(EnvName, Seed=None, RenderMode="rgb_array"):
     if Seed is not None:
         SetSeedForEnv(Env, Seed)
     return Env
-GetSingleEnv = GetEnv
 
-def GetVectorEnv(EnvName, Num: int, Seed, ):
+def get_vec_env(EnvName, Num: int, Seed, ):
     """
     parallel env.
     """
-
-
     assert len(Seed) == Num
-
-
     return Env
 
 

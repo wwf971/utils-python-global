@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 class _PipeOutIncreaseIndent:
-    def __init__(self, Parent: PipeOut):
-        self.Parent = Parent
+    def __init__(self, parent: PipeOut):
+        self.parent = parent
     def __enter__(self):
-        self.Parent.increase_indent()
+        self.parent.increase_indent()
     def __exit__(self, type, value, trace):
-        self.Parent.decrease_indent()
+        self.parent.decrease_indent()
 
 from collections import defaultdict
 class PipeOut:
@@ -52,7 +52,7 @@ class PipeOut:
         self.PrintCounterDict = defaultdict(lambda: 0)
     def write(self, Str: str):
         # self.PrintWithoutIndent(Str)
-        self.Print(Str, end="")
+        self.print(Str, end="")
     ResetPrintCounter = SetPrintCounterToZero
 
 def print_to_pipe(pipe, *list, indent=None, **kwargs):
@@ -108,6 +108,11 @@ if __name__ == "__main__":
     with pipe.increased_indent():
         pipe.print("bbb")
     pipe.print("ccc")
-
     for index in range(100):
         pipe.print_every(10, "%d"%index)
+
+from .file_out import (
+    StdOutAndErrToFileAndTerminal,
+    StdOutToFileAndTerminal,
+    StdErrToFileAndTerminal
+)
