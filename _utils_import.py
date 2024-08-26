@@ -11,7 +11,6 @@ sys.path += [
     dir_path_current,
     dir_path_current + "/utils-python-global",
 ]
-
 LAZY_IMPORT = True
 
 import time

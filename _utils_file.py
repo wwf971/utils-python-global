@@ -82,7 +82,6 @@ def get_file_path_without_suffix(file_path):
 def current_script_path_without_suffix(script_file_path):
     return get_file_path_without_suffix(script_file_path)
 
-
 def to_file(obj, file_path):
     file_path = create_dir_for_file_path(file_path)
     with open(file_path, "wb") as f:
@@ -94,8 +93,8 @@ def from_file(file_path):
         obj = pickle.load(f, encoding='bytes')
     return obj
 
-def get_image_file_time(img_file_path):
-    img_file_path = check_file_exist(img_file_path)
-    unix_stamp_modify = os.path.getmtime(img_file_path) # last modified time
-    unix_stamp_create = os.path.getctime(img_file_path)
-    return unix_stamp_create, unix_stamp_modify
+def text_file_to_str(file_path):
+    file_path = check_file_exist(file_path)
+    with open(file_path, "r") as f:
+        text = f.read()
+    return text

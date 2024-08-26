@@ -5,33 +5,65 @@
 		"body": [
 			"", // 在snippet列表中显示的名称
 			"import sys, os, pathlib",
-			"DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
-			"DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + \"/\"",
-			"DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + \"/\"",
-			"DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
+			"dir_path_current = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
+			"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
+			"dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + \"/\"",
+			"dir_path_great_grand_parent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
 			"sys.path += [",
-			"\tDirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent",
+			"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
 			"]",
 			"$2" //通过Tab让光标跳跃到下1个placeholder
 		],
 		"description": "sys.path add path"
 	},
+	// "sys.path add path": {
+	// 	"prefix": ["sys.path add path"], // 在snippet列表中显示的名称
+	// 	"body": [
+	// 		"", // 在snippet列表中显示的名称
+	// 		"import sys, os, pathlib",
+	// 		"DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
+	// 		"DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + \"/\"",
+	// 		"DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + \"/\"",
+	// 		"DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
+	// 		"sys.path += [",
+	// 		"\tDirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent",
+	// 		"]",
+	// 		"$2" //通过Tab让光标跳跃到下1个placeholder
+	// 	],
+	// 	"description": "sys.path add path"
+	// },
 	"sys.path add path(jupyter)": {
 		"prefix": ["sys.path add path(jupyter)"], // 在snippet列表中显示的名称
 		"body": [
 			// "from __future__ import annotations",
 			"import sys, os, pathlib",
-			"DirPathCurrent = os.path.abspath('') + \"/\"",
-			"DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + \"/\"",
-			"DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + \"/\"",
-			"DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
+			"dir_path_current = os.path.abspath('') + \"/\"",
+			"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
+			"dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + \"/\"",
+			"dir_path_great_grand_parent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
 			"sys.path += [",
-			"\tDirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent",
+			"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
 			"]",
-			"$2"
+			"$2" //通过Tab让光标跳跃到下1个placeholder
 		],
 		"description": "sys.path add path(jupyter)"
 	},
+	// "sys.path add path(jupyter)": {
+	// 	"prefix": ["sys.path add path(jupyter)"], // 在snippet列表中显示的名称
+	// 	"body": [
+	// 		// "from __future__ import annotations",
+	// 		"import sys, os, pathlib",
+	// 		"DirPathCurrent = os.path.abspath('') + \"/\"",
+	// 		"DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + \"/\"",
+	// 		"DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + \"/\"",
+	// 		"DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
+	// 		"sys.path += [",
+	// 		"\tDirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent",
+	// 		"]",
+	// 		"$2"
+	// 	],
+	// 	"description": "sys.path add path(jupyter)"
+	// },
 	"argparse": {
 		"prefix": "parse_args()", // 在snippet列表中显示的名称
 		"body": [
