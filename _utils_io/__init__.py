@@ -116,3 +116,21 @@ from .file_out import (
     StdOutToFileAndTerminal,
     StdErrToFileAndTerminal
 )
+
+def print_utf8_to_stdout(str, indent: int=None):
+    import sys
+    if indent is not None:
+        # assert isinstance(indent, int)
+        str = str.split("\n")
+        for index, str in enumerate(str):
+            print_utf8_to_stdout("    " * indent + str + "\n")
+            # if(Index < len(StrList) - 1):
+            #     WriteUTF8ToStdOut("    " * Indent + Str + "\n")
+            # else:
+            #     WriteUTF8ToStdOut("    " * Indent + Str)
+        return
+    Bytes = str.encode("utf-8")
+    try:
+        sys.__stdout__.buffer.write(Bytes)
+    except Exception:
+        pass # broken pipe
