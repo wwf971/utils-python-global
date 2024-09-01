@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 
 class _PipeOutIncreaseIndent:
     def __init__(self, parent: PipeOut):
@@ -59,7 +60,7 @@ def print_to_pipe(pipe, *list, indent=None, **kwargs):
     _str = print_to_str(*list, **kwargs)
     if indent is None:
         indent = 0
-    print_str_to_pipe(pipe, _str, indent=indent)
+    str_print_to_pipe(pipe, _str, indent=indent)
 
 from io import StringIO
 def print_to_str(*args, **kwargs):
@@ -74,7 +75,7 @@ def print_to_str(*args, **kwargs):
     del print_buf
     return str_
 
-def print_str_to_pipe(
+def str_print_to_pipe(
         pipe,
         _str: str,
         indent=None,
@@ -102,6 +103,26 @@ def print_str_to_pipe(
     if flush and hasattr(pipe, "flush"):
         pipe.flush()
 
+def write_utf8_to_stdout(str_print, indent:int=None):
+    if indent is not None:
+        assert isinstance(indent, int)
+        str_list = str_print.split("\n")
+        for index, _str in enumerate(str_list):
+            write_utf8_to_stdout("    " * indent + _str + "\n")
+        return
+    else:
+        bytes_print = str_print.encode("utf-8")
+        try:
+            sys.__stdout__.buffer.write(bytes_print)
+        except Exception:
+            pass # broken pipe
+
+from .file_out import (
+    StdOutAndErrToFileAndTerminal,
+    StdOutToFileAndTerminal,
+    StdErrToFileAndTerminal
+)
+
 if __name__ == "__main__":
     pipe = PipeOut()
     pipe.print("aaa")
@@ -110,9 +131,3 @@ if __name__ == "__main__":
     pipe.print("ccc")
     for index in range(100):
         pipe.print_every(10, "%d"%index)
-
-from .file_out import (
-    StdOutAndErrToFileAndTerminal,
-    StdOutToFileAndTerminal,
-    StdErrToFileAndTerminal
-)

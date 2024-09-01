@@ -1,7 +1,11 @@
-# all dir_path returned end with / or \\.
 import os
 from pathlib import Path
 from _utils_import import pickle
+
+def file_path_to_unix_style(file_path):
+    # TODO: handle ~ in file path
+    
+    return
 
 def file_exist(file_path):
     return Path(file_path).is_file()
@@ -36,8 +40,8 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
         dir_path_rel = ""
     if verbose:
         print(dir_path_current)
-    for FileName in list_all_file_name(dir_path_current):
-        func(dir_path_current=dir_path_current, FileName=FileName, dir_path_rel=dir_path_rel, **kwargs)
+    for file_name in list_all_file_name(dir_path_current):
+        func(dir_path_current=dir_path_current, file_name=file_name, dir_path_rel=dir_path_rel, **kwargs)
     if recur:
         for dir_name in list_all_dir_name(dir_path_current):
             visit_tree(
@@ -60,6 +64,25 @@ def remove_file(file_path):
     assert file_exist(file_path)
     file_path_obj = Path(file_path)
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
+delete_file = remove_file
+
+def remove_file_if_exist(file_path):
+    if file_exist(file_path):
+        remove_file(file_path)
+delete_file_if_exist = remove_file_if_exist
+
+def move_file(file_path_source, file_path_target):
+    assert file_exist(file_path_source)
+    assert not file_exist(file_path_target)
+    Path(file_path_source).rename(file_path_target)
+    assert not file_exist(file_path_source)
+    assert file_exist(file_path_target)
+
+def move_file_overwrite(file_path_source, file_path_target):
+    assert file_exist(file_path_source)
+    Path(file_path_source).rename(file_path_target)
+    assert not file_exist(file_path_source)
+    assert file_exist(file_path_target)
 
 def get_dir_path_of_file_path(file_path):
     dir_path_obj = Path(file_path).parent
