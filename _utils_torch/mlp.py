@@ -10,6 +10,8 @@ def get_torch_nonlinear_func(nonlinear_func_str: str):
         return nn.Tanh
     elif nonlinear_func_str in ["sigmoid"]:
         return nn.Sigmoid
+    elif nonlinear_func_str in ["none", "identity"]:
+        return nn.Identity
     else:
         raise ValueError
 
@@ -52,12 +54,14 @@ class MLP(ModuleList):
             self.add_submodule("layer-%d"%layer_index, layer)
         return self
     
-def build_mlp(layer_shape, hidden_activation, output_activation):
-    layers = []
+def build_mlp(layer_shape, nonlinear_func, nonlinear_func_output=None):
+    layer_list = []
+    if nonlinear_func_output is None:
+        nonlinear_func_output = nonlinear_func
     for j in range(len(layer_shape)-1):
-        act = hidden_activation if j < len(layer_shape)-2 else output_activation
-        layers += [nn.Linear(layer_shape[j], layer_shape[j+1]), act()]
-    return nn.Sequential(*layers)
+        nonlinear_module = get_torch_nonlinear_func(nonlinear_func if j < len(layer_shape)-2 else nonlinear_func_output)
+        layer_list += [nn.Linear(layer_shape[j], layer_shape[j+1]), nonlinear_module()]
+    return nn.Sequential(*layer_list)
 
 class ParallelMLPLayer(TorchModuleWrapper):
     def init(self, **kwargs):

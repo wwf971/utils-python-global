@@ -164,6 +164,7 @@ if TYPE_CHECKING:
     from matplotlib import pyplot as plt
     from PIL import Image as Im
     import pickle
+    import shutil
     import _utils_io
     import _utils_file
 else:
@@ -177,5 +178,6 @@ else:
     plt = LazyImport("matplotlib.pyplot")
     Im = LazyImport("PIL.Image")
     pickle = LazyImport("pickle")
+    shutil = LazyImport("shutil")
     _utils_io = LazyImport("_utils_io")
     _utils_file = LazyImport("_utils_file")

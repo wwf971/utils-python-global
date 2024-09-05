@@ -11,11 +11,14 @@ from _utils_torch.wrapper import(
 
 from .mlp import (
     MLP,
+    build_mlp,
+    ParallelMLP
 )
 
 from .utils import (
     get_batch_num,
     print_torch_module,
     np_array_to_torch_tensor,
-    check_tensor_shape
+    check_tensor_shape,
+    to_one_hot
 )

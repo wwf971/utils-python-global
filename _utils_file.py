@@ -1,11 +1,18 @@
 import os
 from pathlib import Path
-from _utils_import import pickle
+from _utils_import import pickle, shutil
 
-def file_path_to_unix_style(file_path):
+def file_path_to_unix_style(file_path: str):
     # TODO: handle ~ in file path
-    
-    return
+    file_path.replace("\\", "/")
+    return file_path
+
+def dir_path_to_unix_style(dir_path: str):
+    # TODO: handle ~ in dir path
+    dir_path.replace("\\", "/")
+    dir_path = dir_path.rstrip("/")
+    dir_path += "/"
+    return dir_path
 
 def file_exist(file_path):
     return Path(file_path).is_file()
@@ -66,10 +73,23 @@ def remove_file(file_path):
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
 delete_file = remove_file
 
+def remove_dir(dir_path): # remove a folder and all files and child folders in it
+    assert dir_exist(dir_path)
+    shutil.rmtree(dir_path)
+    return
+delete_dir = remove_dir
+
 def remove_file_if_exist(file_path):
     if file_exist(file_path):
         remove_file(file_path)
 delete_file_if_exist = remove_file_if_exist
+
+def copy_file(file_path_source, file_path_target):
+    assert file_exist(file_path_source)
+    create_dir_for_file_path(file_path_target)
+    shutil.copy2(file_path_source, file_path_target) # copy2() preseves timestamp. copy() does not.
+    assert file_exist(file_path_target)
+    return
 
 def move_file(file_path_source, file_path_target):
     assert file_exist(file_path_source)
@@ -121,3 +141,20 @@ def text_file_to_str(file_path):
     with open(file_path, "r") as f:
         text = f.read()
     return text
+
+import _utils_import
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import yaml # pip install pyyaml
+else:
+    yaml = _utils_import.LazyImport("yaml")
+
+def from_yaml_file(file_path):
+    with open(file_path, 'r') as file:
+        data = yaml.safe_load(file)
+    return data
+
+def to_yaml_file(data, file_path):
+    create_dir_for_file_path(file_path)
+    with open(file_path, 'w') as file:
+        yaml.dump(data, file)

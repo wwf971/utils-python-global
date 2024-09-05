@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from _utils_import import torch
+from _utils_import import torch, nn, F
 
 def get_batch_num(torch_dataloader):
     return len(torch_dataloader)
@@ -34,3 +34,7 @@ def check_tensor_shape(tensor, *shape):
     assert len(tensor.size()) == len(shape)
     for dimension_index, dimension_size in enumerate(shape):
         assert tensor.size(dimension_index) == dimension_size
+
+def to_one_hot(class_index, class_num):
+    # assert len(Data.shape) == 1
+    return F.one_hot(class_index.long(), num_classes=class_num)
