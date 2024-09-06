@@ -167,6 +167,7 @@ if TYPE_CHECKING:
     import shutil
     import _utils_io
     import _utils_file
+    from _utils import List, Dict
 else:
     np = LazyImport("numpy")
     scipy = LazyImport("scipy")
@@ -181,3 +182,5 @@ else:
     shutil = LazyImport("shutil")
     _utils_io = LazyImport("_utils_io")
     _utils_file = LazyImport("_utils_file")
+    List = LazyFromImport("_utils", "List")
+    Dict = LazyFromImport("_utils", "Dict")

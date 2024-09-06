@@ -22,3 +22,11 @@ from .utils import (
     check_tensor_shape,
     to_one_hot
 )
+
+from _utils_import import torch, nn, np
+
+def NpArrayToTorchTensor(NpArray: torch.Tensor):
+    return torch.from_numpy(NpArray)
+
+def TorchTensorToNpArray(Tensor: np.ndarray):
+    return Tensor.cpu().detach().numpy()

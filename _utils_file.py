@@ -158,3 +158,15 @@ def to_yaml_file(data, file_path):
     create_dir_for_file_path(file_path)
     with open(file_path, 'w') as file:
         yaml.dump(data, file)
+
+from _utils_import import _utils_io
+import _utils_import
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from _utils_io import (
+        text_file_to_str,
+        str_to_text_file,
+    )
+else:
+    text_file_to_str = _utils_import.LazyFromImport("_utils_io", "text_file_to_str")
+    str_to_text_file = _utils_import.LazyFromImport("_utils_io", "str_to_text_file")

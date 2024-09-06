@@ -1,9 +1,4 @@
 from __future__ import annotations
-import numpy as np
-import torch
-import torch.nn as nn
-from _utils_import import DLUtils
-
 import os
 from pathlib import Path
 def GetScriptDirPath(__File__=None, EndWithSlash=True):
@@ -40,11 +35,12 @@ def class_instance_from_class_path(ClassPath: str, **KwArgs):
     instance = cls(**KwArgs)
     return instance
 
-def NpArrayToTorchTensor(NpArray: torch.Tensor):
-    return torch.from_numpy(NpArray)
-
-def TorchTensorToNpArray(Tensor: np.ndarray):
-    return Tensor.cpu().detach().numpy()
+class List(list):
+    def __init__(self, *args):
+        super().__init__()
+        for arg in args:
+            self.append(arg)
+    
 
 class Dict(dict):
     """
@@ -52,8 +48,8 @@ class Dict(dict):
     """
     def __init__(self,
             source: dict = None,
-            # allow_missing_attr=False,
             **kwargs
+            # allow_missing_attr=False,
         ):
         # self.allow_missing_attr = allow_missing_attr
         """
@@ -64,15 +60,14 @@ class Dict(dict):
             assert len(kwargs) == 0
             if isinstance(source, dict):
                 self.from_dict(source)
-            elif isinstance(source, NameSpace):
-                pass
+            elif isinstance(source, argparse.Namespace):
+                self.from_dict(vars(source))
             else:
                 raise TypeError
-
-        
-        if len(kwargs) > 0:
-            assert source is None
+        elif len(kwargs) > 0:
             self.from_dict(kwargs)
+        else:
+            self.from_dict({})
     def __getattr__(self, key):
         try:
             return self[key]
@@ -90,18 +85,7 @@ class Dict(dict):
             raise AttributeError(f"'AttrDict' object has no attribute '{key}'")
     def hasattr(self, key):
         return key in self
-    def test(self):
-        # Example usage:
-        d = Dict()
-        d.a = 10
-        print(d.a)  # Output: 10
-        print(d['a'])  # Output: 10
 
-        d['b'] = 20
-        print(d.b)  # Output: 20
-
-        del d.a
-        # print(d.a)  # Raises AttributeError
     def from_dict(self, _dict: dict):
         if not isinstance(_dict, dict):
             raise TypeError("Expect a dictionary")
@@ -152,6 +136,8 @@ class Dict(dict):
             else:
                 self[key] = value
         return self
+    def hasattr(self, key):
+        return hasattr(self, key)
 
 class DefaultDict(Dict):
     def __getattr__(self, key):
@@ -164,3 +150,50 @@ class DefaultDict(Dict):
             return child
             # else:
             #     raise AttributeError(f"'AttrDict' object has no attribute '{key}'")
+
+# class Obj(List, Dict):
+class Obj():
+    def __init__(self, *args, **kwargs):
+        if len(args) > 0:
+            assert len(kwargs) == 0
+            self.core = List(*args)
+        elif len(kwargs) > 0:
+            self.core = Dict(**kwargs)
+        else:
+            self.core = Dict()
+    def __getattr__(self, key):
+        return self.core.__getattr__(key)
+    def __setattr__(self, key, value):
+        if key == "core":
+            super().__setattr__(key, value) # bypass custom __setattr__
+        else:
+            setattr(self.core, key, value)
+    def __len__(self):
+        return len(self.core)
+    def __getitem__(self, index):
+        return self.core[index]
+
+if __name__ == "__main__":
+    obj =List(
+        Dict(A=1, B=2),
+        Dict(C=3, D=4)
+    )
+    print(obj[0].A)
+    obj = Obj(
+        Obj(A=1, B=2),
+        Obj(C=3, D=4)
+    )
+    print(obj[1].D)
+    a = 1
+
+    # Example usage:
+    d = Dict()
+    d.a = 10
+    print(d.a)  # Output: 10
+    print(d['a'])  # Output: 10
+
+    d['b'] = 20
+    print(d.b)  # Output: 20
+
+    del d.a
+    # print(d.a)  # Raises AttributeError

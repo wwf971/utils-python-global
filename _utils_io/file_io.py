@@ -59,7 +59,25 @@ class MultiPipe:
     def flush(self):
         for f in self.files:
             f.flush()
-    
+
+from _utils_import import _utils_file
+from _utils_file import (
+    check_file_exist,
+    create_dir_for_file_path
+)
+
+def text_file_to_str(file_path):
+    file_path = check_file_exist(file_path)
+    with open(file_path, "r") as f:
+        text = f.read()
+    return text
+
+def str_to_text_file(text: str, file_path):
+    file_path = create_dir_for_file_path(file_path)
+    with open(file_path, 'w') as f:
+        f.write(text)
+    return
+
 if __name__ == "__main__":
     import sys, os, pathlib
     DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
