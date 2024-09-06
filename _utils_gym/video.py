@@ -1,8 +1,5 @@
-"""
-
-"""
-
 """A wrapper for video recording environments by rolling it out, frame by frame."""
+
 import json
 import os
 import os.path
@@ -10,7 +7,6 @@ import tempfile
 from typing import List, Optional
 
 from gym import error, logger
-
 
 class VideoRecorder:
     """VideoRecorder renders a nice movie of a rollout, frame by frame.

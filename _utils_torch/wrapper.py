@@ -1,10 +1,11 @@
 from _utils_import import np, torch, nn, F
+import _utils_torch
 from _utils import (
     Dict,
-    TorchTensorToNpArray,
     class_path_from_class_instance,
     class_instance_from_class_path,
 )
+
 from .utils import (
     np_array_to_torch_tensor
 )
@@ -279,7 +280,7 @@ def get_torch_module_param_dict(Module: torch.nn.Module):
     for name, tensor in dict(Module.named_parameters()).items():
         if "." in name:
             continue
-        param_dict[name] = TorchTensorToNpArray(tensor)
+        param_dict[name] = _utils_torch.TorchTensorToNpArray(tensor)
     return param_dict
 
 def get_torch_module_submodule_dict(module: torch.nn.Module):

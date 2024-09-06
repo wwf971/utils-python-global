@@ -1,70 +1,190 @@
 from __future__ import annotations
-import sys
+from typing import TYPE_CHECKING
+import sys, os
 
-class StdOutAndErrToFileAndTerminal:
-    def __init__(self, print_file_path):
-        self.print_file_path = print_file_path
-    def __enter__(self):
-        import _utils_file
-        _utils_file.create_dir_for_file_path(self.print_file_path)
-        f = open(self.print_file_path, "w")
-        self.pipe = MultiPipe(f, sys.__stdout__)
-        self.f = f
-        self.stdout_prev = sys.stdout
-        self.stderr_prev = sys.stderr
-        sys.stdout = self.pipe
-        sys.stderr = self.pipe
+import select
+import threading
+
+
+class Redirect:
+    def __init__(self, file_path=None, from_stdout=True, from_stderr=True, to_stdout=True):
+        read_fd, write_fd = os.pipe() # fd: file descriptor
+        if from_stdout:
+            self.fd_stdout_temp = os.dup(1) # self.fd_stdout_temp will also write to what file descriptor 1 is writing to
+            os.dup2(write_fd, 1) # file descriptor 1 --> write_fd
+            self.redirect_stdout = True
+        else:
+            self.redirect_stdout = False
+
+        if from_stderr:
+            self.fd_stderr_temp = os.dup(2) # self.fd_stderr_temp will also write to what file descriptor 1 is writing to
+            os.dup2(write_fd, 2) # file descriptor 2 --> write_fd
+            self.redirect_stderr = True
+        else:
+            self.redirect_stderr = False
+        self.read_fd = read_fd
+        self.write_fd = write_fd
+        self.to_stdout = to_stdout
     def __exit__(self, type, value, trace):
-        sys.stdout = self.stdout_prev
-        sys.stderr = self.stderr_prev
-        self.f.close()
+        self.is_terminated = True
+        self.thread.join(0.1)
+        # self.thread.join(0.1)
+            # when with block ends, it seems thread will be deleted along with its parent.
+            # thread might not have enough time to send all contents to true sys.stdout
+        if self.redirect_stderr:
+            os.dup2(self.fd_stdout_temp, 1)  # restore stdout to the terminal
+            os.close(self.fd_stdout_temp)
+        if self.redirect_stdout:
+            os.dup2(self.fd_stderr_temp, 2)  # restore stdout to the terminal
+            os.close(self.fd_stderr_temp)
 
-class StdOutToFileAndTerminal:
-    def __init__(self, file_path):
-        self.print_file_path = file_path
-    def __enter__(self):
-        import _utils_file
-        _utils_file.create_dir_for_file_path(self.print_file_path)
-        f = open(self.print_file_path, "w")
-        self.pipe = MultiPipe(f, sys.__stdout__)
-        self.stdout_prev = sys.stdout
-        sys.stdout = self.pipe
-        self.f = f
-    def __exit__(self, type, value, trace):
-        sys.stdout = self.stdout_prev
-        self.f.close()
+        return
 
-class StdErrToFileAndTerminal:
-    def __init__(self, file_path):
+class RedirectThread(threading.Thread):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+    def run(self):
+        """ Write data from the pipe to the file in real-time using select """
+        parent = self.parent
+        with open(parent.file_path, 'wb') as f:
+            if parent.pipe_previous is not None:
+                output = read_from_string_io(parent.pipe_previous.buffer)
+                if output is not None:
+                    if not self.write_output(output, f):
+                        return
+            # self.poll_output(f)
+            self.poll_output(f)
+    def listen_output(self, f):
+        parent = self.parent
+        while True:
+            # use select to wait for data on the pipe
+            readable, _, _ = select.select([parent.read_fd], [], [], 1.0)
+            if readable:
+                output = os.read(parent.read_fd, 1024)  # Read from the pipe
+                if not output:
+                    break  # Exit if there's no more data
+                else:
+                    if not self.write_output(output, f):
+                        break
+            if parent.is_terminated is True:
+                return
+    def poll_output(self, f):
+        parent = self.parent
+        while True:
+            output = os.read(parent.read_fd, 1024)  # Read from the pipe
+            if not self.write_output(output, f):
+                break
+    def write_output(self, output, f):
+        f.write(output)
+        f.flush() # ensure data is written immediately
+        if self.parent.to_stdout:
+            try:
+                os.write(self.parent.fd_stdout_temp, output)
+            except Exception:
+                return False
+        return True
+
+class RedirectStdOutAndStdErrToFile(Redirect):
+    def __init__(self, file_path=None, pipe_previous=None):
+        assert file_path is not None
         self.file_path = file_path
+        from _utils_import import _utils_file
+        _utils_file.create_dir_for_file_path(file_path)
+        self.pipe_previous = pipe_previous
+        super().__init__()
     def __enter__(self):
-        f = open(self.file_path, "w")
-        self.pipe = MultiPipe(f, sys.__stderr__)
-        self.stderr_prev = sys.stderr
-        sys.stderr = self.pipe
-        self.f = f
+        self.is_terminated = False
+        self.thread = RedirectThread(self)
+        self.thread.daemon = True  # Ensure the thread exits when the main program exits
+        self.thread.start()
+        # return self.thread # if not, thread will be deleted on __exit_
+        return self.thread
     def __exit__(self, type, value, trace):
-        sys.stderr = self.stderr_prev
-        self.f.close()
+        self.is_terminated = True
+        # self.thread.join()
+        self.thread.join(0.1)
+            # when with block ends, it seems thread will be deleted along with its parent.
+            # thread might not have enough time to redirect contents from self.read_fd to to true sys.stdout
+        if self.redirect_stderr:
+            os.dup2(self.fd_stdout_temp, 1)  # restore stdout to the terminal
+            os.close(self.fd_stdout_temp)
+        if self.redirect_stdout:
+            os.dup2(self.fd_stderr_temp, 2)  # restore stdout to the terminal
+            os.close(self.fd_stderr_temp)
+        return
 
-class MultiPipe:
-    def __init__(self, *files):
-        self.files = files
+def read_from_string_io(buffer):
+    buffer.seek(0)  # Move cursor to the beginning
+    data = buffer.read()  # Read the contents
+    if not data:
+        return None
+    buffer.seek(0)  # Move cursor to the beginning again
+    buffer.truncate(0)  # Clear the contents of the buffer
+    return data
+import time
+class RedirectStdOutAndStdErrToBytesIOThread(threading.Thread):
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+    def run(self):
+        """ write data from the pipe to the file in real-time using select """
+        self.poll_output()
+    def poll_output(self):
+        parent = self.parent
+        while True:
+            output = os.read(parent.read_fd, 1024)  # os.read() is blocking.
+            parent.buffer.write(output)
+            parent.buffer.flush()
+            if parent.is_terminated:
+                return
+    def listen_output(self):
+        parent = self.parent
+        while True:
+            # select.select has delay.
+            # PROBLEM: parent.__exit__() is called, this thread will be terminated.
+            # might not be able to receive all outputs from parent.read_fd in time  
+            # use select to wait for data on the pipe
+            readable, _, _ = select.select([parent.read_fd], [], [], 1.0)
+            if readable:
+                output = os.read(parent.read_fd, 1024)  # Read from the pipe
+                if not output:
+                    break  # exit if there's no more data
+                parent.buffer.write(output)
+                parent.buffer.flush()
 
-    def write(self, obj):
-        for f in self.files:
-            f.write(obj)
-            f.flush()  # flush the output to ensure it's written
+class RedirectStdOutAndStdErrToBytesIO(Redirect):    
+    def __init__(self):
+        super().__init__()
+        from io import StringIO, BytesIO
+        self.buffer = BytesIO()
+    def __enter__(self):
+        self.is_terminated = False
+        self.thread = RedirectStdOutAndStdErrToBytesIOThread(self)
+        self.thread.daemon = True  # Ensure the thread exits when the main program exits
+        self.thread.start()
+        # return self.thread # if not, thread will be deleted on __exit_
+        return self
+    def __exit__(self, type, value, trace):
+        self.is_terminated = True
+        self.thread.join(0.1)
+        # self.thread.join(0.1)
+            # when with block ends, it seems thread will be deleted along with its parent.
+            # thread might not have enough time to send all contents to true sys.stdout
+        if self.redirect_stderr:
+            os.dup2(self.fd_stdout_temp, 1)  # restore stdout to the terminal
+            os.close(self.fd_stdout_temp)
+        if self.redirect_stdout:
+            os.dup2(self.fd_stderr_temp, 2)  # restore stdout to the terminal
+            os.close(self.fd_stderr_temp)
+        return
 
-    def flush(self):
-        for f in self.files:
-            f.flush()
-
-from _utils_import import _utils_file
-from _utils_file import (
-    check_file_exist,
-    create_dir_for_file_path
-)
+if TYPE_CHECKING:
+    from _utils_import import _utils_file
+    from _utils_file import (
+        check_file_exist,
+        create_dir_for_file_path
+    )
 
 def text_file_to_str(file_path):
     file_path = check_file_exist(file_path)
@@ -80,18 +200,39 @@ def str_to_text_file(text: str, file_path):
 
 if __name__ == "__main__":
     import sys, os, pathlib
-    DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
-    DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
-    DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + "/"
-    DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + "/"
+    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+    dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
+    dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
+    dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
     sys.path += [
-        DirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent
+        dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
     ]
-    import _utils_file
-    with StdOutToFileAndTerminal(_utils_file.get_file_path_without_suffix(__file__) + "/stdout.txt"):
-        with StdErrToFileAndTerminal(_utils_file.get_file_path_without_suffix(__file__) + "/stderr.txt"):
-            print("output to stdout", file=sys.stdout)
-            print("output to stderr", file=sys.stderr)
-    
-    with StdOutAndErrToFileAndTerminal(_utils_file.get_file_path_without_suffix(__file__) + "/stdout_stderr.txt"):
+    from _utils_import import _utils_file
+    import time
+    with RedirectStdOutAndStdErrToBytesIO() as f:
+        print("RedirectStdOutAndStdErrToBytesIO. output to stdout and stderr")
+        print("RedirectStdOutAndStdErrToBytesIO. output to stdout", file=sys.stdout)
+        print("RedirectStdOutAndStdErrToBytesIO. output to stderr", file=sys.stderr)
+        print("RedirectStdOutAndStdErrToBytesIO. output to sys.__stdout__", file=sys.__stdout__)
+        print("RedirectStdOutAndStdErrToBytesIO. output to sys.__stderr__", file=sys.__stderr__)
+        # time.sleep(1.0)
+
+    data = read_from_string_io(f.buffer)
+    print(data.decode("utf-8"))
+    a = 1
+
+    print("begin")
+    import time
+    with RedirectStdOutAndStdErrToFile(
+        file_path=_utils_file.get_file_path_without_suffix(__file__) + "/stdout_stderr.txt",
+        pipe_previous=f
+    ):
         print("output to stdout and stderr")
+        print("output to stdout", file=sys.stdout)
+        print("output to stderr", file=sys.stderr)
+        print("output to sys.__stdout__", file=sys.__stdout__)
+        print("output to sys.__stderr__", file=sys.__stderr__)
+        # time.sleep(1.0)
+    print("end")
+    time.sleep(1.0)
+    a = 1

@@ -63,13 +63,13 @@ def print_to_pipe(pipe, *list, indent=None, **kwargs):
     str_print_to_pipe(pipe, _str, indent=indent)
 
 from io import StringIO
-def print_to_str(*args, **kwargs):
+def print_to_str(*args, file=None, **kwargs):
     # faster than reusing.
     # https://stackoverflow.com/questions/4330812/how-do-i-clear-a-stringio-object
     print_buf = StringIO()
     print_buf.seek(0)
     print_buf.truncate(0)
-    print(*args, **kwargs, file=print_buf)
+    print(*args, **kwargs, file=print_buf) # file=None ensures file is not in **kwargs
     str_ = print_buf.getvalue()
     print_buf.flush()
     del print_buf
@@ -117,10 +117,9 @@ def write_utf8_to_stdout(str_print, indent:int=None):
         except Exception:
             pass # broken pipe
 
-from .file_out import (
-    StdOutAndErrToFileAndTerminal,
-    StdOutToFileAndTerminal,
-    StdErrToFileAndTerminal
+from .file_io import (
+    RedirectStdOutAndStdErrToFile,
+    RedirectStdOutAndStdErrToBytesIO
 )
 
 if __name__ == "__main__":

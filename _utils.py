@@ -41,7 +41,6 @@ class List(list):
         for arg in args:
             self.append(arg)
     
-
 class Dict(dict):
     """
     A subclass of dict that allows attribute-style access.
