@@ -4,12 +4,12 @@ from _utils_import import pickle, shutil
 
 def file_path_to_unix_style(file_path: str):
     # TODO: handle ~ in file path
-    file_path.replace("\\", "/")
+    dir_path = dir_path.replace("\\", "/")
     return file_path
 
 def dir_path_to_unix_style(dir_path: str):
     # TODO: handle ~ in dir path
-    dir_path.replace("\\", "/")
+    dir_path = dir_path.replace("\\", "/")
     dir_path = dir_path.rstrip("/")
     dir_path += "/"
     return dir_path
@@ -36,6 +36,11 @@ def list_all_dir_name(dir_path):
     dir_name_list = [f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
     return dir_name_list
 
+def list_all_dir_path(dir_path):
+    dir_path = dir_path_to_unix_style(dir_path)
+    dir_path_list = [dir_path + "/" + subdir_name + "/" for subdir_name in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
+    return dir_path_list
+
 def list_all_file_path(dir_path):
     if not dir_path.endswith("/") or dir_path.endswith("\\"):
         dir_path += "/"
@@ -57,10 +62,11 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
                 **kwargs
             )
 
-def create_dir_if_non_exist(dir_path):
+def create_dir(dir_path):
     dir_path_obj = Path(dir_path)
     dir_path_obj.mkdir(parents=True, exist_ok=True)
     return dir_path_obj.__str__() + "/"
+create_dir_if_non_exist = create_dir
 
 def create_dir_for_file_path(file_path):
     dir_path_obj = Path(file_path).parent
@@ -72,6 +78,23 @@ def remove_file(file_path):
     file_path_obj = Path(file_path)
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
 delete_file = remove_file
+
+def clear_dir(dir_path):
+    if dir_exist(dir_path):
+        try:
+            remove_dir(dir_path)
+            create_dir(dir_path)
+        except Exception: # failed to remove dir
+            for file_path in list_all_file_path(dir_path):
+                remove_file(file_path)
+            for dir_path in list_all_dir_path(dir_path):
+                remove_dir(file_path)
+    else:
+        create_dir(dir_path)
+    assert dir_exist(dir_path)
+
+def _remove_dir(dir_path):
+    shutil.rmtree(dir_path)
 
 def remove_dir(dir_path): # remove a folder and all files and child folders in it
     assert dir_exist(dir_path)
@@ -94,7 +117,10 @@ def copy_file(file_path_source, file_path_target):
 def move_file(file_path_source, file_path_target):
     assert file_exist(file_path_source)
     assert not file_exist(file_path_target)
-    Path(file_path_source).rename(file_path_target)
+    create_dir_for_file_path(file_path_target)
+    shutil.move(file_path_source, file_path_target)
+    # Path(file_path_source).rename(file_path_target)
+        # [WinError 17] 系统无法将文件移到不同的磁盘驱动器。
     assert not file_exist(file_path_source)
     assert file_exist(file_path_target)
 

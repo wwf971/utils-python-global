@@ -1,10 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import sys, os
-
 import select
 import threading
-
 
 class Redirect:
     def __init__(self, file_path=None, from_stdout=True, from_stderr=True, to_stdout=True):
@@ -22,6 +20,12 @@ class Redirect:
             self.redirect_stderr = True
         else:
             self.redirect_stderr = False
+        
+        # https://stackoverflow.com/questions/66784941/dup2-and-pipe-shenanigans-with-python-and-windows
+        # avoid OSError: [WinError 1] on Windows
+        sys.stdout.write = lambda z: os.write(sys.stdout.fileno(),z.encode() if hasattr(z,'encode') else z)
+        sys.stderr.write = lambda z: os.write(sys.stderr.fileno(),z.encode() if hasattr(z,'encode') else z)
+        
         self.read_fd = read_fd
         self.write_fd = write_fd
         self.to_stdout = to_stdout
@@ -37,7 +41,6 @@ class Redirect:
         if self.redirect_stdout:
             os.dup2(self.fd_stderr_temp, 2)  # restore stdout to the terminal
             os.close(self.fd_stderr_temp)
-
         return
 
 class RedirectThread(threading.Thread):
@@ -97,6 +100,7 @@ class RedirectStdOutAndStdErrToFile(Redirect):
         self.is_terminated = False
         self.thread = RedirectThread(self)
         self.thread.daemon = True  # Ensure the thread exits when the main program exits
+        
         self.thread.start()
         # return self.thread # if not, thread will be deleted on __exit_
         return self.thread
@@ -210,7 +214,7 @@ if __name__ == "__main__":
     from _utils_import import _utils_file
     import time
     with RedirectStdOutAndStdErrToBytesIO() as f:
-        print("RedirectStdOutAndStdErrToBytesIO. output to stdout and stderr")
+        # print("RedirectStdOutAndStdErrToBytesIO. output to stdout and stderr")
         print("RedirectStdOutAndStdErrToBytesIO. output to stdout", file=sys.stdout)
         print("RedirectStdOutAndStdErrToBytesIO. output to stderr", file=sys.stderr)
         print("RedirectStdOutAndStdErrToBytesIO. output to sys.__stdout__", file=sys.__stdout__)
