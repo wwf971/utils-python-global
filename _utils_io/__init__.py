@@ -119,7 +119,13 @@ def write_utf8_to_stdout(str_print, indent:int=None):
 
 from .file_io import (
     RedirectStdOutAndStdErrToFile,
-    RedirectStdOutAndStdErrToBytesIO
+    RedirectStdOutAndStdErrToBytesIO,
+    text_file_to_str,
+    str_to_text_file
+)
+
+from .file_io_cr import (
+    RedirectStdOutAndStdErrToFileCR
 )
 
 if __name__ == "__main__":

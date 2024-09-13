@@ -3,9 +3,10 @@ from typing import TYPE_CHECKING
 import sys, os
 import select
 import threading
+import time
 
 class Redirect:
-    def __init__(self, file_path=None, from_stdout=True, from_stderr=True, to_stdout=True):
+    def __init__(self, from_stdout=True, from_stderr=True, to_stdout=True):
         read_fd, write_fd = os.pipe() # fd: file descriptor
         if from_stdout:
             self.fd_stdout_temp = os.dup(1) # self.fd_stdout_temp will also write to what file descriptor 1 is writing to
@@ -51,6 +52,7 @@ class RedirectThread(threading.Thread):
         """ Write data from the pipe to the file in real-time using select """
         parent = self.parent
         with open(parent.file_path, 'wb') as f:
+            self.f = f
             if parent.pipe_previous is not None:
                 output = read_from_string_io(parent.pipe_previous.buffer)
                 if output is not None:
@@ -126,7 +128,7 @@ def read_from_string_io(buffer):
     buffer.seek(0)  # Move cursor to the beginning again
     buffer.truncate(0)  # Clear the contents of the buffer
     return data
-import time
+
 class RedirectStdOutAndStdErrToBytesIOThread(threading.Thread):
     def __init__(self, parent):
         super().__init__()
@@ -183,21 +185,17 @@ class RedirectStdOutAndStdErrToBytesIO(Redirect):
             os.close(self.fd_stderr_temp)
         return
 
-if TYPE_CHECKING:
-    from _utils_import import _utils_file
-    from _utils_file import (
-        check_file_exist,
-        create_dir_for_file_path
-    )
+
+from _utils_import import _utils_file
 
 def text_file_to_str(file_path):
-    file_path = check_file_exist(file_path)
+    file_path = _utils_file.check_file_exist(file_path)
     with open(file_path, "r") as f:
         text = f.read()
     return text
 
 def str_to_text_file(text: str, file_path):
-    file_path = create_dir_for_file_path(file_path)
+    file_path = _utils_file.create_dir_for_file_path(file_path)
     with open(file_path, 'w') as f:
         f.write(text)
     return

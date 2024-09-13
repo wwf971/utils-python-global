@@ -162,11 +162,7 @@ def from_file(file_path):
         obj = pickle.load(f, encoding='bytes')
     return obj
 
-def text_file_to_str(file_path):
-    file_path = check_file_exist(file_path)
-    with open(file_path, "r") as f:
-        text = f.read()
-    return text
+
 
 import _utils_import
 from typing import TYPE_CHECKING
