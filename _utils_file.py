@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from _utils_import import pickle, shutil
+from _utils_import import pickle, shutil, _utils_file
 
 def file_path_to_unix_style(file_path: str):
     # TODO: handle ~ in file path
@@ -15,6 +15,7 @@ def dir_path_to_unix_style(dir_path: str):
     return dir_path
 
 def file_exist(file_path):
+    # if path ends with "/" or "\\", file_exist(path) should always return False 
     return Path(file_path).is_file()
 
 def check_file_exist(file_path):
@@ -27,6 +28,43 @@ def dir_exist(dir_path):
 def check_dir_exist(dir_path):
     assert dir_exist(dir_path)
     return dir_path
+
+def path_exist(path:str):
+    return file_exist(path) or path_exist(path)
+
+def change_file_path_if_exist(file_path, RenameExistingFile=False):
+    if FilePath.endswith("/"):
+        raise Exception()
+    import re
+    file_name_no_suffix, suffix = get_file_name_and_suffix(FilePath)
+    dir_path_parent = get_dir_path_of_file_path(file_path)
+    file_name_list_exist = list_all_file_name(dir_path_parent)
+
+    if suffix is not None:
+        Sig = True
+        match_result = re.match(r"^(.*)-(\d+)$", file_name_no_suffix)
+        if match_result is None:
+            if path_exist(FilePath):
+                if RenameExistingFile:
+                    os.rename(FilePath, FileName + "-0" + "." + Suffix)
+                FileNameOrigin = FileName
+                Index = 1
+            elif _utils_file.path_exist(FileName + "-0" + "." + Suffix):
+                FileNameOrigin = FileName
+                Index = 1
+            else:
+                Sig = False
+        else:
+            FileNameOrigin = MatchResult.group(1)
+            Index = int(MatchResult.group(2)) + 1
+        if Sig:
+            while True:
+                FilePath = FileNameOrigin + "-%d"%Index + "." + Suffix
+                if not ExistsPath(FilePath):
+                    return FilePath
+                Index += 1
+        else:
+            return FilePath
 
 def list_all_file_name(dir_path):
     file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
@@ -151,6 +189,15 @@ def get_file_path_without_suffix(file_path):
 def current_script_path_without_suffix(script_file_path):
     return get_file_path_without_suffix(script_file_path)
 
+def change_file_path_suffix(file_path:str, suffix:str):
+    file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
+    assert suffix is not None
+    file_path_new = file_path_no_suffix + suffix
+    return file_path_new
+
+def change_file_name_suffix(file_name:str, suffix:str):
+    return change_file_name_suffix(file_path=file_name, suffix=suffix)
+
 def to_file(obj, file_path):
     file_path = create_dir_for_file_path(file_path)
     with open(file_path, "wb") as f:
@@ -161,8 +208,6 @@ def from_file(file_path):
     with open(file_path, 'rb') as f:
         obj = pickle.load(f, encoding='bytes')
     return obj
-
-
 
 import _utils_import
 from typing import TYPE_CHECKING

@@ -163,11 +163,11 @@ if TYPE_CHECKING:
     import matplotlib as mpl
     from matplotlib import pyplot as plt
     from PIL import Image as Im
+    import cv2
     import pickle
     import shutil
     import _utils_io
     import _utils_file
-    from _utils import List, Dict
 else:
     np = LazyImport("numpy")
     scipy = LazyImport("scipy")
@@ -178,9 +178,8 @@ else:
     mpl = LazyImport("matplotlib")
     plt = LazyImport("matplotlib.pyplot")
     Im = LazyImport("PIL.Image")
+    cv2 = LazyImport("cv2")
     pickle = LazyImport("pickle")
     shutil = LazyImport("shutil")
     _utils_io = LazyImport("_utils_io")
     _utils_file = LazyImport("_utils_file")
-    List = LazyFromImport("_utils", "List")
-    Dict = LazyFromImport("_utils", "Dict")
