@@ -1,15 +1,29 @@
 
 import os
 import _utils_file
+import _utils_system
 from _utils_import import np, Im, plt, cv2
 
 def get_image_file_create_time(img_file_path):
     img_file_path = _utils_file.check_file_exist(img_file_path)
-    unix_stamp_create = os.path.getctime(img_file_path) # create_time
+    if _utils_system.is_win():
+        unix_stamp_create = os.path.getctime(img_file_path) # create_time
+    elif _utils_system.is_linux() or _utils_system.is_macos():
+        # https://stackoverflow.com/questions/237079
+        stat = os.stat(img_file_path)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime
+    else:
+        raise NotImplementedError
     return unix_stamp_create
 
 def get_image_file_modify_time(img_file_path):
     img_file_path = _utils_file.check_file_exist(img_file_path)
+    # os.path.getmtime is robust across platform and file system
     unix_stamp_modify = os.path.getmtime(img_file_path) # last modified time
     return unix_stamp_modify
 
