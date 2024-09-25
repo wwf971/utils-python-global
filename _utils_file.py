@@ -22,6 +22,9 @@ def check_file_exist(file_path):
     assert file_exist(file_path)
     return file_path
 
+def is_same_file(file_path_1, file_path_2):
+    return os.path.samefile(file_path_1, file_path_2)
+
 def dir_exist(dir_path):
     return Path(dir_path).is_dir()
 
@@ -190,6 +193,7 @@ def current_script_path_without_suffix(script_file_path):
     return get_file_path_without_suffix(script_file_path)
 
 def change_file_path_suffix(file_path:str, suffix:str):
+    suffix = suffix.lstrip(".")
     file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
     assert suffix is not None
     file_path_new = file_path_no_suffix + suffix
