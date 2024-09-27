@@ -2,6 +2,14 @@ import os
 from pathlib import Path
 from _utils_import import pickle, shutil, _utils_file
 
+def get_dir_path_current(__file__: str):    
+    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+    return dir_path_current
+
+def get_dir_path_parent(__file__: str):    
+    dir_path_parent = os.path.dirname(os.path.realpath(__file__)) + "/"
+    return dir_path_parent
+
 def file_path_to_unix_style(file_path: str):
     # TODO: handle ~ in file path
     dir_path = dir_path.replace("\\", "/")
@@ -13,6 +21,14 @@ def dir_path_to_unix_style(dir_path: str):
     dir_path = dir_path.rstrip("/")
     dir_path += "/"
     return dir_path
+
+def is_file_path(file_path: str):
+    if file_path.endswith("/"):
+        return False
+    return
+
+def check_is_file_path(file_path: str):
+    assert is_file_path(file_path)
 
 def file_exist(file_path):
     # if path ends with "/" or "\\", file_exist(path) should always return False 
@@ -35,39 +51,24 @@ def check_dir_exist(dir_path):
 def path_exist(path:str):
     return file_exist(path) or path_exist(path)
 
-def change_file_path_if_exist(file_path, RenameExistingFile=False):
-    if FilePath.endswith("/"):
-        raise Exception()
-    import re
-    file_name_no_suffix, suffix = get_file_name_and_suffix(FilePath)
-    dir_path_parent = get_dir_path_of_file_path(file_path)
-    file_name_list_exist = list_all_file_name(dir_path_parent)
+def change_file_path_if_exist(file_path: str):
+    check_is_file_path(file_path)
+    if not file_exist(file_path):
+        return file_path
 
-    if suffix is not None:
-        Sig = True
-        match_result = re.match(r"^(.*)-(\d+)$", file_name_no_suffix)
-        if match_result is None:
-            if path_exist(FilePath):
-                if RenameExistingFile:
-                    os.rename(FilePath, FileName + "-0" + "." + Suffix)
-                FileNameOrigin = FileName
-                Index = 1
-            elif _utils_file.path_exist(FileName + "-0" + "." + Suffix):
-                FileNameOrigin = FileName
-                Index = 1
-            else:
-                Sig = False
-        else:
-            FileNameOrigin = MatchResult.group(1)
-            Index = int(MatchResult.group(2)) + 1
-        if Sig:
-            while True:
-                FilePath = FileNameOrigin + "-%d"%Index + "." + Suffix
-                if not ExistsPath(FilePath):
-                    return FilePath
-                Index += 1
-        else:
-            return FilePath
+    file_path_no_suffix, suffix = get_file_path_and_suffix(file_path)
+    dir_path_parent = get_dir_path_of_file_path(file_path) # end with "/"
+
+    index = 0
+    
+    # TODO: file_name already in form of xxx-0.yy
+    # match_result = re.match(r"^(.*)-(\d+)$", file_path_no_suffix)
+    
+    while True:
+        file_path_new = dir_path_parent + file_path_no_suffix + "-%d"%index + "." + suffix
+        if not (file_exist(file_path_new) or dir_exist(file_path_new)):
+            # linux/windows/macos/(most os) does not allow file and folder with same name in one folder.
+            return file_path_new
 
 def list_all_file_name(dir_path):
     file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
@@ -119,6 +120,12 @@ def remove_file(file_path):
     file_path_obj = Path(file_path)
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
 delete_file = remove_file
+
+def remove_file_with_suffix(dir_path:str):
+    dir_path = check_dir_exist(dir_path)
+    for file_path in list_all_file_path(dir_path): 
+        file_path_no_suffix, suffix = get_file_name_and_suffix
+    DLUtils.file.RemoveMatchedFiles("./", r".*\.png")
 
 def clear_dir(dir_path):
     if dir_exist(dir_path):
@@ -178,12 +185,22 @@ def get_dir_path_of_file_path(file_path):
 def get_file_name_and_suffix(file_name):
     import re
     if file_name.endswith("/") or file_name.endswith("\\"):
-        raise Exception()
+        raise Exception
     match_result = re.match(r"(.*)\.(.*)", file_name)
     if match_result is None:
         return file_name, ""
     else:
         return match_result.group(1), match_result.group(2)
+
+def get_file_path_and_suffix(file_path):
+    import re
+    if file_path.endswith("/") or file_path.endswith("\\"):
+        raise Exception
+    match_result = re.match(r"(.*)\.(.*)", file_path)
+    if match_result is None:
+        return file_path, ""
+    else:
+        return match_result.group(1), match_result.group(2)  
 
 def get_file_path_without_suffix(file_path):
     file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)

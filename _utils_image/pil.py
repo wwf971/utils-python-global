@@ -11,7 +11,7 @@ else:
     ExifTags = _utils_import.LazyFromImport("PIL", "ExifTags")
     pillow_avif = _utils_import.LazyImport("pillow_avif")
 
-def img_file_to_png_pil(file_path, file_path_save=None):
+def img_file_to_png(file_path, file_path_save=None):
     backend = backend.lower()
     img_pil = Im.open(file_path)
     img_pil = img_pil.convert("RGB")
@@ -25,10 +25,6 @@ def img_file_to_png_pil(file_path, file_path_save=None):
     img_pil.save(file_path_save, "png")
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
-
-def avif_to_png_pil(file_path, file_path_save=None):
-    pillow_avif.__name__ # trigger lazy import
-    return img_file_to_png(file_path, file_path_save=file_path_save)
 
 def img_file_to_jpg_pil(file_path, file_path_save=None, quality:int=100):
     # quality: affects compression rate. jpeg images themselves don't have quality.
@@ -47,3 +43,19 @@ def img_file_to_jpg_pil(file_path, file_path_save=None, quality:int=100):
     )
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
+
+def import_pil_heif():
+    """
+        to deal with .HEIC images using PIL, you need to
+            pip install pillow_heif
+            pillow_heif.register_heif_opener()
+    """
+    # pillow_heif = _utils_import.LazyImport("pillow_heif", FuncAfterImport=lambda module:module.register_heif_opener())
+    import pillow_heif as _pillow_heif # pip install pillow_heif
+    global pillow_heif
+    pillow_heif = _pillow_heif
+    pillow_heif.register_heif_opener()
+
+def avif_to_png(file_path, file_path_save=None):
+    pillow_avif.__name__ # trigger lazy import
+    return img_file_to_png(file_path, file_path_save=file_path_save)

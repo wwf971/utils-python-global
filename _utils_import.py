@@ -11,6 +11,13 @@ sys.path += [
     dir_path_current,
     dir_path_current + "/utils-python-global",
 ]
+try:
+    from _utils_import_path import sys_path_list
+except Exception:
+    pass
+else:
+    for sys_path in sys_path_list:
+        sys.path.append(sys_path)
 LAZY_IMPORT = True
 
 import time
@@ -168,6 +175,8 @@ if TYPE_CHECKING:
     import shutil
     import _utils_io
     import _utils_file
+    import _utils_image
+    from _utils import Dict, List
 else:
     np = LazyImport("numpy")
     scipy = LazyImport("scipy")
@@ -183,3 +192,6 @@ else:
     shutil = LazyImport("shutil")
     _utils_io = LazyImport("_utils_io")
     _utils_file = LazyImport("_utils_file")
+    _utils_file = LazyImport("_utils_image")
+    Dict = LazyFromImport("_utils", "Dict")
+    List = LazyFromImport("_utils", "List")
