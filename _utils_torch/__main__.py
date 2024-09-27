@@ -11,7 +11,7 @@ from _utils_file import (
     get_file_path_without_suffix,
 )
 from _utils_torch.utils import print_torch_module
-def test_mlp():
+def unit_test_mlp():
     import sys, os, pathlib
     DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
     DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
@@ -34,8 +34,9 @@ def test_mlp():
     # ) # => KeyError: 'parameter name can\'t contain "."'
     #     # use this rule to exclude parameters
     print_torch_module(model_2)
+    return
 
-def test_parallel_mlp():
+def unit_test_parallel_mlp():
     from _utils_torch.mlp import ParallelMLP, torch
     model = ParallelMLP(10, 20, 30, mlp_num=10, nonlinear_func="relu").build()
     import _utils_math
@@ -46,7 +47,8 @@ def test_parallel_mlp():
     save_file_path = base_dir_path + "mlp.dat"
     model_2 = model.to_file(save_file_path).from_file(save_file_path)
     print_torch_module(model_2)
+    return
 
 if __name__=="__main__":
-    test_parallel_mlp()
-    a = 1
+    unit_test_parallel_mlp()
+    pass

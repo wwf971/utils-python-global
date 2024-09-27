@@ -12,7 +12,7 @@ else:
     from .file_io import RedirectStdOutAndStdErrToFile, RedirectThread, read_from_string_io
 
 import os
-class BytesBufferCR:
+class ByteBufferCR:
     # byte buffer that deals with CR(carriage return) just like in terminals
     def __init__(self, buffer_size=65536):
         self.buffer = bytearray(1024)
@@ -86,10 +86,11 @@ class BytesBufferCR:
                 return self.buffer[self.index_start:] + self.buffer[:self.index_end % self.buffer_size_current]
 
 class RedirectThreadCR(RedirectThread):
+    # CR: \r(carriage return). 
     def __init__(self, parent, buffer_size=65536):
         super().__init__(parent)
         self.buffer_size = buffer_size
-        self.buffer = BytesBufferCR()
+        self.buffer = ByteBufferCR()
     def write_output(self, output, f):
         self.buffer.write(output)
         buffer_output = self.buffer.get_overflow()
@@ -112,6 +113,7 @@ class RedirectThreadCR(RedirectThread):
             f.flush()
 
 class RedirectStdOutAndStdErrToFileCR(RedirectStdOutAndStdErrToFile):
+    # CR: \r(carriage return). 
     def __init__(self, file_path=None, pipe_previous=None, buffer_size=1024):
         super().__init__(file_path=file_path, pipe_previous=pipe_previous)
         self.buffer_size = buffer_size
@@ -174,7 +176,7 @@ def unit_test_1():
     test_str = get_random_string(length)
     
     index_list = [0] + get_index(10, length) + [length]
-    buf = BytesBufferCR(buffer_size=5)
+    buf = ByteBufferCR(buffer_size=5)
     overflow_list = []
     for _ in range(len(index_list) - 1):
         buf.write_str(test_str[index_list[_]:index_list[_+1]])
@@ -192,7 +194,7 @@ def unit_test_2():
     truth_str = get_truth_str(test_str)
     
     index_list = [0] + get_index(10, length) + [length]
-    buf = BytesBufferCR(buffer_size=length)
+    buf = ByteBufferCR(buffer_size=length)
         # if buffer_size is too small, some \r could not go back to last \n, as last \n has been flushed.
     overflow_list = []
     for _ in range(len(index_list) - 1):

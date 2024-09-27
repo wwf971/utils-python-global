@@ -26,8 +26,8 @@ def set_seed_for_numpy(seed: int):
 def set_seed_for_torch(seed: int):
     torch.manual_seed(seed)
 
-def GetDataBaseConnection(FilePath):
-    con = sqlite3.connect(FilePath)
+def GetDataBaseConnection(file_path):
+    con = sqlite3.connect(file_path)
     return con
 
 import collections

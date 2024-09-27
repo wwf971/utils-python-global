@@ -25,7 +25,7 @@ def dir_path_to_unix_style(dir_path: str):
 def is_file_path(file_path: str):
     if file_path.endswith("/"):
         return False
-    return
+    return True
 
 def check_is_file_path(file_path: str):
     assert is_file_path(file_path)
@@ -80,9 +80,8 @@ def change_file_path_if_exist(file_path: str):
     
     # TODO: file_name already in form of xxx-0.yy
     # match_result = re.match(r"^(.*)-(\d+)$", file_path_no_suffix)
-    
     while True:
-        file_path_new = dir_path_parent + file_path_no_suffix + "-%d"%index + "." + suffix
+        file_path_new = file_path_no_suffix + "-%d"%index + "." + suffix
         if not (file_exist(file_path_new) or dir_exist(file_path_new)):
             # linux/windows/macos/(most os) does not allow file and folder with same name in one folder.
             break
