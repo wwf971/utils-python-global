@@ -38,8 +38,25 @@ def check_file_exist(file_path):
     assert file_exist(file_path)
     return file_path
 
-def is_same_file(file_path_1, file_path_2):
+def get_file_byte_num(file_path: str):
+    check_file_exist(file_path)
+    byte_num = os.path.getsize(file_path)
+    return byte_num
+
+def is_equiv_file_path(file_path_1, file_path_2):
     return os.path.samefile(file_path_1, file_path_2)
+
+def have_same_content(file_path_1, file_path_2):
+    check_file_exist(file_path_1)
+    check_file_exist(file_path_2)
+
+    byte_num_1 = get_file_byte_num(file_path_1)
+    byte_num_2 = get_file_byte_num(file_path_2)
+    if byte_num_1 != byte_num_2:
+        return False
+
+    import filecmp # python standard lib
+    return filecmp.cmp(byte_num_1, byte_num_2, shallow=False) # byte to byte comparison
 
 def dir_exist(dir_path):
     return Path(dir_path).is_dir()
@@ -68,7 +85,10 @@ def change_file_path_if_exist(file_path: str):
         file_path_new = dir_path_parent + file_path_no_suffix + "-%d"%index + "." + suffix
         if not (file_exist(file_path_new) or dir_exist(file_path_new)):
             # linux/windows/macos/(most os) does not allow file and folder with same name in one folder.
-            return file_path_new
+            break
+    
+    assert not file_exist(file_path_new)
+    return file_path_new
 
 def list_all_file_name(dir_path):
     file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
@@ -100,7 +120,7 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
         for dir_name in list_all_dir_name(dir_path_current):
             visit_tree(
                 dir_path_current=dir_path_current + dir_name, func=func,
-                dir_path_rel=dir_path_rel + dir_name + "/",
+                dir_path_rel=dir_path_rel + dir_name, # dir_name ends with "/"
                 **kwargs
             )
 

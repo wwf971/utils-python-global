@@ -192,6 +192,6 @@ else:
     shutil = LazyImport("shutil")
     _utils_io = LazyImport("_utils_io")
     _utils_file = LazyImport("_utils_file")
-    _utils_file = LazyImport("_utils_image")
+    _utils_image = LazyImport("_utils_image")
     Dict = LazyFromImport("_utils", "Dict")
     List = LazyFromImport("_utils", "List")

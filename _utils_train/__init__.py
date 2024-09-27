@@ -1,20 +1,30 @@
 import sqlite3
-from _utils_import import DLUtils
+from _utils_import import torch, np
 import _utils
-from typing import TYPE_CHECKING
 
-def SetSeed(seed: int, Random=None, Numpy=None, PyTorch=None, ):
-    import torch
-    import random
-    import numpy as np
-    torch.manual_seed(seed)
-    random.seed(seed)
+import random
+def set_seed(seed: int=None, seed_random: int=None, seed_numpy: int=None, seed_torch: int=None):
+    if seed_random is None and seed_numpy is None and seed_torch is None:
+        seed_random = seed
+        seed_numpy = seed
+        seed_torch = seed
+
+    if seed_random is not None:
+        random.seed(seed_random)
+
+    if seed_torch is not None:
+        set_seed_for_torch(seed_torch)
+    
+    if seed_numpy is not None:
+        set_seed_for_numpy(seed_numpy)
+
+    return _utils.Dict()
+
+def set_seed_for_numpy(seed: int):
     np.random.seed(seed)
 
-
-    return _utils.Dict(
-        
-    )
+def set_seed_for_torch(seed: int):
+    torch.manual_seed(seed)
 
 def GetDataBaseConnection(FilePath):
     con = sqlite3.connect(FilePath)
