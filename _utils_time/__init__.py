@@ -1,4 +1,40 @@
 import time
+import math
+
+import _utils_import
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import datetime
+    from dateutil import tz
+else:
+    datetime = _utils_import.LazyImport("datetime")
+    tz = _utils_import.LazyFromImport("dateutil", "tz")
+    timezone = _utils_import.LazyFromImport("datetime", "timezone")
+
+# unix time stamp is always utc time zone
+def get_unix_stamp_base():
+    if globals().get("TimeStampBase") is None:
+        global unix_stamp_base
+        unix_stamp_base = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+        return unix_stamp_base
+    else:
+        return unix_stamp_base
+
+def datetime_obj_to_unix_stamp_float(datetime_obj) -> float:
+    # return time.mktime(DataTimeObj.timetuple())
+    # TimeStamp = DataTimeObj.timestamp() # >= Python 3.3
+    time_diff = datetime_obj - get_unix_stamp_base()
+    unix_stamp = time_diff.total_seconds()
+    return unix_stamp
+
+def get_current_unix_stamp_float() -> float:
+    # return type: float, with millisecond precision.
+    return datetime_obj_to_unix_stamp_float(
+        datetime.datetime.utcnow() # caution. should use Greenwich Mean Time(GMT) here.
+    )
+
+def get_current_unix_stamp_int() -> int: # get unix time stamp
+    return math.ceil(get_current_unix_stamp_float())
 
 def unix_stamp_to_str(unix_stamp, timezone="utc", format=None):
     # unix_stamp始终是以UTC 1970/01/01为基准的.
@@ -6,15 +42,19 @@ def unix_stamp_to_str(unix_stamp, timezone="utc", format=None):
         # 即计算｢创建时间(UTC) - 1970/01/01(UTC)｣的秒数作为unix_stamp.
     timezone = timezone.lower()
     if timezone in ["utc"]:
-        return unit_stamp_to_str_utc(unix_stamp, format=format)
+        return unix_stamp_to_str_utc(unix_stamp, format=format)
     else:
         raise NotImplementedError
 
-def unit_stamp_to_str_utc(unix_stamp:float, format=None):
+def unix_stamp_to_str_utc(unix_stamp:float, format=None):
     from datetime import datetime
     if format is None:
         format = '%Y-%m-%d %H:%M:%S(utc)'
     return datetime.utcfromtimestamp(unix_stamp).strftime(format)
+
+def get_local_time_zone():
+    local_time_zone = datetime.datetime.utcnow().astimezone().tzinfo
+    return local_time_zone # <class 'datetime.timezone'>
 
 class Timer:
     def __init__(self):
