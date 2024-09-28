@@ -178,6 +178,7 @@ if TYPE_CHECKING:
     import _utils_file
     import _utils_image
     from _utils import Dict, List
+    import datetime
 else:
     np = LazyImport("numpy")
     pd = LazyImport("pandas")
@@ -197,3 +198,4 @@ else:
     _utils_file = LazyImport("_utils_image")
     Dict = LazyFromImport("_utils", "Dict")
     List = LazyFromImport("_utils", "List")
+    datetime = LazyImport("datetime")
