@@ -162,6 +162,7 @@ else:
 
 if TYPE_CHECKING:
     import numpy as np
+    import pandas as pd
     import scipy
     import torch
     import torch.nn as nn
@@ -179,6 +180,7 @@ if TYPE_CHECKING:
     from _utils import Dict, List
 else:
     np = LazyImport("numpy")
+    pd = LazyImport("pandas")
     scipy = LazyImport("scipy")
     torch = LazyImport("torch")
     nn = LazyFromImport("torch", "nn")
@@ -192,6 +194,6 @@ else:
     shutil = LazyImport("shutil")
     _utils_io = LazyImport("_utils_io")
     _utils_file = LazyImport("_utils_file")
-    _utils_image = LazyImport("_utils_image")
+    _utils_file = LazyImport("_utils_image")
     Dict = LazyFromImport("_utils", "Dict")
     List = LazyFromImport("_utils", "List")

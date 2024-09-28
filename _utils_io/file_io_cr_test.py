@@ -14,11 +14,8 @@ from _utils_io.file_io_cr import (
     RedirectStdOutAndStdErrToFileCR
 )
 
-import string, random
-def get_random_string(length):
-    letters = string.ascii_letters  # Use letters from 'a-z', 'A-Z'
-    return ''.join(random.choice(letters) for _ in range(length))
-
+from _utils import get_random_string
+import random, string
 def get_random_string_cr(length):
     letters = string.ascii_letters + "\n\r"  # Use letters from 'a-z', 'A-Z'
     return ''.join(random.choice(letters) for _ in range(length))

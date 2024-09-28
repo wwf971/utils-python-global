@@ -12,7 +12,7 @@ def get_dir_path_parent(__file__: str):
 
 def file_path_to_unix_style(file_path: str):
     # TODO: handle ~ in file path
-    dir_path = dir_path.replace("\\", "/")
+    file_path = file_path.replace("\\", "/")
     return file_path
 
 def dir_path_to_unix_style(dir_path: str):
@@ -56,7 +56,8 @@ def have_same_content(file_path_1, file_path_2):
         return False
 
     import filecmp # python standard lib
-    return filecmp.cmp(byte_num_1, byte_num_2, shallow=False) # byte to byte comparison
+    is_same_content = filecmp.cmp(file_path_1, file_path_2, shallow=False) # byte to byte comparison
+    return is_same_content
 
 def dir_exist(dir_path):
     return Path(dir_path).is_dir()
@@ -159,9 +160,6 @@ def clear_dir(dir_path):
     else:
         create_dir(dir_path)
     assert dir_exist(dir_path)
-
-def _remove_dir(dir_path):
-    shutil.rmtree(dir_path)
 
 def remove_dir(dir_path): # remove a folder and all files and child folders in it
     assert dir_exist(dir_path)

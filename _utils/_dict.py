@@ -35,6 +35,8 @@ def class_instance_from_class_path(ClassPath: str, **KwArgs):
     instance = cls(**KwArgs)
     return instance
 
+import argparse
+
 class List(list):
     def __init__(self, *args):
         super().__init__()
@@ -55,6 +57,7 @@ class Dict(dict):
             If allow_missing_attr == True, empty Dict object will be created and returned
                 when trying to get a non-existent attribute
         """
+        
         if source is not None:
             assert len(kwargs) == 0
             if isinstance(source, dict):
