@@ -1,6 +1,13 @@
 import os
 from pathlib import Path
-from _utils_import import pickle, shutil, _utils_file
+from _utils_import import pickle, shutil
+
+from .path import (
+    get_dir_path_of_file_path,
+    get_file_name_and_suffix,
+    get_file_path_and_suffix,
+    is_equiv_file_path
+)
 
 def get_dir_path_current(__file__: str):    
     dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
@@ -43,9 +50,6 @@ def get_file_byte_num(file_path: str):
     byte_num = os.path.getsize(file_path)
     return byte_num
 
-def is_equiv_file_path(file_path_1, file_path_2):
-    return os.path.samefile(file_path_1, file_path_2)
-
 def have_same_content(file_path_1, file_path_2):
     check_file_exist(file_path_1)
     check_file_exist(file_path_2)
@@ -86,7 +90,7 @@ def change_file_path_if_exist(file_path: str):
         if not (file_exist(file_path_new) or dir_exist(file_path_new)):
             # linux/windows/macos/(most os) does not allow file and folder with same name in one folder.
             break
-    
+        index += 1
     assert not file_exist(file_path_new)
     return file_path_new
 
@@ -141,13 +145,16 @@ def remove_file(file_path):
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
 delete_file = remove_file
 
-def remove_file_with_suffix(dir_path:str):
+def remove_file_with_suffix(dir_path: str, suffix: str):
     dir_path = check_dir_exist(dir_path)
+    suffix = suffix.lstrip(".")
     for file_path in list_all_file_path(dir_path): 
-        file_path_no_suffix, suffix = get_file_name_and_suffix
-    DLUtils.file.RemoveMatchedFiles("./", r".*\.png")
+        file_path_no_suffix, _suffix = get_file_name_and_suffix(dir_path)
+        if _suffix == suffix:
+            remove_file(file_path)
 
 def clear_dir(dir_path):
+    # remove all files and subfolders in folder
     if dir_exist(dir_path):
         try:
             remove_dir(dir_path)
@@ -195,29 +202,7 @@ def move_file_overwrite(file_path_source, file_path_target):
     assert not file_exist(file_path_source)
     assert file_exist(file_path_target)
 
-def get_dir_path_of_file_path(file_path):
-    dir_path_obj = Path(file_path).parent
-    return dir_path_obj.__str__() + "/"
 
-def get_file_name_and_suffix(file_name):
-    import re
-    if file_name.endswith("/") or file_name.endswith("\\"):
-        raise Exception
-    match_result = re.match(r"(.*)\.(.*)", file_name)
-    if match_result is None:
-        return file_name, ""
-    else:
-        return match_result.group(1), match_result.group(2)
-
-def get_file_path_and_suffix(file_path):
-    import re
-    if file_path.endswith("/") or file_path.endswith("\\"):
-        raise Exception
-    match_result = re.match(r"(.*)\.(.*)", file_path)
-    if match_result is None:
-        return file_path, ""
-    else:
-        return match_result.group(1), match_result.group(2)  
 
 def get_file_path_without_suffix(file_path):
     file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
@@ -264,7 +249,6 @@ def to_yaml_file(data, file_path):
     with open(file_path, 'w') as file:
         yaml.dump(data, file)
 
-from _utils_import import _utils_io
 import _utils_import
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

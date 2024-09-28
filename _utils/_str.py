@@ -6,7 +6,7 @@ def get_alphabet_az_AZ():
 def get_alphabet_az():
     return string.ascii_lowercase
 
-def get_alphabet_az():
+def get_alphabet_AZ():
     return string.ascii_uppercase
 
 def get_alphabet_digit():

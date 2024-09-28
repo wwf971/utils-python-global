@@ -1,18 +1,22 @@
+from __future__ import annotations
 import _utils_import
-from _utils_import import datetime
+
 import _utils_time
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from dateutil import tz
+    
 else:
     tz = _utils_import.LazyFromImport("dateutil", "tz")
     timezone = _utils_import.LazyFromImport("datetime", "timezone")
 import math
+import time
+import datetime
 
 # unix time stamp is always based on utc time zone
 # unix_stamp: float.
 
-def get_unix_stamp_base_datetime_obj() -> datetime.date:
+def get_unix_stamp_base_datetime_obj() -> datetime.datetime:
     if globals().get("TimeStampBase") is None:
         global unix_stamp_base
         unix_stamp_base = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
@@ -31,9 +35,13 @@ def unix_stamp_to_datetime_obj(unix_stamp: float) -> datetime.datetime:
 def datetime_obj_to_unix_stamp(datetime_obj) -> float:
     # return time.mktime(DataTimeObj.timetuple())
     # TimeStamp = DataTimeObj.timestamp() # >= Python 3.3
+    # assuming that datetime_obj is in utc timezone
     time_diff = datetime_obj - get_unix_stamp_base_datetime_obj()
     unix_stamp = time_diff.total_seconds()
     return unix_stamp
+
+# def datetime_obj_to_unix_stamp(DataTimeObj):
+#     return round(time.mktime(DataTimeObj.timetuple()))
 
 def get_current_unix_stamp() -> float:
     # return type: float, with millisecond precision.
