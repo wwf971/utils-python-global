@@ -67,17 +67,17 @@
 	"argparse": {
 		"prefix": "parse_args()", // 在snippet列表中显示的名称
 		"body": [
-			"parse_args()",
-			"\timport argparse",
-			"\tparser = argparse.ArgumentParser()",
-			"\tparser.add_argument('--device', type=str, default='cuda', help='running device: cuda or cpu')",
-			"\tparser.add_argument('--vis', type=bool, action='store_true', dest='visualize', help='visualize')",
-			"\tparser.add_argument('--write', type=str2bool, default=False, help='Use SummaryWriter to record the training')",
-			"\tparser.add_argument('--render', type=str2bool, default=False, help='Render or Not')",
-			"\tparser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')",
-			"\tparser.add_argument('--ModelIdex', type=int, default=300000, help='which model to load')",
-			"\targs = parser.parse_args()",
-			"\treturn args",
+			"def parse_args():",
+			"    import argparse",
+			"    parser = argparse.ArgumentParser()",
+			"    parser.add_argument('--device', type=str, default='cuda', help='running device: cuda or cpu')",
+			"    parser.add_argument('--vis', type=bool, action='store_true', dest='visualize', help='visualize')",
+			"    parser.add_argument('--write', type=str2bool, default=False, help='Use SummaryWriter to record the training')",
+			"    parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')",
+			"    parser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')",
+			"    parser.add_argument('--ModelIdex', type=int, default=300000, help='which model to load')",
+			"    args = parser.parse_args()",
+			"    return args",
 		],
 		"description": "parse_args()"
 	},
