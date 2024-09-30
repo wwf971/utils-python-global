@@ -249,6 +249,31 @@ def to_yaml_file(data, file_path):
     with open(file_path, 'w') as file:
         yaml.dump(data, file)
 
+def get_file_create_unix_stamp(file_path):
+    import _utils_system
+    file_path = check_file_exist(file_path)
+    if _utils_system.is_win():
+        unix_stamp_create = os.path.getctime(file_path) # create_time
+    elif _utils_system.is_linux() or _utils_system.is_macos():
+        # https://stackoverflow.com/questions/237079
+        stat = os.stat(file_path)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            # We're probably on Linux. No easy way to get creation dates here,
+            # so we'll settle for when its content was last modified.
+            return stat.st_mtime
+    else:
+        raise NotImplementedError
+    return unix_stamp_create
+
+def get_file_modify_unix_stamp(file_path): # last modified time
+    file_path = check_file_exist(file_path)
+    # os.path.getmtime is robust across platform and file system
+    unix_stamp_modify = os.path.getmtime(file_path) # last modified time
+    return unix_stamp_modify
+get_file_last_modify_time = get_file_modify_time
+
 import _utils_import
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

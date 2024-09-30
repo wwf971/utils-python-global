@@ -1,13 +1,12 @@
-
-import os
+from __future__ import annotations
 import _utils_file
-from _utils_import import Im
+import _utils_import
+from _utils_import import Im, np
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pillow_avif # pip3 install pillow-avif-plugin
 else:
-    Im = DLUtils.GetLazyPILImage()
     ExifTags = _utils_import.LazyFromImport("PIL", "ExifTags")
     pillow_avif = _utils_import.LazyImport("pillow_avif")
 
@@ -26,7 +25,7 @@ def img_file_to_png(file_path, file_path_save=None):
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
 
-def img_file_to_jpg_pil(file_path, file_path_save=None, quality:int=100):
+def img_file_to_jpg(file_path, file_path_save=None, quality:int=100):
     # quality: affects compression rate. jpeg images themselves don't have quality.
         # range: [0, 100]
         # 100: almost no loss.
@@ -44,6 +43,7 @@ def img_file_to_jpg_pil(file_path, file_path_save=None, quality:int=100):
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
 
+is_pillow_heif_imported = False
 def import_pil_heif():
     """
         to deal with .HEIC images using PIL, you need to
@@ -51,11 +51,24 @@ def import_pil_heif():
             pillow_heif.register_heif_opener()
     """
     # pillow_heif = _utils_import.LazyImport("pillow_heif", FuncAfterImport=lambda module:module.register_heif_opener())
-    import pillow_heif as _pillow_heif # pip install pillow_heif
-    global pillow_heif
-    pillow_heif = _pillow_heif
-    pillow_heif.register_heif_opener()
+    global is_pillow_heif_imported
+    if not is_pillow_heif_imported:
+        import pillow_heif as _pillow_heif # pip install pillow_heif
+        global pillow_heif
+        pillow_heif = _pillow_heif
+        pillow_heif.register_heif_opener()
+        is_pillow_heif_imported = True
 
 def avif_to_png(file_path, file_path_save=None):
     pillow_avif.__name__ # trigger lazy import
     return img_file_to_png(file_path, file_path_save=file_path_save)
+
+def img_np_int255_to_file(img_np: np.ndarray, file_path_save):
+    # img_np: uint8. range: [0, 255]
+    img_pil = Im.fromarray(img_np)
+    _utils_file.create_dir_for_file_path(file_path_save)
+    img_pil.save(file_path_save)
+
+def ImageFloat01NpToFile(Image, FilePath):
+    return ImageNp2File((Image * 255.0).astype(np.uint8), FilePath)
+ImageFloat01NpToFile = ImageFloat01NpToFile
