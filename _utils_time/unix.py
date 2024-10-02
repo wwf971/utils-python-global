@@ -68,7 +68,7 @@ def unix_stamp_to_time_str_local(unix_stamp: float, format="%Y%m%d_%H%M%S%f"):
     if isinstance(unix_stamp, int):
         unix_stamp = unix_stamp * 1.0
     datetime_obj = unix_stamp_to_datetime_obj(unix_stamp)
-    time_str = _utils_time.datetime_obj_to_time_str(datetime_obj, timezone=timezone, format=format)
+    time_str = _utils_time.datetime_obj_to_time_str(datetime_obj, timezone="local", format=format)
     return time_str
 
 def unix_stamp_to_time_str_utc(unix_stamp:float, format="%Y%m%d_%H%M%S%f"):

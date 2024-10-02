@@ -30,6 +30,6 @@ def svg_to_np_array_float01(file_path_svg, scale=2.0):
     file_path_temp = "output.png"
     file_path_temp = _utils_file.change_file_path_if_exist(file_path_temp)
     file_path_save = svg_to_png(file_path_svg, file_path_save=file_path_temp, scale=scale)
-    img_np = _utils_image.img_file_to_np_array_float01(file_path_save)
+    image_np = _utils_image.image_file_to_np_array_float01(file_path_save)
     _utils_file.remove_file(file_path_temp)
-    return img_np
+    return image_np

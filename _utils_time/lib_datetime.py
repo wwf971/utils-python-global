@@ -17,6 +17,12 @@ def get_local_timezone():
 
 def get_timezone(timezone_str, backend="pytz"):
     backend = backend.lower()
+
+    if timezone_str.lower() == "local":
+        import tzlocal # pip install tzlocal
+        _timezone_local = tzlocal.get_localzone()
+        return _timezone_local
+
     if backend in ["pytz"]:
         return get_timezone_pytz(timezone_str)
     elif backend in ["datetime"]:

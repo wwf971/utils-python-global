@@ -3,31 +3,15 @@ from pathlib import Path
 from _utils_import import pickle, shutil
 
 from .path import (
+    dir_path_to_unix_style,
+    file_path_to_unix_style,
     get_dir_path_of_file_path,
     get_file_name_and_suffix,
     get_file_path_and_suffix,
-    is_equiv_file_path
+    is_equiv_file_path,
+    get_dir_path_current,
+    get_dir_path_parent
 )
-
-def get_dir_path_current(__file__: str):    
-    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-    return dir_path_current
-
-def get_dir_path_parent(__file__: str):    
-    dir_path_parent = os.path.dirname(os.path.realpath(__file__)) + "/"
-    return dir_path_parent
-
-def file_path_to_unix_style(file_path: str):
-    # TODO: handle ~ in file path
-    file_path = file_path.replace("\\", "/")
-    return file_path
-
-def dir_path_to_unix_style(dir_path: str):
-    # TODO: handle ~ in dir path
-    dir_path = dir_path.replace("\\", "/")
-    dir_path = dir_path.rstrip("/")
-    dir_path += "/"
-    return dir_path
 
 def is_file_path(file_path: str):
     if file_path.endswith("/"):
@@ -94,23 +78,38 @@ def change_file_path_if_exist(file_path: str):
     assert not file_exist(file_path_new)
     return file_path_new
 
-def list_all_file_name(dir_path):
-    file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
-    return file_name_list
-
-def list_all_dir_name(dir_path):
-    dir_name_list = [f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
-    return dir_name_list
-
-def list_all_dir_path(dir_path):
-    dir_path = dir_path_to_unix_style(dir_path)
-    dir_path_list = [dir_path + "/" + subdir_name + "/" for subdir_name in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
-    return dir_path_list
+def list_all_file_name(dir_path, _yield=True):
+    if _yield:
+        for f in os.listdir(dir_path):
+            if os.path.isfile(os.path.join(dir_path, f)):
+                yield f
+    else:
+        file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+        return file_name_list
 
 def list_all_file_path(dir_path):
     if not dir_path.endswith("/") or dir_path.endswith("\\"):
         dir_path += "/"
     return [dir_path + file_name for file_name in list_all_file_name(dir_path)]
+
+def list_all_dir_name(dir_path, _yield=True):
+    if _yield:
+        for f in os.listdir(dir_path):
+            if os.path.isdir(os.path.join(dir_path, f)):
+                yield f + "/" 
+    else:
+        dir_name_list = [f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
+        return dir_name_list
+
+def list_all_dir_path(dir_path, _yield=True):
+    if _yield:
+        for f in os.listdir(dir_path):
+            if os.path.isdir(os.path.join(dir_path, f)):
+                yield dir_path + "/" + f + "/" 
+    else:  
+        dir_path = dir_path_to_unix_style(dir_path)
+        dir_path_list = [dir_path + "/" + f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
+        return dir_path_list
 
 def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=None, **kwargs):
     if dir_path_rel is None: # root
@@ -119,7 +118,10 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
     if verbose:
         print(dir_path_current)
     for file_name in list_all_file_name(dir_path_current):
-        func(dir_path_current=dir_path_current, file_name=file_name, dir_path_rel=dir_path_rel, **kwargs)
+        func(
+            dir_path_current=dir_path_current, file_name=file_name,
+            dir_path_rel=dir_path_rel, **kwargs
+        )
     if recur:
         for dir_name in list_all_dir_name(dir_path_current):
             visit_tree(
@@ -272,7 +274,7 @@ def get_file_modify_unix_stamp(file_path): # last modified time
     # os.path.getmtime is robust across platform and file system
     unix_stamp_modify = os.path.getmtime(file_path) # last modified time
     return unix_stamp_modify
-get_file_last_modify_time = get_file_modify_time
+get_file_last_modify_time = get_file_modify_unix_stamp
 
 import _utils_import
 from typing import TYPE_CHECKING

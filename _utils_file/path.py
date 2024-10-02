@@ -1,5 +1,26 @@
 from pathlib import Path
 import os
+
+def file_path_to_unix_style(file_path: str):
+    # TODO: handle ~ in file path
+    file_path = file_path.replace("\\", "/")
+    return file_path
+
+def dir_path_to_unix_style(dir_path: str):
+    # TODO: handle ~ in dir path
+    dir_path = dir_path.replace("\\", "/")
+    dir_path = dir_path.rstrip("/")
+    dir_path += "/"
+    return dir_path
+
+def get_dir_path_current(__file__: str):    
+    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+    return dir_path_current
+
+def get_dir_path_parent(__file__: str):    
+    dir_path_parent = os.path.dirname(os.path.realpath(__file__)) + "/"
+    return dir_path_parent
+
 def get_dir_path_of_file_path(file_path: str):
     dir_path_obj = Path(file_path).parent
     return dir_path_obj.__str__() + "/"

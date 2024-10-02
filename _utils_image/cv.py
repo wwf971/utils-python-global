@@ -92,3 +92,54 @@ def compress_image_by_resize(img_file_path, file_path_save=None, ratio:float=Non
 
     img_compressed_cv = resize_image(img_cv, width=width, height=height)
     img_to_file(img_compressed_cv, file_path_save)
+
+
+def put_text_on_image_center(image: np.ndarray, text="Text", text_box_width=None, text_box_height=None, color=(0, 0, 0)):
+    img_height, img_width = image.shape[0], image.shape[1]
+    
+    if text_box_width is None and text_box_height is None:
+        text_box_width = round(img_width * 0.5)
+        text_box_height = round(img_height * 0.5)
+
+    # get text_box width and height, if font_scale=1.0
+    size = cv2.getTextSize(
+        text=text,
+        fontFace=cv2.FONT_HERSHEY_TRIPLEX,
+        fontScale=1.0,
+        thickness=3
+    ) # ((width, height), ?)
+
+    width_current = size[0][0]
+    height_current = size[0][1]
+    
+    # adjust font_scale, to make text centered on image
+    font_scale = font_scale * min(text_box_width / width_current, text_box_height / height_current)
+
+    size = cv2.getTextSize(
+        text=text,
+        fontFace=cv2.FONT_HERSHEY_TRIPLEX,
+        fontScale=font_scale,
+        thickness=3
+    ) # ((width, height), ...)
+
+    width_current = size[0][0]
+    height_current = size[0][1]
+    
+    x_left = round(img_width / 2.0 - width_current / 2.0)
+    y_bottom = round(img_height / 2.0 + height_current / 2.0)
+
+    put_text_on_image(image, text, x_left, y_bottom, color, font_scale)
+
+def put_text_on_image(image: np.ndarray, text="Text", x_left=0, y_bottom=0, color=(0, 0, 0), font_scale=1.0):
+    if XYLeftBottom is None:
+        XYLeftBottom = (0, image.shape[0])
+    cv2.putText(
+        img=image,
+        text=text,
+        org=(x_left, y_bottom), # coordinate of left bottom corner
+        fontFace=cv2.FONT_HERSHEY_TRIPLEX,
+        fontScale=font_scale,
+        color=color,
+        thickness=3
+    )
+    return image

@@ -1,7 +1,7 @@
 
 from _utils_import import np, Im, plt, cv2
 
-def img_file_to_np_array_float01(file_path, backend:str="pil"):
+def image_file_to_np_array_float01(file_path, backend:str="pil"):
     # return data type: float. value range: [0.0, 1.0]
     backend = backend.lower()
     if backend in ["im", "pil"]:
@@ -20,23 +20,28 @@ def img_file_to_np_array_float01(file_path, backend:str="pil"):
     else:
         raise not NotImplementedError
 
-def img_file_to_png(file_path, file_path_save=None, backend="pil"):
+def image_file_to_png(file_path, file_path_save=None, backend="pil"):
     backend = backend.lower()
     if backend in ["pil"]:
-        from .pil import img_file_to_png
-        img_file_to_png(file_path, file_path_save)
+        from .pil import image_file_to_png
+        image_file_to_png(file_path, file_path_save)
     else:
         raise NotImplementedError
 
-def img_file_to_jpg(file_path, file_path_save=None, quality:int=90, backend="pil"):
+def image_file_to_jpg(file_path, file_path_save=None, quality:int=90, backend="pil"):
     backend = backend.lower()
     if backend in ["pil"]:
-        from .pil import img_file_to_jpg
-        img_file_to_jpg(file_path, file_path_save, quality)
+        from .pil import image_file_to_jpg
+        image_file_to_jpg(file_path, file_path_save, quality)
     else:
         raise NotImplementedError
 
 from .pil import (
     import_pil_heif,
-    img_np_int255_to_file
+    image_np_int255_to_file
+)
+
+from .cv import (
+    put_text_on_image,
+    put_text_on_image_center
 )

@@ -14,4 +14,5 @@ from ._str import (
     get_alphabet_digit,
     get_alphabet_az_AZ,
     get_random_string,
+    binary_string_to_int,
 )

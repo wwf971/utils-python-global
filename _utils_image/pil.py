@@ -10,7 +10,7 @@ else:
     ExifTags = _utils_import.LazyFromImport("PIL", "ExifTags")
     pillow_avif = _utils_import.LazyImport("pillow_avif")
 
-def img_file_to_png(file_path, file_path_save=None):
+def image_file_to_png(file_path, file_path_save=None):
     backend = backend.lower()
     img_pil = Im.open(file_path)
     img_pil = img_pil.convert("RGB")
@@ -25,7 +25,7 @@ def img_file_to_png(file_path, file_path_save=None):
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
 
-def img_file_to_jpg(file_path, file_path_save=None, quality:int=100):
+def image_file_to_jpg(file_path, file_path_save=None, quality:int=100):
     # quality: affects compression rate. jpeg images themselves don't have quality.
         # range: [0, 100]
         # 100: almost no loss.
@@ -61,11 +61,11 @@ def import_pil_heif():
 
 def avif_to_png(file_path, file_path_save=None):
     pillow_avif.__name__ # trigger lazy import
-    return img_file_to_png(file_path, file_path_save=file_path_save)
+    return image_file_to_png(file_path, file_path_save=file_path_save)
 
-def img_np_int255_to_file(img_np: np.ndarray, file_path_save):
-    # img_np: uint8. range: [0, 255]
-    img_pil = Im.fromarray(img_np)
+def image_np_int255_to_file(image_np: np.ndarray, file_path_save):
+    # image_np: uint8. range: [0, 255]
+    img_pil = Im.fromarray(image_np)
     _utils_file.create_dir_for_file_path(file_path_save)
     img_pil.save(file_path_save)
 
