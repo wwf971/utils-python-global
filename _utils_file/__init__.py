@@ -6,6 +6,7 @@ from .path import (
     dir_path_to_unix_style,
     file_path_to_unix_style,
     get_dir_path_of_file_path,
+    get_file_name_of_file_path,
     get_file_name_and_suffix,
     get_file_path_and_suffix,
     is_equiv_file_path,
@@ -29,10 +30,11 @@ def check_file_exist(file_path):
     assert file_exist(file_path)
     return file_path
 
-def get_file_byte_num(file_path: str):
+def get_file_byte_num(file_path: str) -> int:
     check_file_exist(file_path)
     byte_num = os.path.getsize(file_path)
     return byte_num
+get_file_size = get_file_byte_num
 
 def have_same_content(file_path_1, file_path_2):
     check_file_exist(file_path_1)
@@ -114,6 +116,7 @@ def list_all_dir_path(dir_path, _yield=True):
 def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=None, **kwargs):
     if dir_path_rel is None: # root
         dir_path_current = check_dir_exist(dir_path_current)
+        dir_path_current = dir_path_to_unix_style(dir_path_current)
         dir_path_rel = ""
     if verbose:
         print(dir_path_current)
@@ -129,6 +132,12 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
                 dir_path_rel=dir_path_rel + dir_name, # dir_name ends with "/"
                 **kwargs
             )
+
+def create_empty_file(file_path: str):
+    assert not file_exist(file_path)
+    with open(file_path, 'w') as file:
+        pass  # This creates an empty file
+    return
 
 def create_dir(dir_path):
     dir_path_obj = Path(dir_path)
@@ -204,14 +213,10 @@ def move_file_overwrite(file_path_source, file_path_target):
     assert not file_exist(file_path_source)
     assert file_exist(file_path_target)
 
-
-
 def get_file_path_without_suffix(file_path):
     file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
     return file_path_no_suffix
 
-def current_script_path_without_suffix(script_file_path):
-    return get_file_path_without_suffix(script_file_path)
 
 def change_file_path_suffix(file_path:str, suffix:str):
     suffix = suffix.lstrip(".")
@@ -286,3 +291,7 @@ if TYPE_CHECKING:
 else:
     text_file_to_str = _utils_import.LazyFromImport("_utils_io", "text_file_to_str")
     str_to_text_file = _utils_import.LazyFromImport("_utils_io", "str_to_text_file")
+
+from .move import (
+    move_if_file_name_match_pattern
+)

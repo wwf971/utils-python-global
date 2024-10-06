@@ -9,14 +9,18 @@ def get_alphabet_az():
 def get_alphabet_AZ():
     return string.ascii_uppercase
 
-def get_alphabet_digit():
+def get_alphabet_09():
     return string.digits
 
-def get_random_string_az_AZ(length):
-    alphabet = string.ascii_letters  # Use letters from 'a-z', 'A-Z'
-    return get_random_string(length, alphabet=alphabet)
+def get_random_str_az_AZ_09(length):
+    alphabet = get_alphabet_az_AZ() + get_alphabet_09()
+    return get_random_str(length, alphabet=alphabet)
 
-def get_random_string(length, alphabet:list):
+def get_random_str_az_AZ(length):
+    alphabet = string.ascii_letters  # Use letters from 'a-z', 'A-Z'
+    return get_random_str(length, alphabet=alphabet)
+
+def get_random_str(length, alphabet:list):
     return ''.join(random.choice(alphabet) for _ in range(length))
 
 def binary_string_to_int(string_binary: str, large_side:str="left", BigEndian=False):

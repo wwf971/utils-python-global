@@ -11,8 +11,10 @@ from ._unit import (
 from ._str import (
     get_alphabet_az,
     get_alphabet_AZ,
-    get_alphabet_digit,
+    get_alphabet_09,
     get_alphabet_az_AZ,
-    get_random_string,
+    get_random_str,
+    get_random_str_az_AZ,
+    get_random_str_az_AZ_09,
     binary_string_to_int,
 )

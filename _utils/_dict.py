@@ -1,21 +1,6 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-def GetScriptDirPath(__File__=None, EndWithSlash=True):
-    if __File__ is None:
-        __File__ = __file__
-    # Using os.path
-    script_dir_os = os.path.dirname(os.path.abspath(__File__))
-    print(f"Using os.path: {script_dir_os}")
-
-    # Using pathlib
-    script_dir_pathlib = Path(__File__).resolve().parent.__str__()
-    print(f"Using pathlib: {script_dir_pathlib}")
-    
-    if EndWithSlash:
-        script_dir_pathlib += "/"
-    return script_dir_pathlib
-GetCurrentScriptDirPath = GetScriptDirPath
 
 def class_path_from_class_instance(Instance):
     cls = Instance.__class__
