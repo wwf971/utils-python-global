@@ -26,7 +26,10 @@ from .unix import (
     unix_stamp_to_time_str_local
 )
 
-def get_current_time_str(timezone="local"):
-    unix_stamp_current = get_current_unix_stamp()
+def get_current_time_str(
+    offset=0, # unit: second
+    timezone="local"
+):
+    unix_stamp_current = get_current_unix_stamp() + offset
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S%f")
-    return time_str_current[-4] # YYmmdd_hhmmss(ms2digit)
+    return time_str_current[:-4] # YYmmdd_hhmmss(ms2digit)

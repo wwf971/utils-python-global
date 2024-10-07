@@ -37,8 +37,8 @@ def unit_test_mlp():
     return
 
 def unit_test_parallel_mlp():
-    from _utils_torch.mlp import ParallelMLP, torch
-    model = ParallelMLP(10, 20, 30, mlp_num=10, nonlinear_func="relu").build()
+    from _utils_torch.mlp import MLPParallel, torch
+    model = MLPParallel(10, 20, 30, mlp_num=10, nonlinear_func="relu").build()
     import _utils_math
     input_example = torch.from_numpy(_utils_math.sample_from_gaussian_01((64, 10))).float() # (batch_size, input_size)
     output_example = model(input_example) # (batch_size, mlp_num, output_size)

@@ -8,6 +8,18 @@ def get_batch_num(torch_dataloader):
 def np_array_to_torch_tensor(np_array: torch.Tensor):
     return torch.from_numpy(np_array)
 
+def torch_tensor_to_np_array(tensor: np.ndarray):
+    return tensor.cpu().detach().numpy()
+
+def check_tensor_shape(tensor, *shape):
+    assert len(tensor.size()) == len(shape)
+    for dimension_index, dimension_size in enumerate(shape):
+        assert tensor.size(dimension_index) == dimension_size
+
+def to_one_hot(class_index, class_num):
+    # assert len(Data.shape) == 1
+    return F.one_hot(class_index.long(), num_classes=class_num)
+
 def print_torch_module(model: torch.nn.Module, pipe_out=None):
     if pipe_out is None:
         import _utils_io
@@ -29,12 +41,3 @@ def print_torch_module(model: torch.nn.Module, pipe_out=None):
             ))
             with pipe_out.increased_indent():
                 print_torch_module(SubModule, pipe_out=pipe_out)
-
-def check_tensor_shape(tensor, *shape):
-    assert len(tensor.size()) == len(shape)
-    for dimension_index, dimension_size in enumerate(shape):
-        assert tensor.size(dimension_index) == dimension_size
-
-def to_one_hot(class_index, class_num):
-    # assert len(Data.shape) == 1
-    return F.one_hot(class_index.long(), num_classes=class_num)

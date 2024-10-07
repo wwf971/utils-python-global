@@ -10,23 +10,17 @@ from _utils_torch.wrapper import(
 )
 
 from .mlp import (
-    MLP,
+    MLP, MLPParallel,
     build_mlp,
-    ParallelMLP
 )
 
 from .utils import (
     get_batch_num,
     print_torch_module,
     np_array_to_torch_tensor,
+    torch_tensor_to_np_array,
     check_tensor_shape,
     to_one_hot
 )
 
 from _utils_import import torch, nn, np
-
-def NpArrayToTorchTensor(NpArray: torch.Tensor):
-    return torch.from_numpy(NpArray)
-
-def TorchTensorToNpArray(Tensor: np.ndarray):
-    return Tensor.cpu().detach().numpy()

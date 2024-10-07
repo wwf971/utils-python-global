@@ -23,7 +23,6 @@ class NonLinearLayer(TorchModuleWrapper):
         config.output_size = output_size
         
         self.add_torch_module("nonlinear_func", get_torch_nonlinear_func(config.nonlinear_func))
-        
         self.add_torch_module(
             "linear_map",
             nn.Linear,
@@ -63,7 +62,7 @@ def build_mlp(layer_shape, nonlinear_func, nonlinear_func_output=None):
         layer_list += [nn.Linear(layer_shape[j], layer_shape[j+1]), nonlinear_module()]
     return nn.Sequential(*layer_list)
 
-class ParallelMLPLayer(TorchModuleWrapper):
+class MLPParallelLayer(TorchModuleWrapper):
     def init(self, **kwargs):
         super().init(**kwargs)
         config = self.config
@@ -86,7 +85,7 @@ class ParallelMLPLayer(TorchModuleWrapper):
         z = self.nonlinear_func(y).squeeze(1) + self.bias
         return z
 
-class ParallelMLP(ModuleList):
+class MLPParallel(ModuleList):
     def init(self, *layer_unit_num, mlp_num, nonlinear_func):
         assert len(layer_unit_num) >= 2
         config = self.config
@@ -102,7 +101,7 @@ class ParallelMLP(ModuleList):
             input_size = layer_unit_num[layer_index]
             output_size = layer_unit_num[layer_index + 1]
             self.add_submodule(
-                "layer-%d"%layer_index, ParallelMLPLayer(
+                "layer-%d"%layer_index, MLPParallelLayer(
                     input_size=input_size, output_size=output_size,
                     mlp_num=mlp_num, nonlinear_func=nonlinear_func
                 )
@@ -117,17 +116,3 @@ class ParallelMLP(ModuleList):
             z = submodule(y)
             y = z
         return z
-
-class Multi_Q_Critic(TorchModuleWrapper):
-    def init(self, q_num, hidden_size, input_dim, output_dim):
-        super().init(
-            q_num=q_num, hidden_size=hidden_size, input_dim=input_dim, output_dim=output_dim
-        )
-        self.add_module(
-            mlp = ParallelMLP(*[input_dim, *hidden_size, output_dim], mlp_num=q_num)
-        )
-    def forward(self, x): # (batch_size, mlp_num, 1)
-        y = self.mlp(x)
-        z = y.squeeze(2)
-        return z
-

@@ -113,6 +113,19 @@ def list_all_dir_path(dir_path, _yield=True):
         dir_path_list = [dir_path + "/" + f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
         return dir_path_list
 
+def is_dir_emtpy(dir_path):
+    return not any(Path(dir_path).iterdir())
+
+def find_file_name_with_suffix(dir_path: str, suffix: str):
+    file_name_list = []
+    suffix = suffix.lstrip(".")
+    for file_name in list_all_file_name(dir_path):
+        _, _suffix = get_file_name_and_suffix(file_name)
+        if _suffix == suffix:
+            file_name_list.append(file_name)
+    return file_name_list
+
+
 def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=None, **kwargs):
     if dir_path_rel is None: # root
         dir_path_current = check_dir_exist(dir_path_current)
@@ -133,11 +146,12 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
                 **kwargs
             )
 
-def create_empty_file(file_path: str):
+def create_file(file_path: str):
     assert not file_exist(file_path)
     with open(file_path, 'w') as file:
         pass  # This creates an empty file
     return
+create_empty_file = create_file
 
 def create_dir(dir_path):
     dir_path_obj = Path(dir_path)
@@ -150,73 +164,9 @@ def create_dir_for_file_path(file_path):
     dir_path_obj.mkdir(parents=True, exist_ok=True)
     return file_path
 
-def remove_file(file_path):
-    assert file_exist(file_path)
-    file_path_obj = Path(file_path)
-    file_path_obj.unlink() # missing_ok=False for Python>=3.4
-delete_file = remove_file
-
-def remove_file_with_suffix(dir_path: str, suffix: str):
-    dir_path = check_dir_exist(dir_path)
-    suffix = suffix.lstrip(".")
-    for file_path in list_all_file_path(dir_path): 
-        file_path_no_suffix, _suffix = get_file_name_and_suffix(dir_path)
-        if _suffix == suffix:
-            remove_file(file_path)
-
-def clear_dir(dir_path):
-    # remove all files and subfolders in folder
-    if dir_exist(dir_path):
-        try:
-            remove_dir(dir_path)
-            create_dir(dir_path)
-        except Exception: # failed to remove dir
-            for file_path in list_all_file_path(dir_path):
-                remove_file(file_path)
-            for dir_path in list_all_dir_path(dir_path):
-                remove_dir(file_path)
-    else:
-        create_dir(dir_path)
-    assert dir_exist(dir_path)
-
-def remove_dir(dir_path): # remove a folder and all files and child folders in it
-    assert dir_exist(dir_path)
-    shutil.rmtree(dir_path)
-    return
-delete_dir = remove_dir
-
-def remove_file_if_exist(file_path):
-    if file_exist(file_path):
-        remove_file(file_path)
-delete_file_if_exist = remove_file_if_exist
-
-def copy_file(file_path_source, file_path_target):
-    assert file_exist(file_path_source)
-    create_dir_for_file_path(file_path_target)
-    shutil.copy2(file_path_source, file_path_target) # copy2() preseves timestamp. copy() does not.
-    assert file_exist(file_path_target)
-    return
-
-def move_file(file_path_source, file_path_target):
-    assert file_exist(file_path_source)
-    assert not file_exist(file_path_target)
-    create_dir_for_file_path(file_path_target)
-    shutil.move(file_path_source, file_path_target)
-    # Path(file_path_source).rename(file_path_target)
-        # [WinError 17] 系统无法将文件移到不同的磁盘驱动器。
-    assert not file_exist(file_path_source)
-    assert file_exist(file_path_target)
-
-def move_file_overwrite(file_path_source, file_path_target):
-    assert file_exist(file_path_source)
-    Path(file_path_source).rename(file_path_target)
-    assert not file_exist(file_path_source)
-    assert file_exist(file_path_target)
-
 def get_file_path_without_suffix(file_path):
     file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
     return file_path_no_suffix
-
 
 def change_file_path_suffix(file_path:str, suffix:str):
     suffix = suffix.lstrip(".")
@@ -293,5 +243,16 @@ else:
     str_to_text_file = _utils_import.LazyFromImport("_utils_io", "str_to_text_file")
 
 from .move import (
-    move_if_file_name_match_pattern
+    move_file, copy_file, rename_file,
+    move_file_overwrite,
+    move_if_file_name_match_pattern,
+)
+
+from .remove import (
+    remove_file, remove_dir,
+    remove_file_if_exist,
+    remove_file_with_suffix, remove_file_if_has_suffix,
+    remove_dir_if_is_empty,
+    remove_file_if_name_match_pattern,
+    remove_dir_if_name_match_pattern,   
 )

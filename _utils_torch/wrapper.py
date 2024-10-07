@@ -280,7 +280,7 @@ def get_torch_module_param_dict(Module: torch.nn.Module):
     for name, tensor in dict(Module.named_parameters()).items():
         if "." in name:
             continue
-        param_dict[name] = _utils_torch.TorchTensorToNpArray(tensor)
+        param_dict[name] = _utils_torch.torch_tensor_to_np_array(tensor)
     return param_dict
 
 def get_torch_module_submodule_dict(module: torch.nn.Module):
