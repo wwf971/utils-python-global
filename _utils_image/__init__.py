@@ -31,8 +31,8 @@ def image_file_to_png(file_path, file_path_save=None, backend="pil"):
 def image_file_to_jpg(file_path, file_path_save=None, quality:int=90, backend="pil"):
     backend = backend.lower()
     if backend in ["pil"]:
-        from .pil import image_file_to_jpg
-        image_file_to_jpg(file_path, file_path_save, quality)
+        from .pil import image_file_to_jpg as image_file_to_jpg_pil
+        image_file_to_jpg_pil(file_path, file_path_save, quality)
     else:
         raise NotImplementedError
 

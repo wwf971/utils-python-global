@@ -30,25 +30,6 @@ def check_file_exist(file_path):
     assert file_exist(file_path)
     return file_path
 
-def get_file_byte_num(file_path: str) -> int:
-    check_file_exist(file_path)
-    byte_num = os.path.getsize(file_path)
-    return byte_num
-get_file_size = get_file_byte_num
-
-def have_same_content(file_path_1, file_path_2):
-    check_file_exist(file_path_1)
-    check_file_exist(file_path_2)
-
-    byte_num_1 = get_file_byte_num(file_path_1)
-    byte_num_2 = get_file_byte_num(file_path_2)
-    if byte_num_1 != byte_num_2:
-        return False
-
-    import filecmp # python standard lib
-    is_same_content = filecmp.cmp(file_path_1, file_path_2, shallow=False) # byte to byte comparison
-    return is_same_content
-
 def dir_exist(dir_path):
     return Path(dir_path).is_dir()
 
@@ -126,7 +107,7 @@ def find_file_name_with_suffix(dir_path: str, suffix: str):
     return file_name_list
 
 
-def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=None, **kwargs):
+def visit_tree(dir_path_current, func=None, recur=True, verbose=False, dir_path_rel=None, func_dir=None, **kwargs):
     if dir_path_rel is None: # root
         dir_path_current = check_dir_exist(dir_path_current)
         dir_path_current = dir_path_to_unix_style(dir_path_current)
@@ -135,16 +116,25 @@ def visit_tree(dir_path_current, func, recur=True, verbose=False, dir_path_rel=N
         print(dir_path_current)
     for file_name in list_all_file_name(dir_path_current):
         func(
-            dir_path_current=dir_path_current, file_name=file_name,
-            dir_path_rel=dir_path_rel, **kwargs
+            dir_path_current=dir_path_current,
+            file_name=file_name,
+            dir_path_rel=dir_path_rel,
+            **kwargs
         )
     if recur:
         for dir_name in list_all_dir_name(dir_path_current):
+            dir_path_rel = dir_path_rel + dir_name
             visit_tree(
                 dir_path_current=dir_path_current + dir_name, func=func,
-                dir_path_rel=dir_path_rel + dir_name, # dir_name ends with "/"
+                dir_path_rel=dir_path_rel, # dir_name ends with "/"
                 **kwargs
             )
+            if func_dir is not None:
+                func_dir(
+                    dir_path=dir_path_current + dir_name,
+                    dir_path_rel=dir_path_rel,
+                    **kwargs
+                )
 
 def create_file(file_path: str):
     assert not file_exist(file_path)

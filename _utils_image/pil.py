@@ -1,7 +1,6 @@
 from __future__ import annotations
-import _utils_file
 import _utils_import
-from _utils_import import Im, np
+from _utils_import import _utils_io, _utils_file, Im, np
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -25,7 +24,7 @@ def image_file_to_png(file_path, file_path_save=None):
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
 
-def image_file_to_jpg(file_path, file_path_save=None, quality:int=100):
+def image_file_to_jpg(file_path, file_path_save=None, quality:int=100, keep_exif=True):
     # quality: affects compression rate. jpeg images themselves don't have quality.
         # range: [0, 100]
         # 100: almost no loss.
@@ -33,6 +32,9 @@ def image_file_to_jpg(file_path, file_path_save=None, quality:int=100):
     img_pil = Im.open(file_path).convert("RGB")
         # .avif image requires pillow_avif
         # .heif image requires pillow_heif
+    if keep_exif:
+        import _utils_exif
+        exif_info = _utils_exif.piexif.ExifInfo(img_pil=img_pil)
     if file_path_save is None:
         file_path_save = _utils_file.change_file_path_suffix(file_path, ".jpg")
     assert not _utils_file.is_same_file(file_path, file_path_save) # avoid overwriting original image file
@@ -42,6 +44,23 @@ def image_file_to_jpg(file_path, file_path_save=None, quality:int=100):
     )
     assert _utils_file.file_exist(file_path_save)
     return file_path_save
+
+
+
+def avif_to_png(file_path, file_path_save=None):
+    pillow_avif.__name__ # trigger lazy import
+    return image_file_to_png(file_path, file_path_save=file_path_save)
+
+def image_np_int255_to_file(image_np: np.ndarray, file_path_save):
+    # image_np: uint8. range: [0, 255]
+    img_pil = Im.fromarray(image_np)
+    _utils_file.create_dir_for_file_path(file_path_save)
+    img_pil.save(file_path_save)
+
+def ImageFloat01NpToFile(Image, FilePath):
+    return ImageNp2File((Image * 255.0).astype(np.uint8), FilePath)
+ImageFloat01NpToFile = ImageFloat01NpToFile
+
 
 is_pillow_heif_imported = False
 def import_pil_heif():
@@ -59,16 +78,36 @@ def import_pil_heif():
         pillow_heif.register_heif_opener()
         is_pillow_heif_imported = True
 
-def avif_to_png(file_path, file_path_save=None):
-    pillow_avif.__name__ # trigger lazy import
-    return image_file_to_png(file_path, file_path_save=file_path_save)
+def heic_to_jpg(
+    file_path_heic, file_path_save=None,
+    quality=90, # jpg compress quality
+    verbose=True, pipe_out=None,
+    keep_exif=True
+):
+    if file_path_save is None:
+        file_path_save = _utils_file.change_file_path_suffix("jpg")
+    import _utils_exif.piexif as utils_exif_piexif
+    from _utils_exif.piexif import ExifInfo
 
-def image_np_int255_to_file(image_np: np.ndarray, file_path_save):
-    # image_np: uint8. range: [0, 255]
-    img_pil = Im.fromarray(image_np)
-    _utils_file.create_dir_for_file_path(file_path_save)
-    img_pil.save(file_path_save)
+    _utils_file.check_file_exist(file_path_heic)
+    file_path_heic = _utils_file.file_path_to_unix_style(file_path_heic)
+    img_pil = Im.open(file_path_heic)
+    
+    exif_dict = utils_exif_piexif.get_exif_dict(img_pil=img_pil)
+    if verbose:
+        if pipe_out is None:
+            pipe_out = _utils_io.PipeOut()
+        pipe_out.print("BEFORE:")
+        with pipe_out.increased_indent():
+            utils_exif_piexif.print_exif(exif_dict)
+    utils_exif_piexif.img_pil_and_exif_to_file(
+        img_pil, exif_dict, file_path_save,
+        quality=quality
+    )
 
-def ImageFloat01NpToFile(Image, FilePath):
-    return ImageNp2File((Image * 255.0).astype(np.uint8), FilePath)
-ImageFloat01NpToFile = ImageFloat01NpToFile
+    if verbose:
+        img_pil_after = Im.open(file_path_save)
+        exif_info_after = ExifInfo(img_pil=img_pil_after)
+        pipe_out.print("AFTER:")
+        with pipe_out.increased_indent():
+            exif_info_after.print_exif_origin(pipe_out)
