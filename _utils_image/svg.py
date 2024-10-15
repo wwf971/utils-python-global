@@ -5,8 +5,8 @@ if TYPE_CHECKING:
     import torchvision
     import cairosvg
 else:
-    torchvision = _utils_import.LazyImport("torchvision")
-    cairosvg = _utils_import.LazyImport("cairosvg")
+    torchvision = _utils_import.lazy_import("torchvision")
+    cairosvg = _utils_import.lazy_import("cairosvg")
 
 def svg_str_to_png(Str, file_path_save, scale=2.0):
     file_path_save = _utils_file.create_dir_for_file_path(file_path_save)

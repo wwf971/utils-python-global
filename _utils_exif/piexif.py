@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import piexif # pip install piexif
 else:
-    piexif = _utils_import.LazyImport("piexif")
+    piexif = _utils_import.lazy_import("piexif")
 
 class ExifInfo:
     def __init__(self, file_path_img=None, img_pil=None):

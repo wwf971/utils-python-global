@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     import pillow_heif
     pillow_heif.register_heif_opener() # essential for reading heif image
 else:
-    Im = _utils_import.LazyImport("PIL.Image", FuncAfterImport=lambda module:module.import_pil_heif())
+    Im = _utils_import.lazy_import("PIL.Image", FuncAfterImport=lambda module:module.import_pil_heif())
     ExifTags = _utils_import.LazyFromImport("PIL", "ExifTags")
 
 def has_exif_info(img_file_path):

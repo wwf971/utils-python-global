@@ -11,10 +11,8 @@ def set_seed(seed: int=None, seed_random: int=None, seed_numpy: int=None, seed_t
 
     if seed_random is not None:
         random.seed(seed_random)
-
     if seed_torch is not None:
         set_seed_for_torch(seed_torch)
-    
     if seed_numpy is not None:
         set_seed_for_numpy(seed_numpy)
 

@@ -82,7 +82,7 @@ def unit_test_2():
 
 def unit_test_3():
     import _utils_file
-    save_file_path = _utils_file.get_file_path_without_suffix(__file__) + "-stdout.txt"
+    save_file_path = _utils_file.get_file_path_no_suffix(__file__) + "-stdout.txt"
     with RedirectStdOutAndStdErrToFileCR(file_path=save_file_path):
         from tqdm import tqdm
         import time

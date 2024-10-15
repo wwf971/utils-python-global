@@ -1,5 +1,7 @@
 from ._dict import (
     Obj, Dict, List,
+    class_instance_from_class_path,
+    class_path_from_class_instance
 )
 
 from ._unit import (
@@ -17,4 +19,8 @@ from ._str import (
     get_random_str_az_AZ,
     get_random_str_az_AZ_09,
     binary_string_to_int,
+)
+
+from ._json import (
+    json_str_to_dict
 )

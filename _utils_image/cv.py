@@ -1,14 +1,15 @@
 from __future__ import annotations
+import _utils_import
 from _utils_import import _utils_file
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy as np
     import cv2 # pip install opencv-python
 else:
-    np = DLUtils.LazyImport("numpy")
-    cv2 = DLUtils.LazyImport("cv2")
+    np = _utils_import.lazy_import("numpy")
+    cv2 = _utils_import.lazy_import("cv2")
 
-def file_to_img(img_file_path, RaiseOnError=True) -> np.ndarray:
+def read_img_file(img_file_path, RaiseOnError=True) -> np.ndarray:
     # cv2.imread() is not used.
         # might have problem when file_path contains unicode characters.
     Stream = open(img_file_path, "rb")
@@ -22,7 +23,7 @@ def file_to_img(img_file_path, RaiseOnError=True) -> np.ndarray:
     except Exception:
         return None
     return img_cv # np.ndarray
-file_to_img_cv = file_to_img
+file_to_img_cv = file_to_img = read_img_file
 
 def resize_image(img_cv, width=None, height=None):
     height_origin = img_cv.shape[0]
@@ -102,10 +103,11 @@ def put_text_on_image_center(image: np.ndarray, text="Text", text_box_width=None
         text_box_height = round(img_height * 0.5)
 
     # get text_box width and height, if font_scale=1.0
+    font_scale = 1.0
     size = cv2.getTextSize(
         text=text,
         fontFace=cv2.FONT_HERSHEY_TRIPLEX,
-        fontScale=1.0,
+        fontScale=font_scale,
         thickness=3
     ) # ((width, height), ?)
 
@@ -131,8 +133,6 @@ def put_text_on_image_center(image: np.ndarray, text="Text", text_box_width=None
     put_text_on_image(image, text, x_left, y_bottom, color, font_scale)
 
 def put_text_on_image(image: np.ndarray, text="Text", x_left=0, y_bottom=0, color=(0, 0, 0), font_scale=1.0):
-    if XYLeftBottom is None:
-        XYLeftBottom = (0, image.shape[0])
     cv2.putText(
         img=image,
         text=text,

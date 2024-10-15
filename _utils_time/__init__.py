@@ -6,7 +6,7 @@ import _utils_import
 # if TYPE_CHECKING:
 #     from dateutil import tz
 # else:
-#     datetime = _utils_import.LazyImport("datetime")
+#     datetime = _utils_import.lazy_import("datetime")
 #     tz = _utils_import.LazyFromImport("dateutil", "tz")
 #     timezone = _utils_import.LazyFromImport("datetime", "timezone")
 

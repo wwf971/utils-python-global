@@ -7,8 +7,8 @@ if TYPE_CHECKING:
     from dateutil import tz
     
 else:
-    tz = _utils_import.LazyFromImport("dateutil", "tz")
-    timezone = _utils_import.LazyFromImport("datetime", "timezone")
+    tz = _utils_import.lazy_from_import("dateutil", "tz")
+    timezone = _utils_import.lazy_from_import("datetime", "timezone")
 import math
 import time
 import datetime

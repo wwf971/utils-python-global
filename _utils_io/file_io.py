@@ -226,7 +226,7 @@ if __name__ == "__main__":
     print("begin")
     import time
     with RedirectStdOutAndStdErrToFile(
-        file_path=_utils_file.get_file_path_without_suffix(__file__) + "/stdout_stderr.txt",
+        file_path=_utils_file.get_file_path_no_suffix(__file__) + "/stdout_stderr.txt",
         pipe_previous=f
     ):
         print("output to stdout and stderr")

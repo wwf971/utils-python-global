@@ -1,0 +1,39 @@
+
+{
+	"$(OBJ)": {
+		"prefix": [".cpp-->.o"], // 在snippet列表中显示的名称
+		"body": [
+			"$(OBJ): %.o:%.cpp $(HEADER)", // 在snippet列表中显示的名称
+            "\t$(CPP) -c $(patsubst %.o,%.cpp,$@) $(CFLAGS)",
+		],
+		"description": ".cpp-->.o"
+	},
+	"main.exe": {
+		"prefix": ["main.cpp-->main.exe"], // 在snippet列表中显示的名称
+		"body": [
+			"# 编译工程, 依据此makefile文件.", // 在snippet列表中显示的名称
+            "#     make",
+			"",
+			"# 大小写敏感. SHELL不能为shell.",
+			"\tSHELL=cmd",
+			"",
+			"# C++编译器路径和参数",
+			"CPP = \"D:/Programs/mingw64/bin/g++.exe\"",
+			"CPP_FLAGS =",
+			"",
+			"main.exe: main.cpp",
+			"\t$(CPP) $(CPP_FLAGS) main.cpp -o main.exe"
+		],
+		"description": "main.cpp-->main.exe"
+	},
+	"makefile-path": {
+		"prefix": ["makefile-path"], // 在snippet列表中显示的名称
+		"body": [
+			"# 获取当前makefile的文件路径和所在文件夹路径", // 在snippet列表中显示的名称
+            "# 即使该makefile被其他makefile给include也能获取正确的路径.",
+			"MAKEFILE_FILE_PATH := $(realpath $(lastword $(MAKEFILE_LIST)))",
+			"MAKEFILE_DIR_PATH := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))# ends with /. note in this line # must directly folow )",
+		],
+		"description": "parent dir path and file path of current makefile file"
+	},
+}

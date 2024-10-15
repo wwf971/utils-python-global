@@ -1,7 +1,7 @@
-import os
+import os, re
 from pathlib import Path
 from _utils_import import pickle, shutil
-
+import _utils_file
 from .path import (
     dir_path_to_unix_style,
     file_path_to_unix_style,
@@ -9,9 +9,15 @@ from .path import (
     get_file_name_of_file_path,
     get_file_name_and_suffix,
     get_file_path_and_suffix,
+    get_file_name_suffix,
+    get_file_path_suffix,
+    get_file_suffix,
     is_equiv_file_path,
     get_dir_path_current,
-    get_dir_path_parent
+    get_dir_path_parent,
+    get_file_path_current,
+    get_file_path_current_no_suffix,
+    change_file_path_current_suffix
 )
 
 def is_file_path(file_path: str):
@@ -29,6 +35,11 @@ def file_exist(file_path):
 def check_file_exist(file_path):
     assert file_exist(file_path)
     return file_path
+
+def check_file_path_suffix(file_path, suffix):
+    _suffix = get_file_path_suffix(file_path)
+    assert suffix == _suffix
+check_file_suffix = check_file_path_suffix
 
 def dir_exist(dir_path):
     return Path(dir_path).is_dir()
@@ -70,10 +81,68 @@ def list_all_file_name(dir_path, _yield=True):
         file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
         return file_name_list
 
-def list_all_file_path(dir_path):
+def list_all_file_path(dir_path, recur=False):
+    if recur:
+        return list_all_file_path_in_tree(dir_path, order="depth_first")
     if not dir_path.endswith("/") or dir_path.endswith("\\"):
         dir_path += "/"
     return [dir_path + file_name for file_name in list_all_file_name(dir_path)]
+
+def list_all_file_name_with_name_pattern(dir_path, pattern: str, recur=False, _yield=True):
+    if recur:
+        raise NotImplementedError
+    pattern_compiled = re.compile(pattern)
+    dir_path = dir_path_to_unix_style(dir_path)
+
+    if _yield:
+        for file_name in list_all_file_path(dir_path):
+            if pattern_compiled.match(file_name) is None:
+                yield file_name
+    else:
+        file_name_list = []
+        for file_name in list_all_file_path(dir_path):
+            if pattern_compiled.match(file_name) is None:
+                file_name_list.append(file_name)
+        return file_name_list
+list_all_file_name_with_pattern = list_all_file_name_with_name_pattern
+
+def list_all_file_path_with_name_pattern(dir_path, pattern: str, recur=False, _yield=True):
+    if recur:
+        raise NotImplementedError
+    pattern_compiled = re.compile(pattern)
+    dir_path = dir_path_to_unix_style(dir_path)
+
+    if _yield:
+        for file_name in list_all_file_path(dir_path):
+            if pattern_compiled.match(file_name) is None:
+                yield file_name
+    else:
+        file_name_list = []
+        for file_name in list_all_file_path(dir_path):
+            if pattern_compiled.match(file_name) is None:
+                file_name_list.append(file_name)
+        return file_name_list
+
+from collections import deque
+def list_all_file_path_in_tree(dir_path, order="depth_first"):
+    order = order.lower()
+    if order in ["depth_first"]:
+        get_dir_path_next = lambda dir_path_list: dir_path_list.pop()
+    elif order in ["breadth_first"]:
+        get_dir_path_next = lambda dir_path_list: dir_path_list.popleft()
+    else:
+        raise ValueError(order)
+
+    dir_path = _utils_file.check_file_exist(dir_path)
+    dir_path = _utils_file.dir_path_to_unix_style(dir_path)
+    dir_path_list = deque([dir_path])
+
+    while len(dir_path_list) > 0:
+        dir_path_current = get_dir_path_next(dir_path_list)
+        for file_name in _utils_file.list_all_file_name(dir_path_current):
+            yield dir_path_current + file_name
+        for dir_name in _utils_file.list_all_dir_name(dir_path_current):
+            dir_path_list.append(dir_path_current + dir_name + "/")
 
 def list_all_dir_name(dir_path, _yield=True):
     if _yield:
@@ -114,13 +183,14 @@ def visit_tree(dir_path_current, func=None, recur=True, verbose=False, dir_path_
         dir_path_rel = ""
     if verbose:
         print(dir_path_current)
-    for file_name in list_all_file_name(dir_path_current):
-        func(
-            dir_path_current=dir_path_current,
-            file_name=file_name,
-            dir_path_rel=dir_path_rel,
-            **kwargs
-        )
+    if func is not None:
+        for file_name in list_all_file_name(dir_path_current):
+            func(
+                dir_path_current=dir_path_current,
+                file_name=file_name,
+                dir_path_rel=dir_path_rel,
+                **kwargs
+            )
     if recur:
         for dir_name in list_all_dir_name(dir_path_current):
             dir_path_rel = dir_path_rel + dir_name
@@ -154,7 +224,7 @@ def create_dir_for_file_path(file_path):
     dir_path_obj.mkdir(parents=True, exist_ok=True)
     return file_path
 
-def get_file_path_without_suffix(file_path):
+def get_file_path_no_suffix(file_path):
     file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
     return file_path_no_suffix
 
@@ -184,7 +254,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import yaml # pip install pyyaml
 else:
-    yaml = _utils_import.LazyImport("yaml")
+    yaml = _utils_import.lazy_import("yaml")
 
 def from_yaml_file(file_path):
     with open(file_path, 'r') as file:
@@ -229,8 +299,8 @@ if TYPE_CHECKING:
         str_to_text_file,
     )
 else:
-    text_file_to_str = _utils_import.LazyFromImport("_utils_io", "text_file_to_str")
-    str_to_text_file = _utils_import.LazyFromImport("_utils_io", "str_to_text_file")
+    text_file_to_str = _utils_import.lazy_from_import("_utils_io", "text_file_to_str")
+    str_to_text_file = _utils_import.lazy_from_import("_utils_io", "str_to_text_file")
 
 from .move import (
     move_file, copy_file, rename_file,
@@ -240,9 +310,16 @@ from .move import (
 
 from .remove import (
     remove_file, remove_dir,
+    remove_subdir_if_empty,
     remove_file_if_exist,
     remove_file_with_suffix, remove_file_if_has_suffix,
     remove_dir_if_is_empty,
     remove_file_if_name_match_pattern,
     remove_dir_if_name_match_pattern,   
+)
+
+from .content import (
+    get_file_byte_num, get_file_size,
+    get_file_md5,
+    have_same_content
 )

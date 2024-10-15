@@ -22,9 +22,18 @@ def get_dir_path_parent(__file__: str):
     dir_path_parent = os.path.dirname(os.path.realpath(__file__)) + "/"
     return dir_path_parent
 
-def get_script_file_path_without_suffix(__file__):
+def get_file_path_current(__file__: str):
     file_path_script = os.path.abspath(__file__)
-    return _utils_file.get_file_path_without_suffix(file_path_script)
+    return file_path_script
+
+def get_file_path_current_no_suffix(__file__: str):
+    file_path_script = os.path.abspath(__file__)
+    return _utils_file.get_file_path_no_suffix(file_path_script)
+
+def change_file_path_current_suffix(__file__: str, append_before_suffix=""):
+    file_path_script = os.path.abspath(__file__)
+    file_path_script_no_suffix, suffix = _utils_file.get_file_name_and_suffix(file_path_script)
+    return file_path_script_no_suffix + append_before_suffix + "." + suffix
 
 def get_script_dir_path(__file__):
     # Using os.path
@@ -64,6 +73,15 @@ def get_file_path_and_suffix(file_path: str):
         return file_path, ""
     else:
         return match_result.group(1), match_result.group(2)
+
+def get_file_name_suffix(file_path: str):
+    _, suffix = get_file_name_and_suffix(file_path)
+    return suffix
+
+def get_file_path_suffix(file_path: str):
+    _, suffix = get_file_path_and_suffix(file_path)
+    return suffix
+get_file_suffix = get_file_path_suffix
 
 def is_equiv_file_path(file_path_1, file_path_2):
     return os.path.samefile(file_path_1, file_path_2)
