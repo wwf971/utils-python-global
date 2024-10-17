@@ -8,6 +8,10 @@ def remove_file(file_path):
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
 delete_file = remove_file
 
+def remove_files(*file_path_list):
+    for file_path in file_path_list:
+        remove_file(file_path)
+
 def remove_dir(dir_path): # remove a folder and all files and child folders in it
     assert _utils_file.dir_exist(dir_path)
     shutil.rmtree(dir_path)

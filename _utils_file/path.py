@@ -3,12 +3,14 @@ import os
 import _utils_file
 
 def file_path_to_unix_style(file_path: str):
-    # TODO: handle ~ in file path
     file_path = file_path.replace("\\", "/")
+    if "~" in file_path: # handle ~ in file path
+        file_path = os.path.expanduser(file_path)
     return file_path
 
 def dir_path_to_unix_style(dir_path: str):
-    # TODO: handle ~ in dir path
+    if "~" in dir_path: # handle ~ in file path
+        dir_path = os.path.expanduser(dir_path)
     dir_path = dir_path.replace("\\", "/")
     dir_path = dir_path.rstrip("/")
     dir_path += "/"
@@ -54,6 +56,12 @@ def get_file_name_of_file_path(file_path: str):
     file_name = Path(file_path).name
     return file_name
 
+def get_dir_path_of_dir_path(dir_path: str):
+    dir_path = dir_path_to_unix_style(dir_path)
+    dir_path_obj = Path(dir_path).parent
+    return dir_path_obj.__str__() + "/"
+get_parent_dir_path = get_dir_path_of_dir_path
+
 def get_file_name_and_suffix(file_name: str):
     import re
     if file_name.endswith("/") or file_name.endswith("\\"):
@@ -83,5 +91,11 @@ def get_file_path_suffix(file_path: str):
     return suffix
 get_file_suffix = get_file_path_suffix
 
-def is_equiv_file_path(file_path_1, file_path_2):
-    return os.path.samefile(file_path_1, file_path_2)
+def is_equiv_file_path(path_1, path_2):
+    norm_path1 = os.path.normpath(os.path.abspath(path_1))
+    norm_path2 = os.path.normpath(os.path.abspath(path_2))
+    return norm_path1 == norm_path2
+
+    # return os.path.samefile(file_path_1, file_path_2)
+        # both file and dir path ok
+        # raise error if path_1 or path_2 don't exist

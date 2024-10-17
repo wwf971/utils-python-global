@@ -1,6 +1,11 @@
 
 import random
 
+def random_int_in_range(start, end, include_end=False):
+    if include_end:
+        end += 1
+    return random.randrange(start, end)
+
 def multi_random_int_in_range(num, start, end, include_end=False, allow_repeat=False):
     # assert isinstance(num, int)
     if include_end:

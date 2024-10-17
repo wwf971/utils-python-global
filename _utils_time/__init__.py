@@ -14,7 +14,8 @@ from .timer import Timer, Pauser
 from .lib_datetime import (
     datetime_obj_to_time_str,
     get_local_timezone,
-    datetime_obj_change_timezone
+    datetime_obj_change_timezone,
+    get_timezone, get_local_timezone,
 )
 
 from .unix import (

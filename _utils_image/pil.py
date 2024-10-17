@@ -20,8 +20,15 @@ def read_image_file(file_path):
     return img_pil
 file_to_img_pil = file_to_img = read_image_file
 
+def file_to_image_np_int255(file_path):
+    img_pil = read_image_file(file_path)
+    return np.array(img_pil)
+
+def file_to_image_np_float01(file_path):
+    img_np_int255 = file_to_image_np_int255(file_path)
+    return img_np_int255 / 255.0
+
 def image_file_to_png(file_path, file_path_save=None):
-    backend = backend.lower()
     img_pil = Im.open(file_path)
     img_pil = img_pil.convert("RGB")
     # supported format: jpg, jfif, avif, webp.
@@ -29,7 +36,7 @@ def image_file_to_png(file_path, file_path_save=None):
         # .heif image requires pillow_heif
     if file_path_save is None:
         file_path_save = _utils_file.change_file_path_suffix(file_path, ".png")
-    assert not _utils_file.is_same_file(file_path, file_path_save) # avoid overwriting original image file
+    assert not _utils_file.is_equiv_file_path(file_path, file_path_save) # avoid overwriting original image file
     # assert not _utils_file.file_exist(file_path_save)
     img_pil.save(file_path_save, "png")
     assert _utils_file.file_exist(file_path_save)

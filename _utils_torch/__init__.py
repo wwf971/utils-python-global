@@ -6,7 +6,8 @@ from _utils_torch.wrapper import(
     ModuleList, TorchModule,
     init_torch_module_from_dict,
     get_torch_module_config,
-    torch_module_from_file
+    torch_module_from_file,
+    create_torch_module
 )
 
 from .mlp import (

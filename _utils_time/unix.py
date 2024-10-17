@@ -56,18 +56,34 @@ def unix_stamp_to_time_str(unix_stamp: float, timezone: str="local", format="%Y%
     # unix_stamp始终是以UTC 1970/01/01为基准的.
     # 操作系统计算unix_stamp时, 会考虑到时区转换.
         # 即计算｢创建时间(UTC) - 1970/01/01(UTC)｣的秒数作为unix_stamp.
-    timezone = timezone.lower()
+    if isinstance(timezone, str):
+        timezone = timezone.lower()
     if timezone in ["local"]:
         return unix_stamp_to_time_str_local(unix_stamp, format=format)
     elif timezone in ["utc", "greenwich", "utc+0", "utc0"]: # not affected by daylight saving time
         return unix_stamp_to_time_str_utc(unix_stamp, timezone=timezone, format=format)
     else:
-        raise Exception
+        # 0. parse timezone
+        if isinstance(timezone, int):
+            assert -12 <= timezone <= 12
+            _timezone = _utils_time.get_timezone(timezone, backend="pytz")
+        else:
+            raise NotImplementedError
+        # 1. turn unix_stamp to datetime object
+        datetime_obj = unix_stamp_to_datetime_obj(unix_stamp)
+        # 2. set timezone for datetime object
+        datetime_obj_new = datetime_obj.astimezone(_timezone)
+        # 3. generate time_str from datetime object
+        return datetime_obj_new.strftime(format)
 
 def unix_stamp_to_time_str_local(unix_stamp: float, format="%Y%m%d_%H%M%S%f"):
     if isinstance(unix_stamp, int):
         unix_stamp = unix_stamp * 1.0
+    
+    # 1. turn unix_stamp to datetime object
     datetime_obj = unix_stamp_to_datetime_obj(unix_stamp)
+
+    # 2. set timezone for datetime object, and then generate time_str
     time_str = _utils_time.datetime_obj_to_time_str(datetime_obj, timezone="local", format=format)
     return time_str
 

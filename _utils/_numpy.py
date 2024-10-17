@@ -1,4 +1,30 @@
-from _utils_import import np, pd
+from __future__ import annotations
+from _utils_import import np, pd, torch, Dict
+
+def np_array_stat(data: np.ndarray):
+    stat = Dict(
+        min=np.nanmin(data),
+        max=np.nanmax(data),
+        mean=np.nanmean(data),
+        std=np.nanstd(data),
+        var=np.nanvar(data)
+    )
+    return stat
+
+def to_np_array(data, data_type):
+    if data_type is None:
+        data_type = np.float32
+    if isinstance(data, np.ndarray):
+        return data
+    elif isinstance(data, list) or isinstance(data, tuple):
+        return np.array(data, dtype=data_type)
+    elif isinstance(data, torch.Tensor):
+        import _utils_torch
+        _utils_torch.torch_tensor_to_np_array(data)
+    elif isinstance(data, float):
+        return np.asarray([data], dtype=data_type)
+    else:
+        raise Exception(type(data))
 
 def np_array_to_text_file(np_array, file_path_save, **Dict):
     dim_num = len(np_array.shape)

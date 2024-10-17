@@ -48,7 +48,7 @@ def start_thread(func, *args, daemon=False, join=False, **kwargs):
         parent about to exit --> wait for all daemon=False child to exit --> parent really exit
     """
     thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-    thread.setDaemon(daemon)
+    thread.setDaemon(daemon) # the entire Python program exits when only daemon threads are left
     thread.start()
     if join:
         thread.join() # wait for child exit

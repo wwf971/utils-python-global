@@ -8,15 +8,28 @@ sys.path += [
     dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
 ]
 
-from _utils_io.file_io_cr import (
-    ByteBufferCR,
-    RedirectStdOutAndStdErrToFile,
-    RedirectStdOutAndStdErrToFileCR
-)
+from file_io_cr import ByteBufferCR
+from _utils_import import _utils_file, _utils_io
 
-from _utils import get_random_string
+file_path_stdout = _utils_file.get_file_path_current_no_suffix(__file__) + "~stdout.log"
+file_path_stderr = _utils_file.get_file_path_current_no_suffix(__file__) + "~stderr.log"
+
+import time
+def child_func(num = 0, *args, **kwargs):
+    _num = 0
+    while _num < 5:
+        print("child: %s --> sys.stdout"%num, file=sys.stdout)
+        print("child: %s --> sys.stderr"%num, file=sys.stderr)
+        print("child: %s --> sys.__stdout__"%num, file=sys.__stdout__)
+        print("child: %s --> sys.__stderr__"%num, file=sys.__stderr__)
+        time.sleep(1)
+        num += 1
+        _num += 1
+
+
+from _utils import get_random_str
 import random, string
-def get_random_string_cr(length):
+def get_random_str_cr(length):
     letters = string.ascii_letters + "\n\r"  # Use letters from 'a-z', 'A-Z'
     return ''.join(random.choice(letters) for _ in range(length))
 
@@ -45,10 +58,10 @@ def get_truth_str(test_str):
 
 def unit_test_1():
     length = 1000
-    test_str = get_random_string(length)
+    test_str = get_random_str(length)
     
     index_list = [0] + get_index(10, length) + [length]
-    buf = ByteBufferCR(buffer_size=5)
+    buf = ByteBufferCR(buf_size=5)
     overflow_list = []
     for _ in range(len(index_list) - 1):
         buf.write_str(test_str[index_list[_]:index_list[_+1]])
@@ -61,12 +74,11 @@ def unit_test_1():
 
 def unit_test_2():
     length = 1000
-    test_str = get_random_string_cr(length)
-    # test_str = 'gdeSduZsa\rfweqUQJQPicmYfKWQRvmRtIoDmFoHHzixfnL\roAMJVTUQXlJvKeIeMvtgybiMdTtIeixQBHS\rTIBSzHmaLhyTDcMbN\newB\nhhdoGSTDd\rUz\rGjDdybjXOprglZMxbGewRhokSK\ndTJWJqnYWlxqKbXlvmErbCUFZhzduarbRYTxEgbTzDsgojiblyXrvSfqV\rwpHKLGxM\rXTnfuSUfKbkmlVxcuQJInjnZXIYoEpwvRHJsSbgThOljXygOaZLpfrzlXLMFilX\nMTzlzhFSirperkjLXpighhkXPwcSE\ndo\nwYyGVPJOa\rNEravhyqDUUviGUJGUtKHylZpKElwOeSWRLzUeZdfUVovHrCHPywLirhicRehpDotpRoXxZwuMgy\rvrvgo\rzqxKXZGN\noGuFeUqxbxbMdlQTpbRmCpjPdDHxemKrDEnBqbRUO\rKpqlQvQezvvpiudunbFKAZVZqPCJv\rgJESliKcGzmltgAgNJrhMviDTLuhjLw\nzwRs\rewGqhHDbpDijZtXngYoVujPJXSSSzvnTeMB\rFcQsmAWLGosFOyWxdqHSOQYOkqWrJECwNmnPovfYSDY\rjbmutCrbAiFevtNVyapzjkyjaLUZjtkZZ\riocFCXRefLFoXHVjCn\nGmNYHZmheWfxmoRQZuCWKgHaSBQMlyIuglnWAoJSvNGnbQHBcP\namPLnmCCJAtaIq\rgUs\nUgApluyWJIWpQ\rTHbULzyqhuLmdbCMzUNItMhAdgtInIF\rLfHIKGP\nGhpHLKlVjSTdrbsCoBOBDDRRUf\rXcBWEupTOKTQCedGMChUFMUzkKKZIjxrgTzDEgmWXAMiB\rBwyBgFrRvX\rcYocgIxWLUUWVVSUGlD\nwbvgvljxmazMrpUnCebzqTRsAteDsQSAXlYdAkyNQWyp\rBFqz\rtCUNPbecroTjaXTYajL\rGbGkrWpJreAGUsIxYmrxaKRNyGEuzqilGZEdepxEwBpiEwzqQ'
+    test_str = get_random_str_cr(length)
     truth_str = get_truth_str(test_str)
     
     index_list = [0] + get_index(10, length) + [length]
-    buf = ByteBufferCR(buffer_size=length)
+    buf = ByteBufferCR(buf_size=length)
         # if buffer_size is too small, some \r could not go back to last \n, as last \n has been flushed.
     overflow_list = []
     for _ in range(len(index_list) - 1):
@@ -82,17 +94,22 @@ def unit_test_2():
 
 def unit_test_3():
     import _utils_file
-    save_file_path = _utils_file.get_file_path_no_suffix(__file__) + "-stdout.txt"
-    with RedirectStdOutAndStdErrToFileCR(file_path=save_file_path):
+    def func():
         from tqdm import tqdm
         import time
         total = 100
         for i in tqdm(range(total)):
             time.sleep(0.01)  # Simulate work
+    
+    file_path_stdout = _utils_file.get_file_path_no_suffix(__file__) + "~stdout~3.txt"
+    _utils_io.run_func_with_output_to_file_dup_cr(
+        func,
+        file_path_stdout=file_path_stdout
+    )
 
-    save_str = _utils_file.text_file_to_str(save_file_path)
+    str_output = _utils_file.text_file_to_str(file_path_stdout)
     import re
-    result = re.match(r"100%\|██████████\| 100/100 \[00:01<00:00, (\d{2}).(\d{2})it/s\]\n", save_str)
+    result = re.match(r"100%\|██████████\| 100/100 \[00:01<00:00, (\d{2}).(\d{2})it/s\]\n", str_output)
     print("%s:%s"%(result.group(1), result.group(2)))
     return True
 
@@ -101,3 +118,13 @@ if __name__ == "__main__":
     unit_test_2()
     unit_test_3()
     pass
+    _utils_io.run_func_with_output_to_file_dup_cr(
+        child_func,
+        file_path_stdout=file_path_stdout,
+        file_path_stderr=file_path_stderr,
+        print_to_stdout=False
+    )
+    child_func(num=6)
+
+    sys.exit(0)
+

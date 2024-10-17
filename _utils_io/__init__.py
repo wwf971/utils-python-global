@@ -1,19 +1,18 @@
 from __future__ import annotations
 import sys
 
-
-
-
-
 from .file_io import (
     RedirectStdOutAndStdErrToFile,
     RedirectStdOutAndStdErrToBytesIO,
     text_file_to_str,
-    str_to_text_file
+    str_to_text_file,
+    run_func_with_output_to_file,
+    run_func_with_output_to_file_dup,
+    run_func_with_output_to_file_simple
 )
 
 from .file_io_cr import (
-    RedirectStdOutAndStdErrToFileCR
+    run_func_with_output_to_file_dup_cr
 )
 
 from ._print import (

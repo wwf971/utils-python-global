@@ -16,7 +16,7 @@ def get_file_size_str(file_path: str):
 
 def have_same_content(file_path_1, file_path_2):
     _utils_file.check_file_exist(file_path_1)
-    _utils_file.heck_file_exist(file_path_2)
+    _utils_file.check_file_exist(file_path_2)
 
     byte_num_1 = get_file_byte_num(file_path_1)
     byte_num_2 = get_file_byte_num(file_path_2)

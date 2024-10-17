@@ -1,11 +1,13 @@
+from __future__ import annotations
 import os, re
 from pathlib import Path
-from _utils_import import pickle, shutil
+from _utils_import import _utils, pickle, Dict
 import _utils_file
 from .path import (
     dir_path_to_unix_style,
     file_path_to_unix_style,
     get_dir_path_of_file_path,
+    get_dir_path_of_dir_path, get_parent_dir_path,
     get_file_name_of_file_path,
     get_file_name_and_suffix,
     get_file_path_and_suffix,
@@ -30,11 +32,23 @@ def check_is_file_path(file_path: str):
 
 def file_exist(file_path):
     # if path ends with "/" or "\\", file_exist(path) should always return False 
+    if "~" in file_path:
+        return Path(os.path.expanduser(file_path)).is_file()
     return Path(file_path).is_file()
+
+def files_exist(*file_path_list):
+    for file_path in file_path_list:
+        if not file_exist(file_path):
+            return False
+    return True
 
 def check_file_exist(file_path):
     assert file_exist(file_path)
     return file_path
+
+def check_files_exist(*file_path_list):
+    for file_path in file_path_list:
+        check_file_exist(file_path)
 
 def check_file_path_suffix(file_path, suffix):
     _suffix = get_file_path_suffix(file_path)
@@ -87,6 +101,13 @@ def list_all_file_path(dir_path, recur=False):
     if not dir_path.endswith("/") or dir_path.endswith("\\"):
         dir_path += "/"
     return [dir_path + file_name for file_name in list_all_file_name(dir_path)]
+
+def list_all_file_name_and_path(dir_path, recur=False):
+    if recur:
+        return list_all_file_path_in_tree(dir_path, order="depth_first")
+    if not dir_path.endswith("/") or dir_path.endswith("\\"):
+        dir_path += "/"
+    return [(file_name, dir_path + file_name) for file_name in list_all_file_name(dir_path)]
 
 def list_all_file_name_with_name_pattern(dir_path, pattern: str, recur=False, _yield=True):
     if recur:
@@ -163,6 +184,16 @@ def list_all_dir_path(dir_path, _yield=True):
         dir_path_list = [dir_path + "/" + f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
         return dir_path_list
 
+def list_all_dir_name_and_path(dir_path, _yield=True):
+    if _yield:
+        for f in os.listdir(dir_path):
+            if os.path.isdir(os.path.join(dir_path, f)):
+                yield (f + "/", dir_path + "/" + f + "/")
+    else:  
+        dir_path = dir_path_to_unix_style(dir_path)
+        dir_path_list = [(f + "/", dir_path + "/" + f + "/") for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
+        return dir_path_list
+
 def is_dir_emtpy(dir_path):
     return not any(Path(dir_path).iterdir())
 
@@ -217,7 +248,7 @@ def create_dir(dir_path):
     dir_path_obj = Path(dir_path)
     dir_path_obj.mkdir(parents=True, exist_ok=True)
     return dir_path_obj.__str__() + "/"
-create_dir_if_non_exist = create_dir
+create_dir_if_not_exist = create_dir
 
 def create_dir_for_file_path(file_path):
     dir_path_obj = Path(file_path).parent
@@ -230,9 +261,9 @@ def get_file_path_no_suffix(file_path):
 
 def change_file_path_suffix(file_path:str, suffix:str):
     suffix = suffix.lstrip(".")
-    file_path_no_suffix, suffix = get_file_name_and_suffix(file_path)
-    assert suffix is not None
-    file_path_new = file_path_no_suffix + suffix
+    file_path_no_suffix, _suffix = get_file_name_and_suffix(file_path)
+    assert _suffix is not None
+    file_path_new = file_path_no_suffix + "." + suffix
     return file_path_new
 
 def change_file_name_suffix(file_name:str, suffix:str):
@@ -248,23 +279,6 @@ def from_file(file_path):
     with open(file_path, 'rb') as f:
         obj = pickle.load(f, encoding='bytes')
     return obj
-
-import _utils_import
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    import yaml # pip install pyyaml
-else:
-    yaml = _utils_import.lazy_import("yaml")
-
-def from_yaml_file(file_path):
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-    return data
-
-def to_yaml_file(data, file_path):
-    create_dir_for_file_path(file_path)
-    with open(file_path, 'w') as file:
-        yaml.dump(data, file)
 
 def get_file_create_unix_stamp(file_path):
     import _utils_system
@@ -291,6 +305,48 @@ def get_file_modify_unix_stamp(file_path): # last modified time
     return unix_stamp_modify
 get_file_last_modify_time = get_file_modify_unix_stamp
 
+def get_dir_config(dir_path, recur=True):
+    dir_path = _utils_file.dir_path_to_unix_style(dir_path)
+    config = Dict(files=Dict(), dirs=Dict())
+    for file_name, file_path in _utils_file.list_all_file_name_and_path(dir_path):
+        size = _utils_file.get_file_size(file_path)
+        size_str = _utils.byte_num_to_size_str(size)
+        config.files[file_name] = Dict(
+            md5=_utils_file.get_file_md5(file_path),
+            size=size, size_str=size_str
+        )
+    if recur:
+        for dir_name, _dir_path in _utils_file.list_all_dir_name_and_path(dir_path):
+            config.dirs[dir_name] = get_dir_config(_dir_path)
+    else:
+        for dir_name, _dir_path in _utils_file.list_all_dir_name_and_path(dir_path):
+            config.dirs[dir_name] = "__recur=false__"
+    
+    return config
+
+def check_dir_config(dir_path, config: Dict):
+    dir_path = _utils_file.dir_path_to_unix_style(dir_path)
+    for file_name, file_config in config.files.items():
+        file_path = dir_path + file_name
+        if not _utils_file.file_exist(file_path):
+            return False
+        size = _utils_file.get_file_byte_num(file_path)
+        if size != file_config.size:
+            return False
+        md5 = _utils_file.get_file_md5(file_path)
+        if md5 != file_config.md5:
+            return False
+    
+    for dir_name, dir_config in config.dirs.items():
+        _dir_path = dir_path + dir_name
+        if not _utils_file.dir_exist(_dir_path):
+            return False
+        if isinstance(dir_config, str):
+            continue
+        if not check_dir_config(_dir_path, dir_config):
+            return False
+    return True
+
 import _utils_import
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -298,9 +354,15 @@ if TYPE_CHECKING:
         text_file_to_str,
         str_to_text_file,
     )
+    from _utils import (
+        to_yaml_file,
+        from_yaml_file
+    )
 else:
     text_file_to_str = _utils_import.lazy_from_import("_utils_io", "text_file_to_str")
     str_to_text_file = _utils_import.lazy_from_import("_utils_io", "str_to_text_file")
+    to_yaml_file = _utils_import.lazy_from_import("_utils_io", "to_yaml_file")
+    from_yaml_file = _utils_import.lazy_from_import("_utils_io", "from_yaml_file")
 
 from .move import (
     move_file, copy_file, rename_file,
@@ -309,7 +371,9 @@ from .move import (
 )
 
 from .remove import (
-    remove_file, remove_dir,
+    remove_file, remove_files,
+    remove_dir,
+    clear_dir,
     remove_subdir_if_empty,
     remove_file_if_exist,
     remove_file_with_suffix, remove_file_if_has_suffix,
@@ -322,4 +386,14 @@ from .content import (
     get_file_byte_num, get_file_size,
     get_file_md5,
     have_same_content
+)
+
+from .zip import (
+    is_zip_file,
+    extract_zip_file,
+)
+
+from ._gzip import (
+    is_gz_file,
+    extract_gz_file,
 )

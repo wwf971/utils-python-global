@@ -157,6 +157,7 @@ if TYPE_CHECKING:
     import cv2
     import pickle
     import shutil
+    import _utils
     import _utils_io
     import _utils_file
     import _utils_system
@@ -177,6 +178,7 @@ else:
     cv2 = lazy_import("cv2")
     pickle = lazy_import("pickle")
     shutil = lazy_import("shutil")
+    _utils = lazy_import("_utils")
     _utils_io = lazy_import("_utils_io")
     _utils_file = lazy_import("_utils_file")
     _utils_system = lazy_import("_utils_system")

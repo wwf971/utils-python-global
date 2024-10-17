@@ -1,32 +1,22 @@
-if __name__ == "__main__":
-    import sys, os, pathlib
-    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-    dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
-    dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
-    dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
-    sys.path += [
-        dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
-    ]
-    from file_io import RedirectStdOutAndStdErrToFile, RedirectThread, read_from_string_io
-else:
-    from .file_io import RedirectStdOutAndStdErrToFile, RedirectThread, read_from_string_io
 
-import os
+from _utils_import import _utils_file, _utils_system
+from .file_io import read_from_string_io
+import sys, os, traceback
 class ByteBufferCR:
     # byte buffer that deals with CR(carriage return) just like in terminals
-    def __init__(self, buffer_size=65536):
+    def __init__(self, buf_size=65536):
         self.buffer = bytearray(1024)
-        self.buffer_size_current = len(self.buffer)
+        self.buf_size_current = len(self.buffer)
         self.index_start = 0
         self.index_write = 0
         self.index_end = 0
         self.index_last_n = -1
-        self.buffer_size = buffer_size
+        self.buf_size = buf_size
     def write(self, data):
         if not isinstance(data, bytes):
             raise TypeError("Expected bytes, got {}".format(type(data).__name__))
-        assert self.index_start < self.buffer_size_current
-        assert 0 <= self.index_write < 2 * self.buffer_size_current
+        assert self.index_start < self.buf_size_current
+        assert 0 <= self.index_write < 2 * self.buf_size_current
         for byte in data:
             if byte == 13:  # ASCII code for '\r'
                 # Remove everything after the last '\n'. if no '\n' exists, remove everything.
@@ -38,103 +28,153 @@ class ByteBufferCR:
                 self.index_last_n = self.index_write
                 assert self.index_start <= self.index_last_n <= self.index_write
 
-            self.buffer[self.index_write % self.buffer_size_current] = byte 
+            self.buffer[self.index_write % self.buf_size_current] = byte 
             self.index_write += 1
             if self.index_write > self.index_end:
                 self.index_end = self.index_write
-            if self.index_end >= self.buffer_size_current:
-                if self.index_write - self.buffer_size_current >= self.index_start:
+            if self.index_end >= self.buf_size_current:
+                if self.index_write - self.buf_size_current >= self.index_start:
                     # buffer is full
-                    self.buffer = self.buffer + bytearray(self.buffer_size_current)
-                    self.buffer[self.buffer_size_current:self.index_write] = self.buffer[:self.index_write%self.buffer_size_current]
-                    self.buffer_size_current = self.buffer_size_current * 2
-                    assert self.buffer_size_current == len(self.buffer)
-
+                    self.buffer = self.buffer + bytearray(self.buf_size_current)
+                    self.buffer[self.buf_size_current:self.index_write] = self.buffer[:self.index_write%self.buf_size_current]
+                    self.buf_size_current = self.buf_size_current * 2
+                    assert self.buf_size_current == len(self.buffer)
     def write_str(self, data: str):
         self.write(data.encode("utf-8"))
     def getvalue(self):
         return self.buffer
     def get_overflow(self):
-        if self.index_end - self.index_start <= self.buffer_size:
+        if self.index_end - self.index_start <= self.buf_size:
             return None
         else:
-            overflow_size = self.index_end - self.index_start - self.buffer_size
+            overflow_size = self.index_end - self.index_start - self.buf_size
             overflow_index = self.index_start + overflow_size
-            if overflow_index < self.buffer_size_current:
+            if overflow_index < self.buf_size_current:
                 overflow = self.buffer[self.index_start:overflow_index]
             else:
-                overflow = self.buffer[self.index_start:] + self.buffer[:overflow_index % self.buffer_size_current]
-
+                overflow = self.buffer[self.index_start:] + self.buffer[:overflow_index % self.buf_size_current]
             assert self.index_start - 1 <= self.index_last_n < self.index_end
             if self.index_last_n < overflow_index:
                 self.index_last_n = overflow_index - 1 
             self.index_start = overflow_index
             assert self.index_end >= self.index_start
-            if self.index_start >= self.buffer_size_current:
-                self.index_start -= self.buffer_size_current
-                self.index_end -= self.buffer_size_current
-                self.index_last_n -= self.buffer_size_current
+            if self.index_start >= self.buf_size_current:
+                self.index_start -= self.buf_size_current
+                self.index_end -= self.buf_size_current
+                self.index_last_n -= self.buf_size_current
             return overflow
     def get_all(self):
         if self.index_end - self.index_start == 0:
             return None
         else:
             self.index_last_n = self.index_end - 1
-            if self.index_end < self.buffer_size_current:
+            if self.index_end < self.buf_size_current:
                 return self.buffer[self.index_start:self.index_end]
             else:
-                return self.buffer[self.index_start:] + self.buffer[:self.index_end % self.buffer_size_current]
+                return self.buffer[self.index_start:] + self.buffer[:self.index_end % self.buf_size_current]
 
-class RedirectThreadCR(RedirectThread):
-    # CR: \r(carriage return). 
-    def __init__(self, parent, buffer_size=65536):
-        super().__init__(parent)
-        self.buffer_size = buffer_size
-        self.buffer = ByteBufferCR()
-    def write_output(self, output, f):
-        self.buffer.write(output)
-        buffer_output = self.buffer.get_overflow()
-        if buffer_output is not None:
-            f.write(output)
-            f.flush() # ensure data is written immediately
-        if self.parent.to_stdout:
-            try:
-                os.write(self.parent.fd_stdout_temp, output)
-            except Exception:
-                return False
+def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path_stderr=None, pipe_previous=None, print_to_stdout=False, **kwargs):
+    def print_bytes_to_f(_bytes, f):
+        f.write(_bytes)
+        f.flush() # ensure data is written immediately
+        return True
+    def print_bytes_to_stdout(_bytes):
+        if not print_to_stdout:
+            return True
+        try:
+            os.write(fd_stdout_origin, _bytes)
+        except Exception: # fd_stdout_origin becomes invalid
+            return False
         return True
 
-    def write_buffer_remain(self):
-        """write contents remaining in self.buffer"""
-        output_remain = self.buffer.get_all()
-        if output_remain is not None:
-            f = self.f
-            f.write(output_remain)
-            f.flush()
+    def listen_thread(fd_read, file_path, buf:ByteBufferCR, pipe_previous=None):
+        with open(file_path, "wb") as f:
+            if pipe_previous is not None:
+                out_bytes = read_from_string_io(pipe_previous.buffer)
+                buf.write(out_bytes)
+                out_bytes = buf.get_overflow()
+                if out_bytes is not None:
+                    print_bytes_to_f(out_bytes, f)
 
-class RedirectStdOutAndStdErrToFileCR(RedirectStdOutAndStdErrToFile):
-    # CR: \r(carriage return). 
-    def __init__(self, file_path=None, pipe_previous=None, buffer_size=1024):
-        super().__init__(file_path=file_path, pipe_previous=pipe_previous)
-        self.buffer_size = buffer_size
-    def __enter__(self):
-        self.is_terminated = False
-        self.thread = RedirectThreadCR(self, buffer_size=self.buffer_size)
-        self.thread.daemon = True  # Ensure the thread exits when the main program exits
-        self.thread.start()
-        # return self.thread # if not, thread will be deleted on __exit_
-        return self.thread
-    def __exit__(self, type, value, trace):
-        self.is_terminated = True
-        # self.thread.join()
-        self.thread.join(0.1)
-            # when with block ends, it seems thread will be deleted along with its parent.
-            # thread might not have enough time to redirect contents from self.read_fd to to true sys.stdout
-        self.thread.write_buffer_remain()
-        if self.redirect_stderr:
-            os.dup2(self.fd_stdout_temp, 1)  # restore stdout to the terminal
-            os.close(self.fd_stdout_temp)
-        if self.redirect_stdout:
-            os.dup2(self.fd_stderr_temp, 2)  # restore stdout to the terminal
-            os.close(self.fd_stderr_temp)
-        return
+            while True:
+                out_bytes = os.read(fd_read, 1024)  # fd_read --> f
+                buf.write(out_bytes)
+                out_bytes = buf.get_overflow()
+                if out_bytes is not None:
+                    if not print_bytes_to_f(out_bytes, f): break
+                    if not print_bytes_to_stdout(out_bytes): break
+    
+    def write_buf_remain(buf: ByteBufferCR, file_path):
+        with open(file_path, "wb") as f:
+            out_bytes = buf.get_all()
+            if out_bytes is not None:
+                if not print_bytes_to_f(out_bytes, f): return
+                if not print_bytes_to_stdout(out_bytes): return
+
+    # stdout/stderr --> file_path_stdout
+    fd_stdout_origin = os.dup(1)
+    fd_stderr_origin = os.dup(2)
+    if file_path_stderr is None:
+        fd_read, fd_write = os.pipe()
+        os.dup2(fd_write, 1) # fd=1 / fd_write --> same_target
+            # make a copy of fd=1, as fd_write
+        os.dup2(fd_write, 2) # fd=2 / fd_write --> same_target
+            # make fd=1 refer to same target as fd_write
+    else:
+        fd_read_stdout, fd_write_stdout = os.pipe()
+        fd_read_stderr, fd_write_stderr = os.pipe()
+        os.dup2(fd_write_stdout, 1) # fd=1 / fd_write_stdout --> same_target
+            # make fd=1 refer to same target as fd_write_stdout
+        os.dup2(fd_write_stderr, 2) # fd=2 / fd_write_stderr --> same_target
+            # make fd=2 refer to same target as fd_write_stdout
+
+    # https://stackoverflow.com/questions/66784941/dup2-and-pipe-shenanigans-with-python-and-windows
+    # avoid OSError: [WinError 1] on Windows
+    sys.stdout.write = lambda z: os.write(sys.stdout.fileno(), z.encode() if hasattr(z,'encode') else z)
+    sys.stderr.write = lambda z: os.write(sys.stderr.fileno(), z.encode() if hasattr(z,'encode') else z)
+
+    _utils_file.create_dir_for_file_path(file_path_stdout)
+    if file_path_stderr is None:
+        buf = ByteBufferCR()
+        _listen_thread = _utils_system.start_thread(
+            listen_thread, fd_read=fd_read, file_path=file_path_stdout, pipe_previous=pipe_previous,
+            buf=buf,
+            daemon=True, join=False
+        )
+    else:
+        buf_stdout = ByteBufferCR()
+        buf_stderr = ByteBufferCR()
+        _listen_thread_stdout = _utils_system.start_thread(
+            listen_thread, fd_read=fd_read_stdout, file_path=file_path_stdout, pipe_previous=pipe_previous,
+            buf=buf_stdout,
+            daemon=True, join=False
+        )
+        _listen_thread_stderr = _utils_system.start_thread(
+            listen_thread, fd_read=fd_read_stderr, file_path=file_path_stderr, pipe_previous=pipe_previous,
+            buf=buf_stderr,
+            daemon=True, join=False
+        )
+    try:
+        func(*args, **kwargs)
+    except Exception:
+        error_str = traceback.format_exc()
+        try:
+            print(error_str)
+        except Exception:
+            pass
+    
+    if file_path_stderr is None:
+        _listen_thread.join(0.2) # wait for thread to handle all outputs
+        write_buf_remain(buf, file_path_stdout)
+    else:
+        _listen_thread_stdout.join(0.2)
+        _listen_thread_stderr.join(0.2)
+        write_buf_remain(buf_stdout, file_path_stdout)
+        write_buf_remain(buf_stderr, file_path_stderr)
+
+    # restore
+    os.dup2(fd_stdout_origin, 1) # restore stdout to the terminal
+    os.close(fd_stdout_origin)
+    os.dup2(fd_stderr_origin, 2) # restore stdout to the terminal
+    os.close(fd_stderr_origin)
+    return

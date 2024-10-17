@@ -90,7 +90,13 @@ class Dict(dict):
             else:
                 _dict[key] = value
         return _dict
-    def update(self, dict_external:Dict):
+    def update(self, dict_external:Dict=None, **kwargs):
+        if len(kwargs) > 0:
+            assert dict_external is None
+            for key, value in kwargs.items():
+                self[key] = value
+            return self
+
         for key, value in dict_external.items():
             if isinstance(value, dict) and not isinstance(value, Dict):
                 value = Dict(value)
@@ -106,7 +112,12 @@ class Dict(dict):
             else:
                 self[key] = value # overwrite
         return self
-    def create_if_non_exist(self, key) -> Dict:
+    def update_if_not_exist(self, **kwargs):
+        for key, value in kwargs.items():
+            if not key in self:
+                self[key] = value
+        return self        
+    def create_if_not_exist(self, key) -> Dict:
         if key in self:
             return self[key]
         else:
@@ -116,13 +127,15 @@ class Dict(dict):
     def check_key_exist(self, key):
         assert key in self
         return self
-    def set_if_non_exist(self, **_dict):
+    def set_if_not_exist(self, **_dict):
         for key, value in _dict.items():
             if key in self:
                 continue
             else:
                 self[key] = value
         return self
+    def setattr(self, key, value):
+        self[key] = value
     def hasattr(self, key):
         return hasattr(self, key)
 

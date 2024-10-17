@@ -1,16 +1,19 @@
 import string, random, re
 
-def get_alphabet_az_AZ():
-    return string.ascii_letters
-
 def get_alphabet_az():
     return string.ascii_lowercase
 
 def get_alphabet_AZ():
     return string.ascii_uppercase
 
+def get_alphabet_az_AZ():
+    return string.ascii_letters
+
 def get_alphabet_09():
     return string.digits
+
+def get_alphabet_az_AZ_09():
+    return get_alphabet_az_AZ() + get_alphabet_09()
 
 def get_random_str_az_AZ_09(length):
     alphabet = get_alphabet_az_AZ() + get_alphabet_09()
@@ -20,7 +23,9 @@ def get_random_str_az_AZ(length):
     alphabet = string.ascii_letters  # Use letters from 'a-z', 'A-Z'
     return get_random_str(length, alphabet=alphabet)
 
-def get_random_str(length, alphabet:list):
+def get_random_str(length, alphabet:list=None):
+    if alphabet is None:
+        alphabet = get_alphabet_az_AZ_09()
     return ''.join(random.choice(alphabet) for _ in range(length))
 
 def binary_string_to_int(string_binary: str, large_side:str="left", BigEndian=False):

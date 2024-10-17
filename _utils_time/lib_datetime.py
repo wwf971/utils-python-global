@@ -17,8 +17,9 @@ def get_local_timezone():
 
 def get_timezone(timezone_str, backend="pytz"):
     backend = backend.lower()
-
-    if timezone_str.lower() == "local":
+    if isinstance(timezone_str, str):
+        timezone_str = timezone_str.lower()
+    if timezone_str == "local":
         import tzlocal # pip install tzlocal
         _timezone_local = tzlocal.get_localzone()
         return _timezone_local
@@ -77,6 +78,3 @@ def datetime_obj_change_timezone(datetime_obj: datetime.datetime, timezone:str=N
     # datetime_obj_utc = datetime_obj_utc.replace(tzinfo=_timezone_utc)
     # _timezone = get_local_timezone(timezone)
     # return datetime_obj_local
-
-
-

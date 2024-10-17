@@ -218,8 +218,6 @@ def print_module_param(model: torch.nn.Module, stdout=None):
         stdout.print("param: %s.\t%s."%(name, value.shape))
     return TrainParamList
 
-
-
 def print_torch_module_submodule(model: torch.nn.Module, pipe_out=None):
     if pipe_out is None:
         import _utils_io
@@ -366,6 +364,12 @@ def create_torch_module_submodule_from_dict(parent_module: torch.nn.Module, subm
 
 
 class ModuleList(TorchModuleWrapper):
+    """
+    forward: input --module1--> ... --module2--> ... --> output
+        module1: first added submodule
+        module2: secondly added submodule
+        ...
+    """
     def init(self, *module_list, **module_dict):
         if len(module_list) > 0:
             assert len(module_dict) == 0

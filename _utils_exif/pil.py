@@ -1,5 +1,4 @@
 # 基于pillow库实现的一系列图片文件exif信息处理相关函数
-
 import sys, os, pathlib
 dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
 dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
@@ -16,8 +15,8 @@ if TYPE_CHECKING:
     import pillow_heif
     pillow_heif.register_heif_opener() # essential for reading heif image
 else:
-    Im = _utils_import.lazy_import("PIL.Image", FuncAfterImport=lambda module:module.import_pil_heif())
-    ExifTags = _utils_import.LazyFromImport("PIL", "ExifTags")
+    Im = _utils_import.lazy_import("PIL.Image", after_import=lambda module:module.import_pil_heif())
+    ExifTags = _utils_import.lazy_from_import("PIL", "ExifTags")
 
 def has_exif_info(img_file_path):
     img_pil = Im.img_file_path

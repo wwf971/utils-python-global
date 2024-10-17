@@ -42,15 +42,15 @@ def size_str_to_byte_num(size_str: str):
         raise Exception()
     return unit_num * unit_byte_num
 
-def byte_num_to_size_str(ByteNum):
-    if ByteNum < KB:
-        Str = "%d B"%ByteNum
-    elif ByteNum < MB:
-        Str = "%.3f KB"%(1.0 * ByteNum / KB)
-    elif ByteNum < GB:
-        Str = "%.3f MB"%(1.0 * ByteNum / MB)
-    elif ByteNum < TB:
-        Str = "%.3f GB"%(1.0 * ByteNum / GB)
+def byte_num_to_size_str(byte_num):
+    if byte_num < KB:
+        Str = "%d B"%byte_num
+    elif byte_num < MB:
+        Str = "%.3f KB"%(1.0 * byte_num / KB)
+    elif byte_num < GB:
+        Str = "%.3f MB"%(1.0 * byte_num / MB)
+    elif byte_num < TB:
+        Str = "%.3f GB"%(1.0 * byte_num / GB)
     else:
-        Str = "%.3f TB"%(1.0 * ByteNum / TB)
+        Str = "%.3f TB"%(1.0 * byte_num / TB)
     return Str

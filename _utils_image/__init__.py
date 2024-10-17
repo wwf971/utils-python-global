@@ -36,12 +36,36 @@ def image_file_to_jpg(file_path, file_path_save=None, quality:int=90, backend="p
     else:
         raise NotImplementedError
 
+def get_test_image_np_float01(name="lenna", backend="pil"):
+    backend = backend.lower()
+    import os
+    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+    if name in ["lenna"]:
+        file_path_img = dir_path_current + "image-test/" + "lenna.png"
+    else:
+        raise ValueError(name)
+    if backend in ["cv", "cv2"]: # np means return numpy array
+        img_np = read_image_file_cv(file_path_img)
+        return img_np
+    elif backend in ["pil"]:
+        img_pil = file_to_image_np_float01(file_path_img)
+        return img_pil
+    else:
+        raise NotImplementedError
+
 from .pil import (
     import_pil_heif,
-    image_np_int255_to_file
+    file_to_image_np_int255,
+    file_to_image_np_float01,
+    image_np_float01_to_file,
+    image_np_int255_to_file,
 )
+from .pil import read_image_file as read_image_file_pil
 
-from .cv import (
+from .cv import ( # bgr, not rgb
     put_text_on_image,
-    put_text_on_image_center
+    put_text_on_image_center,
+    # image_np_float01_to_file,
+    # image_np_int255_to_file,
 )
+from .cv import read_image_file as read_image_file_cv

@@ -1,4 +1,4 @@
-from _utils_import import Dict
+from _utils_import import Dict, _utils_file
 import json
 def json_str_to_dict(str_json):
     # from types import SimpleNamespace
@@ -9,4 +9,10 @@ def json_str_to_dict_test():
     str_json = '{"name": "John Smith", "hometown": {"name": "New York", "id": 123}}'
     json_dict = json_str_to_dict(str_json)
     print(json_dict.name, json_dict.hometown.name, json_dict.hometown.id)
+    return
+
+def dict_to_json_file(_dict, file_path_save):
+    _utils_file.create_dir_for_file_path(file_path_save)
+    with open(file_path_save, "w") as json_file:
+        json.dump(_dict, json_file, indent=4)  # indent using space
     return
