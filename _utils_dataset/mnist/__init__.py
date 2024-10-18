@@ -1,19 +1,12 @@
 
-import sys, os, pathlib
-dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
-dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
-dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
-sys.path += [
-    dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
-]
-
 from _utils_import import _utils_file
 import _utils_file, _utils
 
 class_num = 10
 train_set_sample_num = 60000
 test_set_sample_num = 10000
+image_height = 28
+image_width = 28
 
 from .mnist_utils import (
     load_dataset_from_zip_file,
@@ -37,9 +30,13 @@ class MNISTDataset():
         self.class_num = class_num
     def is_build(self):
         return self._is_build
-    def from_zip_file(self, file_path_zip, check_integrity=False):
+    def from_zip_file(self, file_path_zip, dir_path_data=None, check_integrity=False):
         self.file_path_zip = file_path_zip
-        self.data = load_dataset_from_zip_file(file_path_zip, check_integrity=check_integrity)
+        self.data = load_dataset_from_zip_file(
+            file_path_zip,
+            dir_path_data=dir_path_data,
+            check_integrity=check_integrity
+        )
         self._is_build = True
         return self
     def from_dir(self, dir_path, check_integrity=False):
@@ -128,9 +125,9 @@ class Dataset():
     def __getitem__(self, index):
         # assert index < self.DataNum
         return (
-            self.image_list[index], # np.ndarray. shape: (32(height), 32(width))
-                # data type: uint8
-                # value range: [0, 255].
+            self.image_list[index] / 255.0, # np.ndarray. shape: (32(height), 32(width))
+                # data type: float32
+                # value range: [0.0, 1.0].
             self.label_list[index]
         )
 

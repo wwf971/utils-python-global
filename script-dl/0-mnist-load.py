@@ -10,7 +10,7 @@ sys.path += [
     dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
 ]
 
-from _utils_import import _utils_file, _utils_io
+from _utils_import import _utils_file, _utils_io, Dict
 import _utils_torch, _utils_math, _utils_dataset
 
 def get_args():
@@ -28,7 +28,10 @@ def main(base_dir_path=None):
     _utils_file.create_dir_if_not_exist(base_dir_path)
 
     # load dataset file
-    dataset = _utils_dataset.MNISTDataset().from_zip_file("~/dataset/mnist.zip")
+    dataset = _utils_dataset.MNISTDataset().from_zip_file(
+        file_path_zip="~/dataset/mnist/mnist.zip",
+        dir_path_data="~/dataset/mnist/"
+    )
 
     """
     plot_image_example:

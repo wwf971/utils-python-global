@@ -59,11 +59,15 @@ def load_dataset_from_dir(dir_path, check_integrity=False):
     )
     return _load_dataset_from_dir(path_info, check_integrity=check_integrity)
 
-def load_dataset_from_zip_file(file_path_zip, use_cache=True, check_integrity=False):
+def load_dataset_from_zip_file(file_path_zip, dir_path_data=None, use_cache=True, check_integrity=False):
     file_path_zip = _utils_file.file_path_to_unix_style(file_path_zip)
     dir_path_zip_file = _utils_file.get_dir_path_of_file_path(file_path_zip)
-    dir_path_extract = dir_path_zip_file + "mnist/"
-    dir_path_data = dir_path_extract
+    if dir_path_data is not None:
+        dir_path_data = _utils_file.dir_path_to_unix_style(dir_path_data)
+        dir_path_extract = dir_path_data
+    else:
+        dir_path_extract = dir_path_zip_file + "mnist/"
+        dir_path_data = dir_path_extract
 
     path_info = Dict(file_path_zip=file_path_zip)
     path_info.dir_path_extract = dir_path_extract
@@ -75,18 +79,16 @@ def load_dataset_from_zip_file(file_path_zip, use_cache=True, check_integrity=Fa
         file_path_test_image = dir_path_data + 't10k-images-idx3-ubyte',
         file_path_test_label = dir_path_data + 't10k-labels-idx1-ubyte',
     )
-    if use_cache:
-        # extract all 4 .gz files
-        if _utils_file.files_exist(
+    if use_cache and _utils_file.files_exist( # extract all 4 .gz files
             path_info.file_path_train_image,
             path_info.file_path_train_label,
             path_info.file_path_test_image,
             path_info.file_path_test_label,
         ):
             pass
-        else:
-            zip_file_to_gz_file(path_info)
-            gz_file_to_data_file(path_info, remove_after_extract=True)
+    else:
+        zip_file_to_gz_file(path_info)
+        gz_file_to_data_file(path_info, remove_after_extract=True)
 
     assert _utils_file.files_exist(
         path_info.file_path_train_image,

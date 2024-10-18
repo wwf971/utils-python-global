@@ -116,10 +116,9 @@ def main(base_dir_path=None):
                 context.batch_index = train_batch_index
                 context.batch_num = train_batch_num
                 TrainDataBatch = next(train_data)
-                image, class_index_truth = TrainDataBatch
+                image, class_index_truth = TrainDataBatch # float32. range: [0.0, 1.0]
                 image, class_index_truth = image.to(device), class_index_truth.to(device).long()
                 batch_size = image.shape[0]
-                image = image / 255 # uint8: [0, 255] -> float32: (0, 1)
                 model.zero_grad()
                 class_logit = model.forward(
                     image.reshape(batch_size, -1) # (28, 28)
