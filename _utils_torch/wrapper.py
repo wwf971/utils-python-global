@@ -14,7 +14,6 @@ import _utils_file
 # a lightweight wrapper of torch.nn.Module
 class TorchModuleWrapper(nn.Module):
     """
-    
     """
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -84,10 +83,11 @@ class TorchModuleWrapper(nn.Module):
     def get_submodule(self, submodule_name):
         assert submodule_name in self.get_child_name_list()
         return getattr(self, submodule_name)
-    def add_torch_module(self, name, torch_module_class, **kwargs):
-        torch_module = torch_module_class(**kwargs)
+    def add_torch_module(self, name, torch_module_class, *args, **kwargs):
+        torch_module = torch_module_class(*args, **kwargs)
         torch_module.config = {
-            "init_args": kwargs
+            "init_args": args,
+            "init_kwargs": kwargs,
         }
         self.add_module(name, torch_module)
         return self
@@ -148,13 +148,18 @@ class TorchModuleWrapper(nn.Module):
         for name, child_dict in submodule_dict.items():
             child_dict = Dict(child_dict)
             child_class_path = child_dict._class_path
+            if "init_kwargs" in child_dict.config:
+                init_kwargs = child_dict.config["init_kwargs"]
+            else:
+                init_kwargs = {}
             if "init_args" in child_dict.config:
                 init_args = child_dict.config["init_args"]
             else:
-                init_args = {}
+                init_args = []
             child = class_instance_from_class_path(
                 child_class_path,
-                **init_args
+                *init_args,
+                **init_kwargs
             )
             # recur
             if isinstance(child, TorchModuleWrapper):
@@ -204,6 +209,11 @@ class TorchModuleWrapper(nn.Module):
         return self
     # def __repr__(self):
     #     return PrintTorchModule(self)
+    def set_device(self, device):
+        self.device = device
+        self.to(device)
+        return self
+
 TorchModule = TorchModuleWrapper
 
 def print_module_param(model: torch.nn.Module, stdout=None):
@@ -242,9 +252,9 @@ def get_torch_module_config(module: torch.nn.Module):
     else:
         config = Dict()
         # if isinstance(Module, torch.nn.Linear):
-        #     config.init_args.in_features = Module.in_features
-        #     config.init_args.out_features = Module.out_features
-        #     config.init_args.bias = Module
+        #     config.init_kwargs.in_features = Module.in_features
+        #     config.init_kwargs.out_features = Module.out_features
+        #     config.init_kwargs.bias = Module
 
         # if len(config) == 0:
         #     return None
@@ -319,10 +329,11 @@ def torch_module_from_file(file_path):
     module_dict = _utils_file.from_file(file_path)
     return create_torch_module_from_dict(module_dict)
 
-def create_torch_module(module_class, **kwargs):
-    module = module_class(**kwargs)
+def create_torch_module(module_class, *args, **kwargs):
+    module = module_class(*args, **kwargs)
     module.config = {
-        "init_args": kwargs
+        "init_kwargs": kwargs,
+        "init_args": args,
     }
     return module
 
@@ -353,11 +364,16 @@ def create_torch_module_submodule_from_dict(parent_module: torch.nn.Module, subm
     # load submodules
     for name, child_dict in submodule_dict.items():
         child_class_path = submodule_dict._class_path
+        if "init_kwargs" in submodule_dict.config:
+            init_kwargs = submodule_dict.config["init_kwargs"]
+        else:
+            init_kwargs = {}
         if "init_args" in submodule_dict.config:
             init_args = submodule_dict.config["init_args"]
         else:
-            init_args = {}
-        child = class_instance_from_class_path(child_class_path, **init_args)
+            init_args = []
+
+        child = class_instance_from_class_path(child_class_path, *init_args, **init_kwargs)
         create_torch_module_from_dict(child_dict) # recur
         parent_module.add_module(name, child)
     return parent_module

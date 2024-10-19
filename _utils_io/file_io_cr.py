@@ -1,12 +1,13 @@
 
 from _utils_import import _utils_file, _utils_system
-from .file_io import read_from_string_io
 import sys, os, traceback
-class ByteBufferCR:
+import _utils_io
+from io import StringIO, BytesIO
+class BytesBufCR:
     # byte buffer that deals with CR(carriage return) just like in terminals
     def __init__(self, buf_size=65536):
-        self.buffer = bytearray(1024)
-        self.buf_size_current = len(self.buffer)
+        self.buf = bytearray(1024)
+        self.buf_size_current = len(self.buf)
         self.index_start = 0
         self.index_write = 0
         self.index_end = 0
@@ -20,7 +21,7 @@ class ByteBufferCR:
         for byte in data:
             if byte == 13:  # ASCII code for '\r'
                 # Remove everything after the last '\n'. if no '\n' exists, remove everything.
-                # self.buffer = self.buffer[:self.buffer.rfind(b'\n') + 1]
+                # self.buf = self.buf[:self.buf.rfind(b'\n') + 1]
                 self.index_write = self.index_last_n + 1
                 assert self.index_start <= self.index_write <= self.index_end
                 continue
@@ -28,21 +29,21 @@ class ByteBufferCR:
                 self.index_last_n = self.index_write
                 assert self.index_start <= self.index_last_n <= self.index_write
 
-            self.buffer[self.index_write % self.buf_size_current] = byte 
+            self.buf[self.index_write % self.buf_size_current] = byte 
             self.index_write += 1
             if self.index_write > self.index_end:
                 self.index_end = self.index_write
             if self.index_end >= self.buf_size_current:
                 if self.index_write - self.buf_size_current >= self.index_start:
-                    # buffer is full
-                    self.buffer = self.buffer + bytearray(self.buf_size_current)
-                    self.buffer[self.buf_size_current:self.index_write] = self.buffer[:self.index_write%self.buf_size_current]
+                    # buf is full
+                    self.buf = self.buf + bytearray(self.buf_size_current)
+                    self.buf[self.buf_size_current:self.index_write] = self.buf[:self.index_write%self.buf_size_current]
                     self.buf_size_current = self.buf_size_current * 2
-                    assert self.buf_size_current == len(self.buffer)
+                    assert self.buf_size_current == len(self.buf)
     def write_str(self, data: str):
         self.write(data.encode("utf-8"))
     def getvalue(self):
-        return self.buffer
+        return self.buf
     def get_overflow(self):
         if self.index_end - self.index_start <= self.buf_size:
             return None
@@ -50,9 +51,9 @@ class ByteBufferCR:
             overflow_size = self.index_end - self.index_start - self.buf_size
             overflow_index = self.index_start + overflow_size
             if overflow_index < self.buf_size_current:
-                overflow = self.buffer[self.index_start:overflow_index]
+                overflow = self.buf[self.index_start:overflow_index]
             else:
-                overflow = self.buffer[self.index_start:] + self.buffer[:overflow_index % self.buf_size_current]
+                overflow = self.buf[self.index_start:] + self.buf[:overflow_index % self.buf_size_current]
             assert self.index_start - 1 <= self.index_last_n < self.index_end
             if self.index_last_n < overflow_index:
                 self.index_last_n = overflow_index - 1 
@@ -69,11 +70,11 @@ class ByteBufferCR:
         else:
             self.index_last_n = self.index_end - 1
             if self.index_end < self.buf_size_current:
-                return self.buffer[self.index_start:self.index_end]
+                return self.buf[self.index_start:self.index_end]
             else:
-                return self.buffer[self.index_start:] + self.buffer[:self.index_end % self.buf_size_current]
+                return self.buf[self.index_start:] + self.buf[:self.index_end % self.buf_size_current]
 
-def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path_stderr=None, pipe_previous=None, print_to_stdout=False, **kwargs):
+def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path_stderr=None, pipe_prev=None, print_to_stdout=False, **kwargs):
     def print_bytes_to_f(_bytes, f):
         f.write(_bytes)
         f.flush() # ensure data is written immediately
@@ -87,10 +88,13 @@ def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path
             return False
         return True
 
-    def listen_thread(fd_read, file_path, buf:ByteBufferCR, pipe_previous=None):
+    def listen_thread(fd_read, file_path, buf:BytesBufCR, pipe_prev=None):
         with open(file_path, "wb") as f:
-            if pipe_previous is not None:
-                out_bytes = read_from_string_io(pipe_previous.buffer)
+            if pipe_prev is not None:
+                if isinstance(pipe_prev, BytesIO):
+                    out_bytes = _utils_io.read_from_string_io(pipe_prev.buf)
+                else:
+                    pass # TODO
                 buf.write(out_bytes)
                 out_bytes = buf.get_overflow()
                 if out_bytes is not None:
@@ -104,7 +108,7 @@ def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path
                     if not print_bytes_to_f(out_bytes, f): break
                     if not print_bytes_to_stdout(out_bytes): break
     
-    def write_buf_remain(buf: ByteBufferCR, file_path):
+    def write_buf_remain(buf: BytesBufCR, file_path):
         with open(file_path, "wb") as f:
             out_bytes = buf.get_all()
             if out_bytes is not None:
@@ -135,22 +139,22 @@ def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path
 
     _utils_file.create_dir_for_file_path(file_path_stdout)
     if file_path_stderr is None:
-        buf = ByteBufferCR()
+        buf = BytesBufCR()
         _listen_thread = _utils_system.start_thread(
-            listen_thread, fd_read=fd_read, file_path=file_path_stdout, pipe_previous=pipe_previous,
+            listen_thread, fd_read=fd_read, file_path=file_path_stdout, pipe_prev=pipe_prev,
             buf=buf,
             daemon=True, join=False
         )
     else:
-        buf_stdout = ByteBufferCR()
-        buf_stderr = ByteBufferCR()
+        buf_stdout = BytesBufCR()
+        buf_stderr = BytesBufCR()
         _listen_thread_stdout = _utils_system.start_thread(
-            listen_thread, fd_read=fd_read_stdout, file_path=file_path_stdout, pipe_previous=pipe_previous,
+            listen_thread, fd_read=fd_read_stdout, file_path=file_path_stdout, pipe_prev=pipe_prev,
             buf=buf_stdout,
             daemon=True, join=False
         )
         _listen_thread_stderr = _utils_system.start_thread(
-            listen_thread, fd_read=fd_read_stderr, file_path=file_path_stderr, pipe_previous=pipe_previous,
+            listen_thread, fd_read=fd_read_stderr, file_path=file_path_stderr, pipe_prev=pipe_prev,
             buf=buf_stderr,
             daemon=True, join=False
         )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from _utils_import import torch, nn, F
+from _utils_import import np, torch, nn, F
 
 def get_batch_num(torch_dataloader):
     return len(torch_dataloader)
@@ -8,7 +8,7 @@ def get_batch_num(torch_dataloader):
 def np_array_to_torch_tensor(np_array: torch.Tensor):
     return torch.from_numpy(np_array)
 
-def torch_tensor_to_np_array(tensor: np.ndarray):
+def torch_tensor_to_np_array(tensor: np.ndarray) -> np.ndarray:
     return tensor.cpu().detach().numpy()
 
 def check_tensor_shape(tensor, *shape):

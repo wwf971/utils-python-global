@@ -2,8 +2,6 @@ from __future__ import annotations
 import sys
 
 from .file_io import (
-    RedirectStdOutAndStdErrToFile,
-    RedirectStdOutAndStdErrToBytesIO,
     text_file_to_str,
     str_to_text_file,
     run_func_with_output_to_file,
@@ -14,6 +12,9 @@ from .file_io import (
 from .file_io_cr import (
     run_func_with_output_to_file_dup_cr
 )
+from .buf_io import (
+    run_func_with_output_to_buf
+)
 
 from ._print import (
     print_to_str,
@@ -21,6 +22,20 @@ from ._print import (
 )
 
 from .pipe import PipeOut
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from io import BytesIO
+
+def read_from_bytes_io(buffer: BytesIO):
+    buffer.seek(0)  # move cursor to the beginning
+    data = buffer.read()  # Read the contents
+    if not data:
+        return None
+    buffer.seek(0)  # move cursor to the beginning again
+    buffer.truncate(0)  # clear the contents of the buffer
+    return data
+read_from_string_io = read_from_bytes_io # works for both BytesIO and StringIO
 
 if __name__ == "__main__":
     pipe = PipeOut()

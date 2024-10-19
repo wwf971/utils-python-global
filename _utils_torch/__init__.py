@@ -1,6 +1,5 @@
 from __future__ import annotations
-import numpy as np
-
+from _utils_import import torch, nn, np, _utils_image, Dict
 from _utils_torch.wrapper import(
     TorchModuleWrapper,
     ModuleList, TorchModule,
@@ -24,4 +23,14 @@ from .utils import (
     to_one_hot
 )
 
-from _utils_import import torch, nn, np
+def torch_tensor_to_image_file(tensor, file_path_save, shape="chw", value_range=[-1.0, 1.0]):
+    assert len(list(tensor.size())) == 3
+    array = torch_tensor_to_np_array(tensor)
+    shape = shape.lower()
+    if shape in ["chw"]:
+        array = array.transpose(1, 2, 0)
+    array = (array - value_range[0]) / (value_range[1] - value_range[0])
+        # --> value_range: [0.0, 1.0]
+    array = array.clip(0.0, 1.0)
+    _utils_image.image_np_float01_to_file(array, file_path_save)
+

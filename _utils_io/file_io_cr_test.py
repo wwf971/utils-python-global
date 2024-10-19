@@ -8,7 +8,7 @@ sys.path += [
     dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
 ]
 
-from file_io_cr import ByteBufferCR
+from file_io_cr import BytesBufCR
 from _utils_import import _utils_file, _utils_io
 
 file_path_stdout = _utils_file.get_file_path_current_no_suffix(__file__) + "~stdout.log"
@@ -25,7 +25,6 @@ def child_func(num = 0, *args, **kwargs):
         time.sleep(1)
         num += 1
         _num += 1
-
 
 from _utils import get_random_str
 import random, string
@@ -61,7 +60,7 @@ def unit_test_1():
     test_str = get_random_str(length)
     
     index_list = [0] + get_index(10, length) + [length]
-    buf = ByteBufferCR(buf_size=5)
+    buf = BytesBufCR(buf_size=5)
     overflow_list = []
     for _ in range(len(index_list) - 1):
         buf.write_str(test_str[index_list[_]:index_list[_+1]])
@@ -78,7 +77,7 @@ def unit_test_2():
     truth_str = get_truth_str(test_str)
     
     index_list = [0] + get_index(10, length) + [length]
-    buf = ByteBufferCR(buf_size=length)
+    buf = BytesBufCR(buf_size=length)
         # if buffer_size is too small, some \r could not go back to last \n, as last \n has been flushed.
     overflow_list = []
     for _ in range(len(index_list) - 1):
@@ -125,6 +124,5 @@ if __name__ == "__main__":
         print_to_stdout=False
     )
     child_func(num=6)
-
     sys.exit(0)
 

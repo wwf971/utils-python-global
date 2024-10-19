@@ -138,6 +138,8 @@ class Dict(dict):
         self[key] = value
     def hasattr(self, key):
         return hasattr(self, key)
+    def copy():
+        return Dict(super().copy())
 
 class DefaultDict(Dict):
     def __getattr__(self, key):

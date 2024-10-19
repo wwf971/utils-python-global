@@ -18,6 +18,10 @@ def remove_dir(dir_path): # remove a folder and all files and child folders in i
     return
 delete_dir = remove_dir
 
+def remove_dir_if_exist(file_path):
+    if _utils_file.dir_exist(file_path):
+        remove_dir(file_path)
+
 def remove_subdir_if_empty(dir_path_current, recur=True):
     def remove_dir_if_empty(dir_path, dir_path_rel, pipe_out=None, **kwargs):
         if _utils_file.is_dir_emtpy(dir_path):

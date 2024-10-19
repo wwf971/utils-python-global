@@ -2,6 +2,7 @@ import sqlite3
 from _utils_import import torch, np
 import _utils
 
+
 import random
 def set_seed(seed: int=None, seed_random: int=None, seed_numpy: int=None, seed_torch: int=None):
     if seed_random is None and seed_numpy is None and seed_torch is None:
@@ -83,3 +84,8 @@ class TriggerFuncAtEveryFixedInterval:
         else:
             result = None
         return result
+
+from ._tensorboard import (
+    init_tensorboard,
+    TensorboardWrapper
+)
