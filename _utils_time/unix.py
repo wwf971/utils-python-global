@@ -79,9 +79,13 @@ def unix_stamp_to_time_str(unix_stamp: float, timezone: str="local", format="%Y%
 def unix_stamp_to_time_str_local(unix_stamp: float, format="%Y%m%d_%H%M%S%f"):
     if isinstance(unix_stamp, int):
         unix_stamp = unix_stamp * 1.0
-    
+
     # 1. turn unix_stamp to datetime object
     datetime_obj = unix_stamp_to_datetime_obj(unix_stamp)
+    
+    # localize to UTC
+    import pytz
+    datetime_obj = pytz.utc.localize(datetime_obj) # set timezone to gmt+0 for datetimeobj
 
     # 2. set timezone for datetime object, and then generate time_str
     time_str = _utils_time.datetime_obj_to_time_str(datetime_obj, timezone="local", format=format)

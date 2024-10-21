@@ -32,11 +32,3 @@ def GetProjectDirPath(FilePath):
     BaseDirPath = DLUtils.EnsureDir(BaseDirPath)
     return BaseDirPath
 
-def GetExperimentDirPath(BaseDirPath):
-    """
-    path of a folder that stores data of one experiment instance
-    """
-    from datetime import datetime
-    ExperimentDirPath = GetDirPathWithSameDirNameAsFile(BaseDirPath) + datetime.now().strftime("%Y%m%d-%H%M%S") + "/"
-    return ExperimentDirPath
-

@@ -20,5 +20,3 @@ class CustomArgumentParser(argparse.ArgumentParser):
 			self.add_argument('--' + arg_name, nargs="?", const=True, type=str2bool, default=False, help=help)
 def get_parser() -> CustomArgumentParser:
 	return CustomArgumentParser()
-
-

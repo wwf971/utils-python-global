@@ -89,3 +89,12 @@ from ._tensorboard import (
     init_tensorboard,
     TensorboardWrapper
 )
+
+from .args import (
+    save_args
+)
+
+from .path import (
+    get_model_file_path_by_epoch,
+    set_dir_path_instance
+)

@@ -8,16 +8,16 @@ def class_path_from_class_instance(Instance):
     qualname = cls.__qualname__
     return f"{module}.{qualname}"
 
-def class_instance_from_class_path(ClassPath: str, **KwArgs):
+def class_instance_from_class_path(ClassPath: str, *args, **kwargs):
     import importlib
     # split the class_path into module path and class name
-    ModulePath, ClassName = ClassPath.rsplit('.', 1)
+    module_path, ClassName = ClassPath.rsplit('.', 1)
     # import the module
-    module = importlib.import_module(ModulePath)
+    module = importlib.import_module(module_path)
     # get the class
     cls = getattr(module, ClassName)
     # create an instance of the class
-    instance = cls(**KwArgs)
+    instance = cls(*args, **kwargs)
     return instance
 
 import argparse
@@ -134,8 +134,14 @@ class Dict(dict):
             else:
                 self[key] = value
         return self
-    def setattr(self, key, value):
+    def setattr(self, key=None, value=None, **kwargs):
+        if len(kwargs) > 0:
+            assert key is None and value is None
+            for _key, _value in kwargs.items():
+                self[_key] = _value
+            return self
         self[key] = value
+        return self
     def hasattr(self, key):
         return hasattr(self, key)
     def copy():

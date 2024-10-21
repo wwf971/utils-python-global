@@ -91,7 +91,7 @@ class TorchModuleWrapper(nn.Module):
         }
         self.add_module(name, torch_module)
         return self
-    def AddModuleList(self, name, *module_list, **module_dict):
+    def add_module_list(self, name, *module_list, **module_dict):
         if len(module_list) > 0:
             # Modulename will be like "1", "2", ...
             assert len(module_list) == 0
@@ -202,10 +202,10 @@ class TorchModuleWrapper(nn.Module):
     def clear(self):
         if hasattr(self, "config"):
             delattr(self, "config")
-        if hasattr(self, "_HasBuild"):
-            delattr(self, "_HasBuild")
-        if hasattr(self, "_IsLoad"):
-            delattr(self, "_IsLoad")
+        if hasattr(self, "_has_build"):
+            delattr(self, "_has_build")
+        if hasattr(self, "_is_load"):
+            delattr(self, "_is_load")
         return self
     # def __repr__(self):
     #     return PrintTorchModule(self)
@@ -213,7 +213,6 @@ class TorchModuleWrapper(nn.Module):
         self.device = device
         self.to(device)
         return self
-
 TorchModule = TorchModuleWrapper
 
 def print_module_param(model: torch.nn.Module, stdout=None):
@@ -377,7 +376,6 @@ def create_torch_module_submodule_from_dict(parent_module: torch.nn.Module, subm
         create_torch_module_from_dict(child_dict) # recur
         parent_module.add_module(name, child)
     return parent_module
-
 
 class ModuleList(TorchModuleWrapper):
     """

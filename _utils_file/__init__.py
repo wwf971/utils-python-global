@@ -298,6 +298,19 @@ def get_file_create_unix_stamp(file_path):
         raise NotImplementedError
     return unix_stamp_create
 
+def get_file_latest_create(dir_path: str):
+    file_path_latest = None
+    time_stamp_latest = None
+    file_path_list = _utils_file.list_all_file_path(dir_path)
+    if len(file_path_list) == 0:
+        return None
+    for file_path in file_path_list:
+        time_stamp_create = _utils_file.get_file_create_unix_stamp(file_path)
+        if time_stamp_latest is None or time_stamp_latest < time_stamp_create:
+            time_stamp_latest = time_stamp_create
+            file_path_latest = file_path
+    return file_path_latest
+
 def get_file_modify_unix_stamp(file_path): # last modified time
     file_path = check_file_exist(file_path)
     # os.path.getmtime is robust across platform and file system
@@ -347,6 +360,17 @@ def check_dir_config(dir_path, config: Dict):
             return False
     return True
 
+def obj_to_binary_file(obj, file_path):
+    _utils_file.create_dir_for_file_path(file_path)
+    with open(file_path, "wb") as f:
+        pickle.dump(obj, f)
+
+def binary_file_to_obj(file_path):
+    _utils_file.check_file_exist(file_path)
+    with open(file_path, 'rb') as f:
+        obj = pickle.load(f, encoding='bytes')
+    return obj
+
 import _utils_import
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -356,13 +380,17 @@ if TYPE_CHECKING:
     )
     from _utils import (
         to_yaml_file,
-        from_yaml_file
+        from_yaml_file,
+        dict_to_json_file,
+        json_str_to_dict
     )
 else:
     text_file_to_str = _utils_import.lazy_from_import("_utils_io", "text_file_to_str")
     str_to_text_file = _utils_import.lazy_from_import("_utils_io", "str_to_text_file")
-    to_yaml_file = _utils_import.lazy_from_import("_utils_io", "to_yaml_file")
-    from_yaml_file = _utils_import.lazy_from_import("_utils_io", "from_yaml_file")
+    to_yaml_file = _utils_import.lazy_from_import("_utils", "to_yaml_file")
+    from_yaml_file = _utils_import.lazy_from_import("_utils", "from_yaml_file")
+    dict_to_json_file = _utils_import.lazy_from_import("_utils", "dict_to_json_file")
+    json_str_to_dict = _utils_import.lazy_from_import("_utils", "json_str_to_dict")
 
 from .move import (
     move_file, copy_file, rename_file,
@@ -384,6 +412,7 @@ from .remove import (
 
 from .content import (
     get_file_byte_num, get_file_size,
+    get_file_size_str,
     get_file_md5,
     have_same_content
 )

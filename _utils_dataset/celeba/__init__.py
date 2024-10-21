@@ -1,4 +1,4 @@
-from _utils_import import _utils_file, Dict
+from _utils_import import _utils_file, Dict, torch
 import _utils_file, _utils
 from _utils_image import image_file_to_np_array_float01
 
@@ -16,14 +16,18 @@ class CelebADataset():
         )
         self._is_build = True
         return self
-    def get_dataset(self):
-        return Dataset(self.dir_path_data + "img_align_celeba/")
+    def get_dataset(self, transform=None):
+        return Dataset(
+            self.dir_path_data + "img_align_celeba/",
+            transform=transform
+        )
 
 class Dataset():
-    def __init__(self, dir_path_img):
+    def __init__(self, dir_path_img, transform=None):
         self.dir_path_img = dir_path_img
         global sample_num
         self.sample_num = sample_num
+        self.transform = transform
     def __len__(self):
         return self.sample_num
     def __getitem__(self, index):
@@ -32,7 +36,13 @@ class Dataset():
             # ...
             # 202599.jpg <-- index=202598
         img_np = image_file_to_np_array_float01(self.dir_path_img + file_name_image)
-        return img_np
+        img_tensor = torch.from_numpy(img_np).permute(2, 0, 1)
+
+        if self.transform is not None:
+            img_transformed = self.transform(img_tensor)
+            return img_transformed
+        else:
+            return img_np
 
 def load_dataset_from_zip_file(file_path_zip, dir_path_data=None, use_cache=True):
     file_path_zip = _utils_file.file_path_to_unix_style(file_path_zip)

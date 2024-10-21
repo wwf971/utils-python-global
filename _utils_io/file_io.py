@@ -6,12 +6,26 @@ from _utils_import import _utils_file, _utils_system
 import _utils_io
 from io import StringIO, BytesIO
 
-def run_func_with_output_to_file(func, file_path_stdout, *args, file_path_stderr=None, backend="dup", **kwargs):
+def run_func_with_output_to_file(func,
+    file_path_stdout, *args, file_path_stderr=None, backend="dup",
+    pipe_prev=None, **kwargs
+):
     backend = backend.lower()
     if backend == "dup":
-        run_func_with_output_to_file_dup(func, *args, file_path_stdout=file_path_stdout, file_path_stderr=file_path_stderr, **kwargs)
+        return run_func_with_output_to_file_dup(
+            func, *args,
+            file_path_stdout=file_path_stdout, file_path_stderr=file_path_stderr,
+            pipe_prev=pipe_prev,
+            **kwargs
+        )
     elif backend == "simple":
-        run_func_with_output_to_file_dup(func, *args, file_path_stdout=file_path_stdout, file_path_stderr=file_path_stderr, **kwargs)
+        return run_func_with_output_to_file_simple(
+            func, *args,
+            file_path_stdout=file_path_stdout, file_path_stderr=file_path_stderr,
+            **kwargs
+        )
+    else:
+        raise ValueError(backend)
     return
 
 def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_stderr=None, pipe_prev=None, print_to_stdout=False, **kwargs):
@@ -83,8 +97,9 @@ def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_st
         )
 
     try:
-        func(*args, **kwargs)
+        result = func(*args, **kwargs)
     except Exception:
+        result = None
         error_str = traceback.format_exc()
         try:
             print(error_str)
@@ -102,7 +117,7 @@ def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_st
     os.close(fd_stdout_origin)
     os.dup2(fd_stderr_origin, 2) # restore stdout to the terminal
     os.close(fd_stderr_origin)
-    return
+    return result
 
 def run_func_with_output_to_file_simple(func, file_path_stdout, *args, file_path_stderr=None, **kwargs):
     # might not correctly redirect output from low-level c library to file

@@ -1,21 +1,17 @@
 from __future__ import annotations
-import xml
-from _utils import Dict
-
-
-def SetMujocoRenderBackend(Backend="egl"):
+def set_mujoco_backend(backend="egl"):
     import os
     # os.environ["MJKEY_PATH"] = "/home/wwf/.mujoco/mjkey.txt"
-    if Backend in ["egl", "EGL"]:
+    if backend in ["egl", "EGL"]:
         os.environ["MUJOCO_GL"] = "egl"
         os.environ["PYOPENGL_PLATFORM"] = "egl"
-    elif Backend in ["osmesa", "OSMESA"]:
+    elif backend in ["osmesa", "OSMESA"]:
         os.environ["MUJOCO_GL"] = "osmesa"
         os.environ["PYOPENGL_PLATFORM"] = "osmesa"
-    elif Backend in ["glfw", "GLFW", "gl", "GL"]:
+    elif backend in ["glfw", "GLFW", "gl", "GL"]:
         os.environ["MUJOCO_GL"] = "glfw"
         os.environ["PYOPENGL_PLATFORM"] = "glfw"
-    elif Backend in ["wgl", "WGL"]:
+    elif backend in ["wgl", "WGL"]:
         os.environ["MUJOCO_GL"] = "wgl"
         os.environ["PYOPENGL_PLATFORM"] = "wgl"
     else:

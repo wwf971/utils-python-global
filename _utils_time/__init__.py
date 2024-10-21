@@ -29,7 +29,19 @@ from .unix import (
 
 def get_current_time_str(
     offset=0, # unit: second
-    timezone="local"
+    timezone="local",
+    format=None
+):
+    if format is None:
+        return get_current_time_str_ymd8_hms8(offset=offset, timezone=timezone)
+
+    unix_stamp_current = get_current_unix_stamp() + offset
+    time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S")
+    return time_str_current # YYmmdd_hhmmss
+    
+def get_current_time_str_ymd8_hms8(
+    offset=0, # unit: second
+    timezone="local",
 ):
     unix_stamp_current = get_current_unix_stamp() + offset
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S%f")

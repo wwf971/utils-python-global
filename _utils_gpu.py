@@ -9,35 +9,28 @@ if TYPE_CHECKING:
 else:
     pynvml = _utils_import.lazy_import("pynvml")
 
-def ReturnGPUDevice(GPUIndex, ReturnType="str"):
-    if ReturnType in ["str"]:
-        return "cuda:%d"%GPUIndex
-    elif ReturnType in ["int"]:
-        return GPUIndex
-    else:
-        raise Exception()
-
 def get_gpu_free_memory(gpu_index):
     pynvml.nvmlInit()
     handle = pynvml.nvmlDeviceGetHandleByIndex(gpu_index)
     info = pynvml.nvmlDeviceGetMemoryInfo(handle)
     return info.free
 
-def get_gpu_with_largest_available_useage(Verbose=False, ReturnType="str", OutPipe=None):
+def get_gpu_with_largest_available_useage(verbose=False, ReturnType="str", OutPipe=None) -> int:
     import torch
     gpu_num = torch.cuda.device_count()
-    MemoryFreeLargestIndex = -1
+    gpu_max_memory_index = -1
     MemoryFreeLargest = -1
     for gpu_index in range(gpu_num):
         MemoryFree = get_gpu_free_memory(gpu_index)
-        if Verbose:
+        if verbose:
             print("GPU%d MemoryAvailable: %d"%(gpu_index, MemoryFree), file=OutPipe, flush=True)
         if MemoryFree > MemoryFreeLargest:
-            MemoryFreeLargestIndex = gpu_index
+            gpu_max_memory_index = gpu_index
             MemoryFreeLargest = MemoryFree
-    if Verbose:
-        print("gpu-%d has largest available memory %d"%(MemoryFreeLargestIndex, MemoryFreeLargest), file=OutPipe, flush=True)
-    return ReturnGPUDevice(MemoryFreeLargestIndex, ReturnType=ReturnType)
+    if verbose:
+        print("gpu-%d has largest available memory %d"%(gpu_max_memory_index, MemoryFreeLargest), file=OutPipe, flush=True)
+    return gpu_max_memory_index
+
 get_gpu_with_largest_free_memory = get_gpu_with_largest_available_useage
 
 try:

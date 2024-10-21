@@ -3,8 +3,14 @@ import _utils_file
 
 from tensorboard.backend.event_processing import event_accumulator
 class TensorboardWrapper():
-    def init(self, dir_path):
-        self.writer = init_tensorboard(dir_path)
+    def __init__(self, dir_path):
+        self.dir_path_tensorboard = dir_path
+        dir_path = _utils_file.dir_path_to_unix_style(dir_path)
+        from torch.utils.tensorboard import SummaryWriter
+        self.writer = SummaryWriter(log_dir=dir_path)
+        self.file_path_tensorboard = _utils_file.get_file_latest_create(dir_path)
+    def get_file_path_tensorboard(self):
+        return self.file_path_tensorboard
     def add_int(self, global_step=None, **kwargs):
         for key, value in kwargs.items():
             self.writer.add_scalar(

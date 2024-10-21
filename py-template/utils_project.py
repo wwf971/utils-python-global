@@ -1,15 +1,14 @@
 from __future__ import annotations
 import sys, os, pathlib
-DirPathProject = os.path.dirname(os.path.realpath(__file__)) + "/"
-DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
-DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
-DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + "/"
-DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + "/"
+dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
+dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
+dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
 sys.path += [
-    DirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent
+    dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
 ]
 
-from _utils_import import DLUtils
+from _utils_import import _utils_file
 import _utils_project
 
 def create_experiment_dir_path(config):
@@ -42,10 +41,6 @@ def create_experiment_instance_dir_path(config):
     return experiment_instance_dir_path
 
 def get_experiment_instance_dir_path(config):
-    if not hasattr(config, "experiment_instance_dir_path"):
+    if not hasattr(config, "dir_path_instance"):
         create_experiment_instance_dir_path(config)
     return config.experiment_instance_dir_path
-
-def get_save_file_path(config, episode_index):
-    experiment_instance_dir_path = get_experiment_instance_dir_path(config)
-    return experiment_instance_dir_path + f"model-episode-{episode_index}.dat"

@@ -86,3 +86,7 @@ from .python_script import (
     run_python_script,
     run_python_script_method
 )
+
+from .cmd_line import (
+    run_cmd_line
+)

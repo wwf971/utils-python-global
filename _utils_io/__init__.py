@@ -8,14 +8,12 @@ from .file_io import (
     run_func_with_output_to_file_dup,
     run_func_with_output_to_file_simple
 )
-
 from .file_io_cr import (
     run_func_with_output_to_file_dup_cr
 )
 from .buf_io import (
     run_func_with_output_to_buf
 )
-
 from ._print import (
     print_to_str,
     print_str_to_pipe

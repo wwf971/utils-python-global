@@ -50,7 +50,7 @@ def run_func_with_output_to_buf(func, *args, print_to_stdout=False, pipe_prev=No
         daemon=True, join=False
     )
     try:
-        func(*args, **kwargs)
+        result = func(*args, **kwargs)
     except Exception:
         error_str = traceback.format_exc()
         try:
@@ -65,8 +65,7 @@ def run_func_with_output_to_buf(func, *args, print_to_stdout=False, pipe_prev=No
     os.close(fd_stdout_origin)
     os.dup2(fd_stderr_origin, 2) # restore stdout to the terminal
     os.close(fd_stderr_origin)
-    return buf
-
+    return buf, result
 
 if __name__ == "__main__":
     import sys, os, pathlib
