@@ -1,8 +1,7 @@
-import os
+import sys, os, time
 import platform
-import _utils_file
+from _utils_import import _utils_file, psutil
 import _utils_system
-import importlib
 
 _is_win = None
 def is_win():
@@ -37,29 +36,6 @@ def get_monitor_num():
     else:
         raise NotImplementedError
 
-def get_current_process_pid():
-    return os.getpid()
-
-import threading
-def start_thread(func, *args, daemon=False, join=False, **kwargs):
-    """
-    daemon=True   parent exit --> child exit
-    daemon=False  parent exit --> child conitnue
-        parent about to exit --> wait for all daemon=False child to exit --> parent really exit
-    """
-    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-    thread.setDaemon(daemon) # the entire Python program exits when only daemon threads are left
-    thread.start()
-    if join:
-        thread.join() # wait for child exit
-    return thread
-    # import _thread
-    # try:
-    #     _thread.start_new_thread(func, 
-    #         args, # must be tuple. (xxx) is not a tuple. (xxx,) is a tuple.
-    #     )
-    # except:
-    #     print ("Error: 无法启动线程")
 
 def is_file_used_by_another_process(file_path):
     _utils_file.check_file_exist(file_path)
@@ -72,21 +48,47 @@ def is_file_used_by_another_process(file_path):
     else:
         raise NotImplementedError
 
-def load_module_from_file_path(file_path_script):
-    import importlib.util
+def load_module_from_file(file_path_script):
     # load a .py script file as module
+    import importlib.util
     _utils_file.check_file_exist(file_path_script)
+
+    # get the module name by stripping the directory and file extension
+    module_name = os.path.splitext(os.path.basename(file_path_script))[0]
+
     # load the module spec
-    spec = importlib.util.spec_from_file_location("loaded_module", file_path_script)
+    spec = importlib.util.spec_from_file_location(module_name, file_path_script)
+        # module_name can be any string
     module_loaded = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module_loaded)
     return module_loaded
+
+def import_class_from_file(file_path_script, class_name):
+    module_loaded = load_module_from_file(file_path_script)
+
+    # retrieve the class from the loaded module
+    if hasattr(module_loaded, class_name):
+        return getattr(module_loaded, class_name)
+    else:
+        raise AttributeError(f"Class {class_name} not found in {file_path_script}")
 
 from .python_script import (
     run_python_script,
     run_python_script_method
 )
 
-from .cmd_line import (
-    run_cmd_line
+from ._process import (
+    process_exist,
+    get_current_process_pid,
+    exit_if_another_process_exit,
+    exit_if_parent_process_exit
+)
+
+from run_thread import (
+    start_thread
+)
+
+from .run_process import (
+    start_process,
+    run_cmd_line,
 )

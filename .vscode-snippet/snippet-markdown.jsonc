@@ -1,0 +1,9 @@
+{
+	"insert-image": {
+		"prefix": "insert-image",
+		"body": [
+			"<p align=\"center\"><img src=\"${1}\" width=\"${2}00\"></p>",
+		], // 通过Ctrl+[和Ctrl+]让光标在形如${xxx}的place_holder之间跳转
+		"description": "insert an image"
+	}
+}

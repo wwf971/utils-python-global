@@ -65,7 +65,6 @@ def remove_file_with_suffix(dir_path: str, suffix: str):
         if _suffix == suffix:
             remove_file(file_path)
 
-
 def remove_file_if_has_suffix(dir_path, suffix):
     suffix = suffix.lstrip(".")
     dir_path = _utils_file.dir_path_to_unix_style(dir_path)
@@ -75,16 +74,12 @@ def remove_file_if_has_suffix(dir_path, suffix):
             if _suffix == suffix:
                 _utils_file.remove_file(dir_path + file_name)
 
-def remove_dir_if_is_empty(
-    dir_path,
-    pattern=None,
-):
-    dir_path = _utils_file.dir_path_to_unix_style(dir_path)
-    pattern_compiled = re.compile(pattern)
-    for dir_path in _utils_file.list_all_dir_path(dir_path):
-        if _utils_file.is_dir_emtpy(dir_path):
-            _utils_file.remove_dir(dir_path)
-
+def remove_dir_if_is_empty(dir_path: str):
+    if _utils_file.is_dir_emtpy(dir_path):
+        _utils_file.remove_dir(dir_path)
+        return True
+    else:
+        return False
 
 def remove_file_if_name_match_pattern(dir_path, pattern=None,):
     dir_path = _utils_file.dir_path_to_unix_style(dir_path)

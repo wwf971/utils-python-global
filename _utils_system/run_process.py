@@ -1,6 +1,14 @@
 import _utils_system
 import subprocess
 
+def start_process(cmd_line, on_output, print_output=False, return_output=False, daemon=False, join=False, backend="subprocess", **kwargs):
+    backend = backend.lower()
+    if backend == "subprocess":
+        return
+    else:
+        raise Exception
+    return
+
 def run_cmd_line(cmd_line, on_output=None, print_output=True, return_output=False):
     if isinstance(cmd_line, list):
         pass

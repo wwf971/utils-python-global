@@ -197,7 +197,7 @@ def list_all_dir_name_and_path(dir_path, _yield=True):
 def is_dir_emtpy(dir_path):
     return not any(Path(dir_path).iterdir())
 
-def find_file_name_with_suffix(dir_path: str, suffix: str):
+def list_all_file_name_with_suffix(dir_path: str, suffix: str):
     file_name_list = []
     suffix = suffix.lstrip(".")
     for file_name in list_all_file_name(dir_path):
@@ -206,6 +206,14 @@ def find_file_name_with_suffix(dir_path: str, suffix: str):
             file_name_list.append(file_name)
     return file_name_list
 
+def list_all_file_path_with_suffix(dir_path: str, suffix: str):
+    file_path_list = []
+    suffix = suffix.lstrip(".")
+    for file_name, file_path in list_all_file_name_and_path(dir_path):
+        _, _suffix = get_file_name_and_suffix(file_name)
+        if _suffix == suffix:
+            file_path_list.append(file_path)
+    return file_path_list
 
 def visit_tree(dir_path_current, func=None, recur=True, verbose=False, dir_path_rel=None, func_dir=None, **kwargs):
     if dir_path_rel is None: # root
@@ -403,6 +411,7 @@ from .remove import (
     remove_dir,
     clear_dir,
     remove_subdir_if_empty,
+    remove_dir_if_is_empty,
     remove_file_if_exist,
     remove_file_with_suffix, remove_file_if_has_suffix,
     remove_dir_if_is_empty,
