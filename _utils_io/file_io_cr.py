@@ -143,7 +143,7 @@ def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path
         _listen_thread = _utils_system.start_thread(
             listen_thread, fd_read=fd_read, file_path=file_path_stdout, pipe_prev=pipe_prev,
             buf=buf,
-            daemon=True, join=False
+            dependent=True, join=False
         )
     else:
         buf_stdout = BytesBufCR()
@@ -151,12 +151,12 @@ def run_func_with_output_to_file_dup_cr(func, file_path_stdout, *args, file_path
         _listen_thread_stdout = _utils_system.start_thread(
             listen_thread, fd_read=fd_read_stdout, file_path=file_path_stdout, pipe_prev=pipe_prev,
             buf=buf_stdout,
-            daemon=True, join=False
+            dependent=True, join=False
         )
         _listen_thread_stderr = _utils_system.start_thread(
             listen_thread, fd_read=fd_read_stderr, file_path=file_path_stderr, pipe_prev=pipe_prev,
             buf=buf_stderr,
-            daemon=True, join=False
+            dependent=True, join=False
         )
     try:
         func(*args, **kwargs)

@@ -2,7 +2,7 @@ import sqlite3
 from _utils_import import torch, np
 import _utils
 
-
+from _utils_args import CustomArgumentParser
 import random
 def set_seed(seed: int=None, seed_random: int=None, seed_numpy: int=None, seed_torch: int=None):
     if seed_random is None and seed_numpy is None and seed_torch is None:
@@ -31,10 +31,22 @@ def GetDataBaseConnection(file_path):
 
 import collections
 class FloatLog:
-    def __init__(self, buf_size):
-        # collections.deque: FIFO(first-in-first-out) queue with max length.
-        self.float_list = collections.deque([], maxlen=buf_size)
-        self.batch_size_list = collections.deque([], maxlen=buf_size)
+    def __init__(self, buf_size=None):
+        if buf_size is None:
+            self.has_buf = True
+            # collections.deque: FIFO(first-in-first-out) queue with max length.
+            self.float_list = collections.deque([], maxlen=buf_size)
+            self.batch_size_list = collections.deque([], maxlen=buf_size)
+        else:
+            self.has_buf = False
+            self.float_list = []
+            self.batch_size_list = []
+    def clear(self):
+        if self.has_buf:
+            raise NotImplementedError
+        else:
+            self.float_list.clear()
+            self.batch_size_list.clear()
     def append(self, data: float, batch_size: int):
         self.float_list.append(data)
         self.batch_size_list.append(batch_size)
@@ -67,18 +79,18 @@ class IntLog: # AccuracyAlongEpochBatchTrain
         return int_sum / sample_num
 
 class TriggerFuncAtEveryFixedInterval:
-    def __init__(self, interval, Func, *Args, **kwargs):
+    def __init__(self, interval, func, *Args, **kwargs):
         self.Args = Args
         self.kwargs = kwargs
         self.reset()
-        self.Func = Func
+        self.func = func
         self.interval = interval
     def reset(self):
         self.count = 0
     def tick(self):
         self.count += 1
         if self.count >= self.interval:
-            result = self.Func(*self.Args, **self.kwargs)
+            result = self.func(*self.Args, **self.kwargs)
             self.reset()
             return result
         else:

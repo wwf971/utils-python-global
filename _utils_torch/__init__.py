@@ -21,7 +21,8 @@ from .utils import (
     np_array_to_torch_tensor,
     torch_tensor_to_np_array,
     check_tensor_shape,
-    to_one_hot
+    to_one_hot,
+    get_activation_func_class
 )
 
 def torch_tensor_to_image_file(tensor, file_path_save, shape="chw", value_range=[0.0, 1.0]):

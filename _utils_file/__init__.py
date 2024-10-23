@@ -6,6 +6,7 @@ import _utils_file
 from .path import (
     dir_path_to_unix_style,
     file_path_to_unix_style,
+    dir_path_to_win_style,
     get_dir_path_of_file_path,
     get_dir_path_of_dir_path, get_parent_dir_path,
     get_file_name_of_file_path,
@@ -307,17 +308,20 @@ def get_file_create_unix_stamp(file_path):
     return unix_stamp_create
 
 def get_file_latest_create(dir_path: str):
-    file_path_latest = None
-    time_stamp_latest = None
     file_path_list = _utils_file.list_all_file_path(dir_path)
     if len(file_path_list) == 0:
         return None
+    return get_file_latest_create_from_file_list(file_path_list)
+
+def get_file_latest_create_from_file_list(file_path_list):
+    file_path_latest = None
+    time_stamp_latest = None
     for file_path in file_path_list:
         time_stamp_create = _utils_file.get_file_create_unix_stamp(file_path)
         if time_stamp_latest is None or time_stamp_latest < time_stamp_create:
             time_stamp_latest = time_stamp_create
             file_path_latest = file_path
-    return file_path_latest
+    return file_path_latest 
 
 def get_file_modify_unix_stamp(file_path): # last modified time
     file_path = check_file_exist(file_path)

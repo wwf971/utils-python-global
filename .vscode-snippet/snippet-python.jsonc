@@ -1,9 +1,17 @@
 {
 	// 在utils-python-global/snippet-python.jsonc中进行改动, 然后copy到python.json
-	"sys.path add path": {
-		"prefix": ["sys.path add path"], // 在snippet列表中显示的名称
+
+
+	"pyqt": {
+		"prefix": ["pyqt import"], // 在snippet列表中显示的名称
 		"body": [
-			"", // 在snippet列表中显示的名称
+			"from PyQt5 import QtWidgets, QtGui, QtCore",
+		],
+		"description": "import pyqt components"
+	},
+	"sys.path add path": {
+		"prefix": ["add path to sys.path"], // 在snippet列表中显示的名称
+		"body": [
 			"import sys, os, pathlib",
 			"dir_path_current = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
 			"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
@@ -11,29 +19,12 @@
 			"dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + \"/\"",
 			"sys.path += [",
 			"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
-			"]",
-			"$2" //通过Tab让光标跳跃到下1个placeholder
+			"]"
 		],
-		"description": "sys.path add path"
+		"description": "sys.path add path" // 在snippet列表中以小字显示
 	},
-	// "sys.path add path": {
-	// 	"prefix": ["sys.path add path"], // 在snippet列表中显示的名称
-	// 	"body": [
-	// 		"", // 在snippet列表中显示的名称
-	// 		"import sys, os, pathlib",
-	// 		"DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
-	// 		"DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + \"/\"",
-	// 		"DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + \"/\"",
-	// 		"DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
-	// 		"sys.path += [",
-	// 		"\tDirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent",
-	// 		"]",
-	// 		"$2" //通过Tab让光标跳跃到下1个placeholder
-	// 	],
-	// 	"description": "sys.path add path"
-	// },
 	"sys.path add path(jupyter)": {
-		"prefix": ["sys.path add path(jupyter)"], // 在snippet列表中显示的名称
+		"prefix": ["add path to sys.path(jupyter)"], // 在snippet列表中显示的名称
 		"body": [
 			// "from __future__ import annotations",
 			"import sys, os, pathlib",
@@ -43,8 +34,7 @@
 			"dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + \"/\"",
 			"sys.path += [",
 			"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
-			"]",
-			"$2" //通过Tab让光标跳跃到下1个placeholder
+			"]"
 		],
 		"description": "sys.path add path(jupyter)"
 	},

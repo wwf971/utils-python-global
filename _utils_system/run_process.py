@@ -1,7 +1,7 @@
 import _utils_system
 import subprocess
 
-def start_process(cmd_line, on_output, print_output=False, return_output=False, daemon=False, join=False, backend="subprocess", **kwargs):
+def start_process(cmd_line, on_output, print_output=False, return_output=False, dependent=False, join=False, backend="subprocess", **kwargs):
     backend = backend.lower()
     if backend == "subprocess":
         return
@@ -56,8 +56,8 @@ def run_cmd_line(cmd_line, on_output=None, print_output=True, return_output=Fals
     )
 
     # create threads for stdout and stderr
-    thread_stdout = _utils_system.start_thread(read_output, process.stdout, stream_name="STDOUT", daemon=True, join=False)
-    thread_stderr = _utils_system.start_thread(read_output, process.stderr, stream_name="STDERR", daemon=True, join=False)
+    thread_stdout = _utils_system.start_thread(read_output, process.stdout, stream_name="STDOUT", dependent=True, join=False)
+    thread_stderr = _utils_system.start_thread(read_output, process.stderr, stream_name="STDERR", dependent=True, join=False)
 
     # wait for the process to finish
     process.wait()

@@ -36,7 +36,6 @@ def get_monitor_num():
     else:
         raise NotImplementedError
 
-
 def is_file_used_by_another_process(file_path):
     _utils_file.check_file_exist(file_path)
     if _utils_system.is_win():
@@ -48,29 +47,26 @@ def is_file_used_by_another_process(file_path):
     else:
         raise NotImplementedError
 
-def load_module_from_file(file_path_script):
-    # load a .py script file as module
-    import importlib.util
-    _utils_file.check_file_exist(file_path_script)
+def run_func_with_timeout(func, timeout, *args, **kwargs):
+    # timeout: in seconds
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(func, *args, **kwargs)
+        try:
+            # Wait for the result within the time limit
+            result = future.result(timeout=timeout)
+            is_timeout = False
+        except concurrent.futures.TimeoutError:
+            # Timeout occurred
+            is_timeout = True
+            result = None
+            return "Function timed out"
+    return is_timeout, result
 
-    # get the module name by stripping the directory and file extension
-    module_name = os.path.splitext(os.path.basename(file_path_script))[0]
-
-    # load the module spec
-    spec = importlib.util.spec_from_file_location(module_name, file_path_script)
-        # module_name can be any string
-    module_loaded = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module_loaded)
-    return module_loaded
-
-def import_class_from_file(file_path_script, class_name):
-    module_loaded = load_module_from_file(file_path_script)
-
-    # retrieve the class from the loaded module
-    if hasattr(module_loaded, class_name):
-        return getattr(module_loaded, class_name)
-    else:
-        raise AttributeError(f"Class {class_name} not found in {file_path_script}")
+from ._module import (
+    load_module_from_file,
+    import_class_from_file
+)
 
 from .python_script import (
     run_python_script,
@@ -84,7 +80,7 @@ from ._process import (
     exit_if_parent_process_exit
 )
 
-from run_thread import (
+from .run_thread import (
     start_thread
 )
 

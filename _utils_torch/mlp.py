@@ -1,19 +1,6 @@
-from _utils_import import torch, nn, F
+from _utils_import import torch, nn
 import _utils_torch
 from .wrapper import TorchModuleWrapper, ModuleList
-
-def get_torch_nonlinear_func(nonlinear_func_str: str):
-    nonlinear_func_str = nonlinear_func_str.lower()
-    if nonlinear_func_str in ["relu"]:
-        return nn.ReLU
-    elif nonlinear_func_str in ["tanh"]:
-        return nn.Tanh
-    elif nonlinear_func_str in ["sigmoid"]:
-        return nn.Sigmoid
-    elif nonlinear_func_str in ["none", "identity"]:
-        return nn.Identity
-    else:
-        raise ValueError
 
 class NonLinearLayer(TorchModuleWrapper):
     def init(self, input_size, output_size, nonlinear_func="relu"):
@@ -22,7 +9,7 @@ class NonLinearLayer(TorchModuleWrapper):
         config.input_size = input_size
         config.output_size = output_size
         
-        self.add_torch_module("nonlinear_func", get_torch_nonlinear_func(config.nonlinear_func))
+        self.add_torch_module("nonlinear_func", _utils_torch.get_activation_func_class(config.nonlinear_func))
         self.add_torch_module(
             "linear_map",
             nn.Linear,
@@ -58,7 +45,7 @@ def build_mlp(layer_shape, nonlinear_func, nonlinear_func_output=None):
     if nonlinear_func_output is None:
         nonlinear_func_output = nonlinear_func
     for j in range(len(layer_shape)-1):
-        nonlinear_module = get_torch_nonlinear_func(nonlinear_func if j < len(layer_shape)-2 else nonlinear_func_output)
+        nonlinear_module = _utils_torch.get_activation_func_class(nonlinear_func if j < len(layer_shape)-2 else nonlinear_func_output)
         layer_list += [nn.Linear(layer_shape[j], layer_shape[j+1]), nonlinear_module()]
     return nn.Sequential(*layer_list)
 
@@ -76,7 +63,7 @@ class MLPParallelLayer(TorchModuleWrapper):
         _utils_torch.check_tensor_shape(weight, config.mlp_num, config.input_size, config.output_size)
         _utils_torch.check_tensor_shape(bias, config.mlp_num, config.output_size)
         self.add_param(weight=weight, bias=bias)
-        self.add_torch_module("nonlinear_func", get_torch_nonlinear_func(config.nonlinear_func))
+        self.add_torch_module("nonlinear_func", _utils_torch.get_activation_func_class(config.nonlinear_func))
         
     def forward(self, x): # x: (batch_size, mlp_num, input_dim)
         # x_unsqueeze = x.unsqueeze(1) # (batch_size, mlp_num, input_dim)

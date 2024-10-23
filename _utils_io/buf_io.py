@@ -47,7 +47,7 @@ def run_func_with_output_to_buf(func, *args, print_to_stdout=False, pipe_prev=No
 
     _listen_thread = _utils_system.start_thread(
         listen_thread, fd_read=fd_read, buf=buf, pipe_prev=pipe_prev,
-        daemon=True, join=False
+        dependent=True, join=False
     )
     try:
         result = func(*args, **kwargs)

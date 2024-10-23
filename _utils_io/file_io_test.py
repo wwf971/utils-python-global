@@ -38,4 +38,3 @@ if __name__ == "__main__":
         file_path_stdout=file_path_stdout,
         file_path_stderr=file_path_stderr
     )
-

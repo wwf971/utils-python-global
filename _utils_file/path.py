@@ -8,12 +8,20 @@ def file_path_to_unix_style(file_path: str):
         file_path = os.path.expanduser(file_path)
     return file_path
 
-def dir_path_to_unix_style(dir_path: str):
+def dir_path_to_unix_style(dir_path: str, trailing_slash=True):
     if "~" in dir_path: # handle ~ in file path
         dir_path = os.path.expanduser(dir_path)
     dir_path = dir_path.replace("\\", "/")
     dir_path = dir_path.rstrip("/")
-    dir_path += "/"
+    if trailing_slash:
+        dir_path += "/"
+    return dir_path
+
+def dir_path_to_win_style(dir_path: str, trailing_slash=False):
+    dir_path = dir_path.lstrip("/").lstrip("\\")
+    dir_path = dir_path.replace("\\", "/")
+    if trailing_slash:
+        dir_path += "\\"
     return dir_path
 
 def get_dir_path_current(__file__: str):    

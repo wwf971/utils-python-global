@@ -2,6 +2,19 @@ from __future__ import annotations
 
 from _utils_import import np, torch, nn, F
 
+def get_activation_func_class(func_str: str):
+    func_str = func_str.lower()
+    if func_str in ["relu"]:
+        return nn.ReLU
+    elif func_str in ["tanh"]:
+        return nn.Tanh
+    elif func_str in ["sigmoid"]:
+        return nn.Sigmoid
+    elif func_str in ["none", "identity"]:
+        return nn.Identity
+    else:
+        raise ValueError
+
 def get_batch_num(torch_dataloader):
     return len(torch_dataloader)
 

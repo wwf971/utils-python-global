@@ -1,6 +1,13 @@
 
 from _utils_import import np, Im, plt, cv2
 
+def img_pil_to_np_array(img_pil):
+    return np.array(img_pil)
+
+def np_array_to_img_pil(img_np):
+    img_pil = Im.fromarray(img_np)
+    return img_pil
+
 def image_file_to_np_array_float01(file_path, backend:str="pil"):
     # return data type: float. value range: [0.0, 1.0]
     backend = backend.lower()

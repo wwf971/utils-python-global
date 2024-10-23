@@ -84,16 +84,16 @@ def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_st
     if file_path_stderr is None:
         _listen_thread = _utils_system.start_thread(
             listen_thread, fd_read=fd_read, file_path=file_path_stdout, pipe_prev=pipe_prev,
-            daemon=True, join=False
+            dependent=True, join=False
         )
     else:
         _listen_thread_stdout = _utils_system.start_thread(
             listen_thread, fd_read=fd_read_stdout, file_path=file_path_stdout, pipe_prev=pipe_prev,
-            daemon=True, join=False
+            dependent=True, join=False
         )
         _listen_thread_stderr = _utils_system.start_thread(
             listen_thread, fd_read=fd_read_stderr, file_path=file_path_stderr, pipe_prev=pipe_prev,
-            daemon=True, join=False
+            dependent=True, join=False
         )
 
     try:

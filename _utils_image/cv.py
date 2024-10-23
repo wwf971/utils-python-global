@@ -134,7 +134,16 @@ def put_text_on_image_center(image: np.ndarray, text="Text", text_box_width=None
 
     put_text_on_image(image, text, x_left, y_bottom, color, font_scale)
 
-def put_text_on_image(image: np.ndarray, text="Text", x_left=0, y_bottom=0, color=(0, 0, 0), font_scale=1.0):
+def put_text_on_image(
+        image: np.ndarray, text="Text", x_left=0, y_bottom=0, color=(0, 0, 0),
+        font_scale=1.0, thickness=1
+    ):
+    # thickness must be integer
+    if isinstance(thickness, float):
+        thickness = round(thickness)
+        if thickness == 0:
+            thickness = 1
+
     cv2.putText(
         img=image,
         text=text,
@@ -142,6 +151,6 @@ def put_text_on_image(image: np.ndarray, text="Text", x_left=0, y_bottom=0, colo
         fontFace=cv2.FONT_HERSHEY_TRIPLEX,
         fontScale=font_scale,
         color=color,
-        thickness=3
+        thickness=thickness
     )
     return image
