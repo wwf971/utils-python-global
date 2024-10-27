@@ -1,28 +1,56 @@
 {
-
+    // "latex-workshop.latex.outDir": "%DIR%/aux",
+    "latex-workshop.showContextMenu": true,//启用上下文LaTeX菜单
+    "latex-workshop.intellisense.package.enabled": true,  //根据加载的包，自动完成命令或包
+    // "latex-workshop.message.error.show": false,
+    // "latex-workshop.message.warning.show": false,
+    "latex-workshop.latex.clean.fileTypes": [ // 清除辅助文件
+        "*.aux",
+        "*.bbl",
+        "*.blg",
+        "*.idx",
+        "*.ind",
+        "*.lof",
+        "*.lot",
+        "*.out",
+        "*.toc",
+        "*.acn",
+        "*.acr",
+        "*.alg",
+        "*.glg",
+        "*.glo",
+        "*.gls",
+        "*.nav",
+        "*.xml",
+        "*.synctex.gz",
+        "*.snm",
+        "*.ist",
+        "*.fls",
+        "*.log",
+        "*.fdb_latexmk"
+    ],
+    "latex-workshop.latex.clean.method": "glob", // 强制删除所有辅助文件
+    "latex-workshop.latex.autoClean.run": "onBuilt", // 在何时删除辅助文件
     "latex-workshop.latex.tools": [
         {
             // 编译工具和命令
             "name": "xelatex",
             "command": "xelatex",
             "args": [
-                "-synctex=0",
+                "-synctex=1",
                 "-interaction=nonstopmode",
                 "-file-line-error",
                 "-pdf",
-                "%DOCFILE%",
-                // "-output-directory=%DIR%/dir",
-                "-output-directory=target"
+                "%DOCFILE%"
             ]
         },
         {
             "name": "pdflatex",
             "command": "pdflatex",
             "args": [
-                "-synctex=0",
+                "-synctex=1",
                 "-interaction=nonstopmode",
                 // "--aux-directory=%DIR%/aux",
-                // "-output-directory=%DIR%/dir",
                 "-file-line-error",
                 "%DOCFILE%"
             ]
@@ -31,12 +59,11 @@
             "name": "bibtex",
             "command": "bibtex",
             "args": [
-                "%DOCFILE%",
-                // "-output-directory=%DIR%/dir",
+                "%DOCFILE%"
             ]
         }
     ],
-    "latex-workshop.latex.recipes": [
+    "latex-workshop.latex.recipes": [ // 编译链条. 是对"latex-workshop.latex.tools"中项目的组合.
         {
             "name": "xe->bib->xe->xe",
             "tools": [
@@ -67,31 +94,5 @@
                 "pdflatex"
             ]
         }
-    ],
-    "latex-workshop.latex.clean.fileTypes": [
-        "*.aux",
-        "*.bbl",
-        "*.blg",
-        "*.idx",
-        "*.ind",
-        "*.lof",
-        "*.lot",
-        "*.out",
-        "*.toc",
-        "*.acn",
-        "*.acr",
-        "*.alg",
-        "*.glg",
-        "*.glo",
-        "*.gls",
-        "*.ist",
-        "*.fls",
-        "*.log",
-        "*.fdb_latexmk"
-    ],
-    // "latex-workshop.latex.outDir": "%DIR%/aux",
-        // setting this makes latex-workshop.latex.clean.fileTypes not delete files.
-    "latex-workshop.latex.autoClean.run": "onBuilt",
-    "latex-workshop.latex.clean.method": "glob",
-    "latex-workshop.latex.clean.subfolder.enabled": true
+    ]
 }

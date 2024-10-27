@@ -2,7 +2,7 @@ from __future__ import annotations
 import _utils_file
 import _utils_train
 
-from tensorboard.backend.event_processing import event_accumulator
+from tensorboard.backend.event_processing import event_accumulator # pip install tensorboard
 class TensorboardWrapper():
     def __init__(self, dir_path=None):
         if dir_path is not None:
@@ -31,18 +31,25 @@ class TensorboardWrapper():
             self._cache_float[key].append(value, batch_size)
             return
     def cache_flush(self, global_step):
+        _dict = dict()
         for key, value in dict(self._cache_float).items():
-            self.add_float(
-                key, value.report_avg(),
-                global_step=global_step
-            )
+            _dict[key] = value.report_avg()
             value.clear()
+        self.add_float(
+            global_step=global_step,
+            **_dict
+        )
+
+        _dict = dict()
         for key, value in dict(self._cache_int).items():
-            self.add_int(
-                key, value.report_avg(),
-                global_step=global_step
-            )
+            _dict[key] = value.report_avg()
             value.clear()
+        
+        self.add_int(
+            global_step=global_step,
+            **_dict
+        )
+
         return
     def get_file_path_tensorboard_from_dir_path(self, dir_path):
         file_path_list = []
@@ -99,7 +106,6 @@ class TensorboardWrapper():
             self.writer.add_scalar(
                 key, value, global_step=global_step 
             )
-
     def add_float(self, global_step=None, **kwargs):
         for key, value in kwargs.items():
             self.writer.add_scalar(

@@ -1,5 +1,6 @@
-
-from _utils_import import _utils_file
+import os
+dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+from _utils_import import _utils_file, torch, np
 import _utils_file, _utils
 
 class_num = 10
@@ -46,11 +47,12 @@ class MNISTDataset():
         return self
     def get_subset_list(self):
         return ("train", "test")
-    def get_train_set(self):
+    def get_train_set(self, transform=None):
         assert self.is_build()
         return TrainSet(
             self.data.train_image,
-            self.data.train_label
+            self.data.train_label,
+            transform=transform
         )
     def get_test_set(self):
         assert self.is_build()
@@ -116,20 +118,26 @@ class Dataset():
         __len__ tells how many data samples are in Dataset
         __item__ allows retrieving i-th sample by Dataset[i]
     """
-    def __init__(self, image_list, label_list):
+    def __init__(self, image_list, label_list, transform=None):
         self.image_list = image_list
         self.label_list = label_list
 
         assert len(self.image_list) == len(self)
         assert len(self.label_list) == len(self)
+
+        if transform is None:
+            self.transform = lambda x:x
+        else:
+            self.transform = transform
     def __getitem__(self, index):
         # assert index < self.DataNum
-        return (
-            self.image_list[index] / 255.0, # np.ndarray. shape: (32(height), 32(width))
-                # data type: float32
-                # value range: [0.0, 1.0].
-            self.label_list[index]
-        )
+        image_np = (self.image_list[index] / 255.0).astype(np.float32) # np.ndarray. shape: (32(height), 32(width))
+            # data type: float32
+            # value range: [0.0, 1.0]
+        label = self.label_list[index]
+        image = torch.from_numpy(image_np)
+        image_transform = self.transform(image)
+        return image_transform, label
 
 class TrainSet(Dataset):
     def __len__(self):

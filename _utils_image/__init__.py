@@ -27,11 +27,11 @@ def image_file_to_np_array_float01(file_path, backend:str="pil"):
     else:
         raise not NotImplementedError
 
-def image_file_to_png(file_path, file_path_save=None, backend="pil"):
+def image_file_to_png(file_path, file_path_save=None, backend="pil", keep_exif=True):
     backend = backend.lower()
     if backend in ["pil"]:
         from .pil import image_file_to_png
-        image_file_to_png(file_path, file_path_save)
+        image_file_to_png(file_path, file_path_save, keep_exif=keep_exif)
     else:
         raise NotImplementedError
 
@@ -59,6 +59,35 @@ def get_test_image_np_float01(name="lenna", backend="pil"):
         return img_pil
     else:
         raise NotImplementedError
+
+def get_row_num_and_col_num(plot_num, row_num=None, col_num=None):
+    if row_num is None:
+        if col_num is None:
+            if plot_num <= 3:
+                return 1, plot_num
+            col_num = round(plot_num ** 0.5)
+            if col_num == 0:
+                col_num = 1
+            row_num = plot_num // col_num
+            if plot_num % col_num > 0:
+                row_num += 1
+            return row_num, col_num
+        else:
+            row_num = plot_num // col_num
+            if plot_num % col_num > 0:
+                row_num += 1
+            return row_num, col_num
+    else:
+        if col_num is None:
+            col_num = plot_num // row_num
+            if plot_num % row_num > 0:
+                col_num += 1
+            return row_num, col_num
+        else:
+            if plot_num != row_num * col_num:
+                raise Exception('plot_num: %d != row_num %d x ColumnNum %d'%(plot_num, row_num, col_num))
+            else:
+                return row_num, col_num
 
 from .pil import (
     import_pil_heif,

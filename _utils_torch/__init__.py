@@ -1,4 +1,5 @@
 from __future__ import annotations
+from _utils_import import _utils_file, _utils_image
 from _utils_import import torch, nn, np, _utils_image, Dict
 from _utils_torch.wrapper import(
     TorchModuleWrapper,
@@ -37,5 +38,27 @@ def torch_tensor_to_image_file(tensor, file_path_save, shape="chw", value_range=
     _utils_image.image_np_float01_to_file(array, file_path_save)
 
 def get_device_with_largest_available_useage():
-    import _utils_gpu
-    return "cuda:%d"%_utils_gpu.get_gpu_with_largest_available_useage()
+    if torch.cuda.is_available():
+        import _utils_gpu
+        return "cuda:%d"%_utils_gpu.get_gpu_with_largest_available_useage()
+    else:
+        return "cpu"
+
+def save_images_as_grid(img: torch.Tensor, file_path_save):
+    from torchvision import transforms
+    _utils_file.create_dir_for_file_path(file_path_save)
+    # concat 4x4 images
+    if len(img.shape) == 4:
+        N, C, H, W = img.shape
+    else:
+        N, H, W = img.shape
+        C = 1
+        img = img.unsqueeze(0) # (1, N, H, W)
+    
+    row_num, col_num = _utils_image.get_row_num_and_col_num(N)
+    img = torch.permute(img, (1, 0, 2, 3)) # (C, N, H, W)
+    img = torch.reshape(img, (C, col_num, row_num * H, W))
+    img = torch.permute(img, (0, 2, 1, 3))
+    img = torch.reshape(img, (C, row_num * H, col_num * W))
+    img_pil = transforms.ToPILImage()(img)
+    img_pil.save(file_path_save)

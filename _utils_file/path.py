@@ -19,7 +19,7 @@ def dir_path_to_unix_style(dir_path: str, trailing_slash=True):
 
 def dir_path_to_win_style(dir_path: str, trailing_slash=False):
     dir_path = dir_path.lstrip("/").lstrip("\\")
-    dir_path = dir_path.replace("\\", "/")
+    dir_path = dir_path.replace("/", "\\")
     if trailing_slash:
         dir_path += "\\"
     return dir_path

@@ -323,6 +323,9 @@ def torch_module_to_file(Module: torch.nn.Module, FilePath, OutPipe=None):
     _utils_file.to_file(get_torch_module_dict(Module), FilePath)
     return
 
+def load_model(file_path):
+    return TorchModuleWrapper().from_file(file_path)
+
 def torch_module_from_file(file_path):
     file_path = _utils_file.create_dir_for_file_path(file_path)
     module_dict = _utils_file.from_file(file_path)

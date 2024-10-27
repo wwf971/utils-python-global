@@ -206,7 +206,6 @@ def add_exif_tag(exif_dict, key: int, value):
     return exif_dict
 
 def get_exif_dict(file_path_img=None, img_pil: str=None):
-    backend = backend.lower()
     if file_path_img is not None:
         assert isinstance(file_path_img, str)
         assert img_pil is None

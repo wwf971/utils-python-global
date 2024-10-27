@@ -25,14 +25,17 @@ def set_seed_for_numpy(seed: int):
 def set_seed_for_torch(seed: int):
     torch.manual_seed(seed)
 
-def GetDataBaseConnection(file_path):
-    con = sqlite3.connect(file_path)
-    return con
+def get_device():
+    import _utils_gpu
+    if torch.cuda.is_available():
+        return "cuda:%d"%_utils_gpu.get_gpu_with_largest_available_useage()
+    else:
+        return "cpu"
 
 import collections
 class FloatLog:
     def __init__(self, buf_size=None):
-        if buf_size is None:
+        if buf_size is not None:
             self.has_buf = True
             # collections.deque: FIFO(first-in-first-out) queue with max length.
             self.float_list = collections.deque([], maxlen=buf_size)
@@ -62,9 +65,15 @@ class FloatLog:
 
 class IntLog: # AccuracyAlongEpochBatchTrain
     def __init__(self, buf_size):
-        # collections.deque: FIFO(first-in-first-out) queue with max length.
-        self.int_list = collections.deque([], maxlen=buf_size)
-        self.batch_size_list = collections.deque([], maxlen=buf_size)
+        if buf_size is not None:
+            self.has_buf = True
+            # collections.deque: FIFO(first-in-first-out) queue with max length.
+            self.int_list = collections.deque([], maxlen=buf_size)
+            self.batch_size_list = collections.deque([], maxlen=buf_size)
+        else:
+            self.has_buf = False
+            self.int_list = []
+            self.batch_size_list = []
     def append(self, data: float, batch_size: int):
         self.int_list.append(data)
         self.batch_size_list.append(batch_size)
@@ -77,6 +86,12 @@ class IntLog: # AccuracyAlongEpochBatchTrain
             int_sum += self.int_list[index]
             sample_num += self.batch_size_list[index]
         return int_sum / sample_num
+    def clear(self):
+        if self.has_buf:
+            raise NotImplementedError
+        else:
+            self.int_list.clear()
+            self.batch_size_list.clear()
 
 class TriggerFuncAtEveryFixedInterval:
     def __init__(self, interval, func, *Args, **kwargs):

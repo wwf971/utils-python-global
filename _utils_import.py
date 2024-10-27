@@ -37,7 +37,7 @@ def lazy_import(module_path, after_import=None, print_stack_on_first_import=Fals
     import a.b => LazyImport("a.b") # lazy import submodule
     module, submodule
     """
-    return _LazyImport(module_path, import_mode="module", after_import=after_import, print_stack_on_first_import=print_stack_on_first_import)
+    return LazyImport(module_path, import_mode="module", after_import=after_import, print_stack_on_first_import=print_stack_on_first_import)
 
 def from_import(module_path: str, var_str: str):
     """
@@ -51,9 +51,9 @@ def lazy_from_import(ModuleStr: str, VarStr: str):
     """
     from a.b import c as d => d = lazy_from_import("a.b", "c")
     """
-    return _LazyImport(ModuleStr, VarStr, import_mode="from_import")
+    return LazyImport(ModuleStr, VarStr, import_mode="from_import")
 
-class _LazyImport(object):
+class LazyImport(object):
     def __init__(self,
         module_name: str,
         var_name: str = None, 
@@ -63,29 +63,31 @@ class _LazyImport(object):
         print_stack_on_first_import=False
     ):
         self.module_name = module_name
+        self.var_name = var_name
         self.raise_on_import_error = raise_on_import_error
         self.is_module_imported = False
-        
-        self.module_path_list = module_name.split(".")
+        self.import_mode = import_mode
+        self.after_import = after_import
+        self.print_stack_on_first_import = print_stack_on_first_import
+        self.init()
+    def init(self):
+        self.module_path_list = self.module_name.split(".")
         if len(self.module_path_list) == 1:
             self.import_module = self._import_module
         elif len(self.module_path_list) > 1:
             self.import_module = self._import_submodule
         else:
             raise Exception
-        if import_mode in ["module", "submodule", "import"]:
+        if self.import_mode in ["module", "submodule", "import"]:
             self.import_mode = "import"
             self._import = self._import_module
             self.is_from_import = False
-        elif import_mode in ["from_module_import", "from_submodule_import", "from", "from_import"]:
+        elif self.import_mode in ["from_module_import", "from_submodule_import", "from", "from_import"]:
             self.import_mode = "from_import"
-            self.var_name = var_name
             self._import = self._from_import
             self.is_from_import = True
         else:
-            raise ValueError(import_mode)
-        self.after_import = after_import
-        self.print_stack_on_first_import = print_stack_on_first_import
+            raise ValueError(self.import_mode)
     def _import_module(self):
         # assert not self.is_module_imported
         import importlib
@@ -96,7 +98,7 @@ class _LazyImport(object):
                 raise Exception(f"Failed to import module: %s"%{self.module_name})
             else:
                 self.is_module_imported = False
-                module = "_utils_import._LazyImport: ImportFailure"
+                module = "_utils_import.LazyImport: ImportFailure"
                 return None
         else:
             self.is_module_imported = True
@@ -122,15 +124,10 @@ class _LazyImport(object):
         self.var = var
         return var
     def __call__(self, *List, **Dict):
-        """
-        self._import = _from_import
-        """
-        # assert self.import_mode == "FromImport"
         if not self.is_module_imported:
             self._import()    
         return self.var(*List, **Dict)
     def __getattr__(self, Name):
-        # print(f"LazyImport:{name}")
         if not self.is_module_imported:
             self._import()
         if self.is_from_import:
@@ -139,9 +136,23 @@ class _LazyImport(object):
             var = getattr(self.module, Name) # submodule, method, variable etc
             setattr(self, Name, var)
             return var
-    # def GetModuleAndis_module_imported(self):
-    #     return self.Module, self.is_module_imported
+    def __getstate__(self): # called when serialize this object
+        # Create a copy of the instance's dictionary
+        state = {}
+        # Remove the module and other non-serializable attributes
+        # Store the import status separately to avoid re-importing during unpickling
+        state['is_module_imported'] = False
+        state['import_mode'] = self.import_mode
+        state['module_name'] = self.module_name
+        state['var_name'] = self.var_name
+        state['after_import'] = self.after_import
+        state['print_stack_on_first_import'] = self.print_stack_on_first_import
+        return state
+    def __setstate__(self, state): # called when deserialize this object
+        self.__dict__.update(state)
+        self.init()
 
+import pickle # lazy_import pickle can be buggy
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy as np
@@ -150,12 +161,11 @@ if TYPE_CHECKING:
     import torch
     import torch.nn as nn
     import torch.nn.functional as F
-    import psutil
     import matplotlib as mpl
     from matplotlib import pyplot as plt
     from PIL import Image as Im
     import cv2
-    import pickle
+    import psutil
     import shutil
     import _utils
     import _utils_io
@@ -171,12 +181,11 @@ else:
     torch = lazy_import("torch")
     nn = lazy_from_import("torch", "nn")
     F = lazy_import("torch.nn.functional")
-    psutil = lazy_import("psutil")
     mpl = lazy_import("matplotlib")
     plt = lazy_import("matplotlib.pyplot")
     Im = lazy_import("PIL.Image")
     cv2 = lazy_import("cv2")
-    pickle = lazy_import("pickle")
+    psutil = lazy_import("psutil")
     shutil = lazy_import("shutil")
     _utils = lazy_import("_utils")
     _utils_io = lazy_import("_utils_io")

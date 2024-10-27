@@ -5,7 +5,7 @@ import sys, subprocess
 def run_python_script_method(file_path_script, func_name, *args, **kwargs):
     _utils_file.check_file_exist(file_path_script)
     # load the module spec
-    module = _utils_system.load_module_from_file(file_path_script)
+    module = _utils_system.import_module_from_file(file_path_script)
     # get the method from the module
     func = getattr(module, func_name)
     # run the method with any provided arguments
@@ -67,14 +67,17 @@ def run_python_script_subprocess(
                 cmd_args=cmd_args,
                 on_output=on_output,
                 file_path_python=file_path_python,
-                dependent=True,
+                args_dict={
+                    "depedent": True # --> start_process
+                },
+                dependent=True, # --> start_thread
                 join=False,
                 **kwargs
             )
     else:
         raise NotImplementedError
 
-def run_python_script_thread(file_path_script, cmd_args=[], file_path_python=None, on_output=None):
+def run_python_script_thread(file_path_script, cmd_args=[], file_path_python=None, on_output=None, return_output=False):
     if on_output is not None:
         def read_output(stream, stream_name):
             for line_bytes in iter(stream.readline, b''):
@@ -91,39 +94,31 @@ def run_python_script_thread(file_path_script, cmd_args=[], file_path_python=Non
     if file_path_python is None:
         file_path_python = sys.executable # python executable running this line
 
-    cmd_line = "\"%s\" -u \"%s\""%(file_path_python, file_path_script)
-        # -u: do not buffer stdout/stderr
+    cmd_line = [
+        "%s"%file_path_python,
+        "-u", # -u: do not buffer stdout/stderr
+        "%s"%file_path_script,
+    ]
     for arg in cmd_args:
-        cmd_line += " %s"%arg
-
+        cmd_line += arg
+    
+    cmd_line_str = " ".join(cmd_line)
     if on_output:
-        on_output("cmd_line: %s"%cmd_line)
-    print("cmd_line: %s"%cmd_line)
+        on_output("cmd_line: %s"%cmd_line_str)
+    print("cmd_line: %s"%cmd_line_str)
 
-    # create the subprocess
-    process = subprocess.Popen(
-        cmd_line,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        # text=True,  # set to True to get str instead of bytes
-        bufsize=1,  # line-buffered output
-        shell=True,  # set to True if you're using shell commands
-    )
-
-    # create threads for stdout and stderr
-    thread_stdout = _utils_system.start_thread(read_output, process.stdout, stream_name="STDOUT", dependent=True, join=False)
-    thread_stderr = _utils_system.start_thread(read_output, process.stderr, stream_name="STDERR", dependent=True, join=False)
-
-    # wait for the process to finish
-    process.wait()
-
-    # wait for the threads to finish
-    thread_stdout.join(0.2)
-    thread_stderr.join(0.2)
-
-    if on_output:
-        on_output("run_python_script: exit")
-    print("run_python_script: exit")
+    if return_output:
+        exit_code, stdout_bytes, stderr_bytes = _utils_system.start_process(
+            cmd_line, on_output=on_output, return_output=return_output,
+            backend="subprocess"
+        )
+        return exit_code, stdout_bytes, stderr_bytes
+    else:
+        exit_code = _utils_system.start_process(
+            cmd_line, on_output=on_output, return_output=return_output,
+            backend="subprocess"
+        )
+        return exit_code
 
 def run_python_script_select(file_path_script, cmd_args=[], file_path_python=None):
     import select
@@ -141,7 +136,6 @@ def run_python_script_select(file_path_script, cmd_args=[], file_path_python=Non
         cmd_line,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        # text=True,  # set to True to get str instead of bytes
         bufsize=1,  # line-buffered output
         shell=True  # set to True if you're using shell commands
     )

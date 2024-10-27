@@ -1,6 +1,13 @@
 
 import random
 
+def prod(num_list):
+    import functools
+    import operator
+    # multiple all num in num_list
+    result = functools.reduce(operator.mul, num_list)
+    return result
+
 def random_int_in_range(start, end, include_end=False):
     if include_end:
         end += 1

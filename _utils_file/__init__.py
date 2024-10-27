@@ -87,6 +87,11 @@ def change_file_path_if_exist(file_path: str):
     assert not file_exist(file_path_new)
     return file_path_new
 
+def to_absolute_dir_path(dir_path):
+    if "~" in dir_path:
+        dir_path = os.path.expanduser(dir_path)
+    return os.path.abspath(dir_path) + "/"
+
 def list_all_file_name(dir_path, _yield=True):
     if _yield:
         for f in os.listdir(dir_path):
@@ -383,6 +388,16 @@ def binary_file_to_obj(file_path):
         obj = pickle.load(f, encoding='bytes')
     return obj
 
+def natural_sort(file_name_list, _nsre=None):
+    if _nsre is None:
+        _nsre = re.compile(r'(\d+)')
+    def to_key(text):
+        return [
+            int(text) if text.isdigit() else text.lower()
+            for text in _nsre.split(file_name_list)
+        ]
+    sorted(file_name_list, key=to_key)
+
 import _utils_import
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -439,3 +454,6 @@ from ._gzip import (
     is_gz_file,
     extract_gz_file,
 )
+
+
+from .user import get_user_download_folder

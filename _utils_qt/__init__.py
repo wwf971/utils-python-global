@@ -38,12 +38,18 @@ from .widget_custom import (
     KeyValueH,
     WidgetDebug
 )
-
-from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import (
+    Qt, pyqtSignal
+)
 # from PyQt5.QtWidgets import QWidget # pip install PyQt5
-from PyQt5 import QtWidgets
+from PyQt5 import (
+    QtWidgets
+)
+from PyQt5.QtGui import (
+    QIcon
+)
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (
     QWidget,
     QLabel, QApplication, QMainWindow
@@ -78,6 +84,9 @@ def set_window_icon(widget, file_path_icon):
     _utils_file.check_file_exist(file_path_icon)
     widget.setWindowIcon(QIcon(file_path_icon))
 
+def make_label_text_selectable(label: QLabel):
+    label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
 from PyQt5.QtCore import QProcess
 def open_dir_in_explorer(dir_path):
     if not _utils_file.dir_exist(dir_path):
@@ -86,6 +95,7 @@ def open_dir_in_explorer(dir_path):
     # check the operating system and execute the corresponding command
     if os.name == 'nt':  # windows
         dir_path = _utils_file.dir_path_to_win_style(dir_path, trailing_slash=False)
+        print("dir_path: %s"%dir_path)
         QProcess.startDetached('explorer.exe', [dir_path])
             # .exe后缀不可缺
     elif os.name == 'posix':  # Unix-like (Linux, macOS)

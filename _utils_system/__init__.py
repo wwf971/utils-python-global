@@ -1,4 +1,4 @@
-import sys, os, time
+import sys, os, time, traceback
 import platform
 from _utils_import import _utils_file, psutil
 import _utils_system
@@ -47,24 +47,8 @@ def is_file_used_by_another_process(file_path):
     else:
         raise NotImplementedError
 
-def run_func_with_timeout(func, timeout, *args, **kwargs):
-    # timeout: in seconds
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(func, *args, **kwargs)
-        try:
-            # Wait for the result within the time limit
-            result = future.result(timeout=timeout)
-            is_timeout = False
-        except concurrent.futures.TimeoutError:
-            # Timeout occurred
-            is_timeout = True
-            result = None
-            return "Function timed out"
-    return is_timeout, result
-
 from ._module import (
-    load_module_from_file,
+    import_module_from_file,
     import_class_from_file
 )
 
@@ -87,4 +71,11 @@ from .run_thread import (
 from .run_process import (
     start_process,
     run_cmd_line,
+)
+
+from .timeout import (
+    run_func_with_timeout,
+    run_func_with_timeout_multiple_trial,
+    run_func_with_timeout_thread,
+    run_func_with_timeout_wrapt
 )
