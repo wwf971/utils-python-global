@@ -16,13 +16,18 @@ def run_python_script(
     backend:str="subprocess",
     join=False,
     dependent=True, # if dependent, parent exit --> child exit.
-    cmd_args=[],
+    cmd_args=None,
     file_path_python=None,
     pass_parent_pid=False,
     **kwargs
 ):
     _utils_file.check_file_exist(file_path_script)
     backend = backend.lower()
+
+    if cmd_args is None: 
+        # cnd_args=[] in func param is dangerous.
+        # same [] object might be used in different thread
+        cmd_args = []
 
     if pass_parent_pid:
         import _utils_system
@@ -47,12 +52,17 @@ def run_python_script_subprocess(
     dependent=True, join=True, **kwargs
 ):
     if dependent: # parent exit --> child exit
-        if join: # dependent=True, join=False
+        if join: # dependent=True, join=True
+            print("run_python_script_subprocess")
             run_python_script_thread(
                 file_path_script=file_path_script,
                 cmd_args=cmd_args,
                 on_output=on_output,
                 file_path_python=file_path_python,
+                args_dict={
+                    "join": True,
+                    "depedent": True # --> start_process
+                },
                 **kwargs
             )
             # elif method == 'select':
@@ -68,6 +78,7 @@ def run_python_script_subprocess(
                 on_output=on_output,
                 file_path_python=file_path_python,
                 args_dict={
+                    "join": False,
                     "depedent": True # --> start_process
                 },
                 dependent=True, # --> start_thread
@@ -77,20 +88,7 @@ def run_python_script_subprocess(
     else:
         raise NotImplementedError
 
-def run_python_script_thread(file_path_script, cmd_args=[], file_path_python=None, on_output=None, return_output=False):
-    if on_output is not None:
-        def read_output(stream, stream_name):
-            for line_bytes in iter(stream.readline, b''):
-                line_str = line_bytes.decode('utf-8', errors='replace').rstrip('\r\n').rstrip('\n')
-                on_output(line_str)
-            stream.close()
-    else:
-        def read_output(stream, stream_name):
-            for line_bytes in iter(stream.readline, b''):
-                line_str = line_bytes.decode('utf-8', errors='replace').rstrip('\r\n').rstrip('\n')
-                print(f"{stream_name}: {line_str}")
-            stream.close()
-    
+def run_python_script_thread(file_path_script, cmd_args=[], file_path_python=None, on_output=None, return_output=False, join=True, dependent=True, **kwargs):    
     if file_path_python is None:
         file_path_python = sys.executable # python executable running this line
 
@@ -100,22 +98,24 @@ def run_python_script_thread(file_path_script, cmd_args=[], file_path_python=Non
         "%s"%file_path_script,
     ]
     for arg in cmd_args:
-        cmd_line += arg
+        cmd_line.append(arg)
     
     cmd_line_str = " ".join(cmd_line)
     if on_output:
         on_output("cmd_line: %s"%cmd_line_str)
     print("cmd_line: %s"%cmd_line_str)
-
+    
     if return_output:
         exit_code, stdout_bytes, stderr_bytes = _utils_system.start_process(
             cmd_line, on_output=on_output, return_output=return_output,
+            join=join, dependent=dependent,
             backend="subprocess"
         )
         return exit_code, stdout_bytes, stderr_bytes
     else:
         exit_code = _utils_system.start_process(
             cmd_line, on_output=on_output, return_output=return_output,
+            join=join, dependent=dependent,
             backend="subprocess"
         )
         return exit_code

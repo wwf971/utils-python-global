@@ -189,8 +189,7 @@ class TorchModuleWrapper(nn.Module):
     def to_file(self, file_path):
         file_path = _utils_file.create_dir_for_file_path(file_path)
         self_module_dict = self.get_module_dict()
-        import DLUtils
-        DLUtils.file.ObjToBinaryFile(self_module_dict, file_path)
+        _utils_file.obj_to_binary_file(self_module_dict, file_path)
         return self
     def from_file(self, file_path):
         assert not self.has_init()

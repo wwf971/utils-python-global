@@ -9,6 +9,8 @@ def start_process(cmd_line, on_output, print_output=False, return_output=False, 
                 cmd_line=cmd_line, on_output=on_output, print_output=print_output, return_output=return_output,
                 dependent=dependent
             )
+        else:
+            raise NotImplementedError
         return
     else:
         raise Exception

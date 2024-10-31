@@ -44,7 +44,7 @@ def files_exist(*file_path_list):
     return True
 
 def check_file_exist(file_path):
-    assert file_exist(file_path)
+    assert file_exist(file_path), file_path
     return file_path
 
 def check_files_exist(*file_path_list):
@@ -238,16 +238,15 @@ def visit_tree(dir_path_current, func=None, recur=True, verbose=False, dir_path_
             )
     if recur:
         for dir_name in list_all_dir_name(dir_path_current):
-            dir_path_rel = dir_path_rel + dir_name
             visit_tree(
                 dir_path_current=dir_path_current + dir_name, func=func,
-                dir_path_rel=dir_path_rel, # dir_name ends with "/"
+                dir_path_rel=dir_path_rel + dir_name, # dir_name ends with "/"
                 **kwargs
             )
             if func_dir is not None:
                 func_dir(
                     dir_path=dir_path_current + dir_name,
-                    dir_path_rel=dir_path_rel,
+                    dir_path_rel=dir_path_rel + dir_name,
                     **kwargs
                 )
 
@@ -388,15 +387,15 @@ def binary_file_to_obj(file_path):
         obj = pickle.load(f, encoding='bytes')
     return obj
 
-def natural_sort(file_name_list, _nsre=None):
+def natural_sort(file_name_list, _nsre=None)->list:
     if _nsre is None:
         _nsre = re.compile(r'(\d+)')
-    def to_key(text):
+    def to_key(file_name):
         return [
             int(text) if text.isdigit() else text.lower()
-            for text in _nsre.split(file_name_list)
+            for text in _nsre.split(file_name)
         ]
-    sorted(file_name_list, key=to_key)
+    return sorted(file_name_list, key=to_key)
 
 import _utils_import
 from typing import TYPE_CHECKING
@@ -428,6 +427,7 @@ from .move import (
 from .remove import (
     remove_file, remove_files,
     remove_dir,
+    remove_dir_if_exist,
     clear_dir,
     remove_subdir_if_empty,
     remove_dir_if_is_empty,
