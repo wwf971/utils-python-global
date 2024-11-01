@@ -20,7 +20,7 @@ def unit_test_mlp():
     sys.path += [
         DirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent
     ]
-    
+
     from _utils_torch.mlp import MLP
     # example usage:
     model = MLP().init(10, 20, 30, 40).build()

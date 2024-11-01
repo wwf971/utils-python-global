@@ -27,10 +27,24 @@ from .font import (
 
 from .size import (
     print_size,
-    print_alignment,
     print_size_policy,
     print_size_policy_and_alignment,
+    set_size_policy_vertical,
+    set_size_policy_horizontal,
+    str_to_size_policy,
+    size_policy_to_str,
+    set_size_hint,
+    set_size_hint_height,
+    set_size_hint_width,
+    set_min_size_hint_width,
+    set_min_size_hint_height,
+)
+
+from .alignment import (
+    make_components_align_to_top,
+    set_alignment_to_null,
     alignment_to_str,
+    print_alignment,
 )
 
 from .widget_custom import (
@@ -51,9 +65,10 @@ from PyQt5.QtGui import (
 )
 
 from PyQt5.QtWidgets import (
-    QWidget,
+    QWidget, QSplitter,
     QLabel, QApplication, QMainWindow
 )
+
 
 def print_pyqt_version():
     from PyQt5.QtCore import QT_VERSION_STR, PYQT_VERSION_STR
@@ -113,6 +128,6 @@ def set_fixed_height_for_layout_component(layout, height: int):
         if widget:  # Ensure the widget exists
             widget.setFixedHeight(height)  # Set the desired fixed height
 
-from .alignment import (
-    make_components_align_to_top
-)
+def make_splitter_not_collapsible(splitter: QSplitter):
+    for index in range(splitter.count()):
+        splitter.setCollapsible(index, False)

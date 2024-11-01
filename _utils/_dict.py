@@ -23,17 +23,28 @@ def class_instance_from_class_path(ClassPath: str, *args, **kwargs):
 import argparse
 
 class List(list):
-    def __init__(self, *args):
+    def __init__(self, list_like=None, *args):
         super().__init__()
-        for arg in args:
-            self.append(arg)
+        if list_like is not None:
+            for _ in list_like:
+                if isinstance(_, dict):
+                    self.append(Dict(_))
+                elif isinstance(_, argparse.Namespace):
+                    self.append(Dict(_))
+                else:
+                    self.append(_)
+        elif len(args) > 0:
+            for arg in args:
+                self.append(arg)
+        else:
+            pass
     
 class Dict(dict):
     """
     A subclass of dict that allows attribute-style access.
     """
     def __init__(self,
-            source: dict = None,
+            dict_like: dict = None,
             **kwargs
             # allow_missing_attr=False,
         ):
@@ -43,12 +54,12 @@ class Dict(dict):
                 when trying to get a non-existent attribute
         """
         
-        if source is not None:
+        if dict_like is not None:
             assert len(kwargs) == 0
-            if isinstance(source, dict):
-                self.from_dict(source)
-            elif isinstance(source, argparse.Namespace):
-                self.from_dict(vars(source))
+            if isinstance(dict_like, dict):
+                self.from_dict(dict_like)
+            elif isinstance(dict_like, argparse.Namespace):
+                self.from_dict(vars(dict_like))
             else:
                 raise TypeError
         elif len(kwargs) > 0:
@@ -79,6 +90,8 @@ class Dict(dict):
         for key, value in _dict.items():
             if isinstance(value, dict):
                 self[key] = Dict(value)
+            elif isinstance(value, list):
+                self[key] = List(value)
             else:
                 self[key] = value
         return self

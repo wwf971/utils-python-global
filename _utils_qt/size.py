@@ -1,5 +1,12 @@
 from _utils_import import _utils_io
 from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5.QtWidgets import (
+    QWidget,
+    QSizePolicy
+)
+from PyQt5.QtCore import (
+    QSize
+)
 
 def print_size_policy_and_alignment(widget: QtWidgets.QWidget, widget_name="Window", pipe_out = None):
     if pipe_out is None:
@@ -32,11 +39,11 @@ def print_size(widget: QtWidgets.QWidget, widget_name="Window", pipe_out = None)
         else:
             pipe_out.print("SizePolicy: method not supported.")
 
-def size_policy_to_str(SizePolicy: QtWidgets.QSizePolicy.Policy):
-    GrowFlag = SizePolicy & QtWidgets.QSizePolicy.GrowFlag # 1
-    ExpandFlag = SizePolicy & QtWidgets.QSizePolicy.ExpandFlag # 2
-    ShrinkFlag = SizePolicy & QtWidgets.QSizePolicy.ShrinkFlag # 4
-    IgnoreFlag = SizePolicy & QtWidgets.QSizePolicy.IgnoreFlag # 8
+def size_policy_to_str(size_policy: QSizePolicy.Policy):
+    GrowFlag = size_policy & QSizePolicy.GrowFlag # 1
+    ExpandFlag = size_policy & QSizePolicy.ExpandFlag # 2
+    ShrinkFlag = size_policy & QSizePolicy.ShrinkFlag # 4
+    IgnoreFlag = size_policy & QSizePolicy.IgnoreFlag # 8
     
     FlagList = []
     if GrowFlag:
@@ -51,25 +58,70 @@ def size_policy_to_str(SizePolicy: QtWidgets.QSizePolicy.Policy):
     if len(FlagList) == 0:
         FlagList = ["NoFlag"]
 
-    if SizePolicy == QtWidgets.QSizePolicy.Fixed:
-        Name = "Fixed" # 0
-    elif SizePolicy == QtWidgets.QSizePolicy.Minimum:
-        Name = "Minimum" # 1
-    elif SizePolicy == QtWidgets.QSizePolicy.MinimumExpanding:
-        Name = "Expanding" # 3
-    elif SizePolicy == QtWidgets.QSizePolicy.Maximum:
-        Name = "Maximum" # 4
-    elif SizePolicy == QtWidgets.QSizePolicy.Preferred:
-        Name = "Preferred" # 5
-    elif SizePolicy == QtWidgets.QSizePolicy.Expanding:
-        Name = "Expanding" # 7
-    elif SizePolicy == QtWidgets.QSizePolicy.Ignored:
-        Name = "Ignored" # 13
+    if size_policy == QSizePolicy.Fixed:
+        size_policy_str = "Fixed" # 0
+    elif size_policy == QSizePolicy.Minimum:
+        size_policy_str = "Minimum" # 1
+    elif size_policy == QSizePolicy.MinimumExpanding:
+        size_policy_str = "MinimumExpanding" # 3
+    elif size_policy == QSizePolicy.Maximum:
+        size_policy_str = "Maximum" # 4
+    elif size_policy == QSizePolicy.Preferred:
+        size_policy_str = "Preferred" # 5
+    elif size_policy == QSizePolicy.Expanding:
+        size_policy_str = "Expanding" # 7
+    elif size_policy == QSizePolicy.Ignored:
+        size_policy_str = "Ignored" # 13
     else:
-        Name = "NoName"
-    return "%s(%s)"%(Name, "|".join(FlagList))
+        size_policy_str = "NoName"
+    return "%s(%s)"%(size_policy_str, "|".join(FlagList))
 
-def print_size_policy(widget: QtWidgets.QWidget, widget_name=None, pipe_out=None):
+def str_to_size_policy(size_policy_str: str):
+    size_policy_str = size_policy_str.lower()
+    if size_policy_str in ["fixed"]: # 0
+        size_policy = QSizePolicy.Fixed
+    elif size_policy_str in ["minimum"]: # 1
+        size_policy = QSizePolicy.Minimum
+    elif size_policy_str in ["minimumexpanding"]: # 3
+        size_policy = QSizePolicy.MinimumExpanding
+    elif size_policy_str in ["maximum"]: # 4
+        size_policy = QSizePolicy.Maximum
+    elif size_policy_str in ["preferred"]: # 5
+        size_policy = QSizePolicy.Preferred
+    elif size_policy_str in ["expanding"]: # 7
+        size_policy = QSizePolicy.Expanding    
+    elif size_policy_str in ["ignored"]: # 13
+        size_policy = QSizePolicy.Ignored    
+    else:
+        raise NotImplementedError
+    size_policy_str = size_policy_str.lower()
+    return size_policy
+
+def set_size_policy_vertical(widget: QWidget, size_policy: str):
+    if isinstance(size_policy, str):
+        size_policy = str_to_size_policy(size_policy)
+    # get the current size policy
+    _size_policy = widget.sizePolicy()
+
+    # set only the horizontal policy to expanding, keeping vertical policy unchanged
+    _size_policy.setVerticalPolicy(size_policy)
+
+    # apply the modified size policy back to the widget
+    widget.setSizePolicy(_size_policy)
+
+def set_size_policy_horizontal(widget: QWidget, size_policy: str):
+    if isinstance(size_policy, str):
+        size_policy = str_to_size_policy(size_policy)
+    # get the current size policy
+    _size_policy = widget.sizePolicy()
+
+    # set only the horizontal policy to expanding, keeping vertical policy unchanged
+    _size_policy.setHorizontalPolicy(size_policy)
+
+    # apply the modified size policy back to the widget
+    widget.setSizePolicy(_size_policy)
+
+def print_size_policy(widget: QWidget, widget_name=None, pipe_out=None):
     if pipe_out is None:
         pipe_out = _utils_io.PipeOut()
     if widget_name is None:
@@ -88,71 +140,22 @@ def print_size_policy(widget: QtWidgets.QWidget, widget_name=None, pipe_out=None
             pipe_out.print("method not supported")
     return
 
-def alignment_to_str(Alignment: QtCore.Qt.AlignmentFlag) -> str:
-    """
-    test
-        alignment_to_str(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter) -> AlignCenter|AlignVCenter
-        alignment_to_str(QtCore.Qt.Alignment()) -> null
-    """
-    AlignmentInt = int(Alignment)
-    
-    TypeListHorizontal = []
-    TypeListVertical = []
-    if AlignmentInt // 128 == 1:
-        TypeListVertical.append("AlignVCenter")
-        AlignmentInt = AlignmentInt % 128
-    if AlignmentInt // 64 == 1:
-        TypeListVertical.append("AlignBottom")
-        AlignmentInt = AlignmentInt % 64
-    if AlignmentInt // 32 == 1:
-        TypeListVertical.append("AlignTop")
-        AlignmentInt = AlignmentInt % 32
-    AlignmentInt = AlignmentInt % 8
-    if AlignmentInt // 4 == 1:
-        TypeListHorizontal.append("AlignHCenter")
-        AlignmentInt = AlignmentInt % 4
-    if AlignmentInt // 2 == 1:
-        TypeListHorizontal.append("AlignRight")
-        AlignmentInt = AlignmentInt % 2
-    if AlignmentInt // 1 == 1:
-        TypeListHorizontal.append("AlignLeft")
-        AlignmentInt = AlignmentInt % 1
+def set_size_hint(widget: QWidget, width, height):
+    widget.sizeHint = lambda: QSize(width, height)
 
-    if isinstance(Alignment, QtWidgets.QWidget):
-        pass
+def set_size_hint_width(widget: QWidget, width):
+    height = widget.sizeHint().height()
+    widget.sizeHint = lambda: QSize(width, height)
 
-    if len(TypeListHorizontal) > 0:
-        AlignmentHorizontal = "|".join(TypeListHorizontal)
-    else:
-        AlignmentHorizontal = "null"
+def set_size_hint_height(widget: QWidget, height):
+    width = widget.sizeHint().width()
+    widget.sizeHint = lambda: QSize(width, height)
 
-    if len(TypeListVertical) > 0:
-        AlignmentVertical = "|".join(TypeListVertical)
-    else:
-        AlignmentVertical = "null"
 
-    return AlignmentHorizontal, AlignmentVertical
+def set_min_size_hint_width(widget: QWidget, width):
+    height = widget.minimumSizeHint().height()
+    widget.minimumSizeHint = lambda: QSize(width, height)
 
-def print_alignment(Widget, widget_name=None, pipe_out=None):
-    """
-    test
-        print_alignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
-    """
-    if pipe_out is None:
-        pipe_out = _utils_io.PipeOut()
-    if widget_name is None:
-        widget_name = "Window"
-    if widget_name == "":
-        pipe_out.print("alignment:")
-    else:
-        pipe_out.print("%s. alignment:"%widget_name)
-    if hasattr(Widget, "alignment"):
-        AlignmentHorizontal, AlignmentVertical = alignment_to_str(Widget.alignment())
-        with pipe_out.increased_indent():
-            pipe_out.print("Horizontal: %s"%AlignmentHorizontal)
-            pipe_out.print("Vertical  : %s"%AlignmentVertical)
-    else:
-        pipe_out.print("method not supported.")
-
-def set_alignment_to_null(Obj: QtWidgets.QLayout):
-    Obj.setAlignment(QtCore.Qt.Alignment()) # alignment_to_str(Obj) will return null
+def set_min_size_hint_height(widget: QWidget, height):
+    width = widget.minimumSizeHint().width()
+    widget.minimumSizeHint = lambda: QSize(width, height)
