@@ -14,6 +14,22 @@
 		"body": [
 			"import sys, os, pathlib",
 			"dir_path_current = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
+			"dir_path_1 = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
+			"dir_path_2 = pathlib.Path(dir_path_1).parent.absolute().__str__() + \"/\"",
+			"dir_path_3 = pathlib.Path(dir_path_2).parent.absolute().__str__() + \"/\"",
+			"dir_path_4 = pathlib.Path(dir_path_4).parent.absolute().__str__() + \"/\"",
+			"dir_path_5 = pathlib.Path(dir_path_3).parent.absolute().__str__() + \"/\"",
+			"sys.path += [",
+			"    dir_path_current, dir_path_1, dir_path_2 , dir_path_3, dir_path_4, dir_path_5",
+			"]"
+		],
+		"description": "sys.path add path" // 在snippet列表中以小字显示
+	},
+	"sys.path add path-2": {
+		"prefix": ["add path to sys.path"], // 在snippet列表中显示的名称
+		"body": [
+			"import sys, os, pathlib",
+			"dir_path_current = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
 			"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
 			"dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + \"/\"",
 			"dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + \"/\"",
@@ -57,19 +73,15 @@
 	"argparse": {
 		"prefix": "parse_args()", // 在snippet列表中显示的名称
 		"body": [
-			"def parse_args():",
-			"    import argparse",
-			"    parser = argparse.ArgumentParser()",
+			"def get_args() -> Dict:",
+			"    parser = _utils_train.CustomArgumentParser()",
+			"    parser.add_bool_arg('--train', default=False)",
 			"    parser.add_argument('--device', type=str, default='cuda', help='running device: cuda or cpu')",
-			"    parser.add_argument('--vis', type=bool, action='store_true', dest='visualize', help='visualize')",
-			"    parser.add_argument('--write', type=str2bool, default=False, help='Use SummaryWriter to record the training')",
-			"    parser.add_argument('--render', type=str2bool, default=False, help='Render or Not')",
-			"    parser.add_argument('--Loadmodel', type=str2bool, default=False, help='Load pretrained model or Not')",
-			"    parser.add_argument('--ModelIdex', type=int, default=300000, help='which model to load')",
-			"    args = parser.parse_args()",
-			"    return args",
+			"    parser.add_argument('--learning_rate', type=float, default=0.005) # 0.00025",
+			"    args, unknownargs = parser.parse_known_args()",
+			"    return Dict(args)",
 		],
-		"description": "parse_args()"
+		"description": "get_args()"
 	},
 	"sys.path": {
 		"prefix": ["sys.path add path(simple)"],

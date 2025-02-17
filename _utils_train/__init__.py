@@ -38,7 +38,8 @@ from ._tensorboard import (
 )
 
 from .args import (
-    save_args
+    save_args,
+    Config
 )
 
 from .path import (

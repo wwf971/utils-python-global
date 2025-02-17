@@ -12,7 +12,7 @@ def from_yaml_file(file_path):
         data = yaml.safe_load(file)
     return data
 
-def to_yaml_file(obj, file_path, backend='local'):
+def obj_to_yaml_file(obj, file_path, backend='local'):
     backend = backend.lower()
     if backend in ['local']:
         to_yaml_file_local(obj, file_path)
@@ -20,6 +20,7 @@ def to_yaml_file(obj, file_path, backend='local'):
         _utils_file.create_dir_for_file_path(file_path)
         with open(file_path, 'w') as file:
             yaml.dump(obj, file, sort_keys=False)
+to_yaml_file = obj_to_yaml_file
 
 def to_yaml_file_local(obj, file_path_save):
     _utils_file.create_dir_for_file_path(file_path_save)
@@ -79,7 +80,12 @@ def _to_yaml_str_local(obj, indent, yaml_str:list, parent=None, parent_index=-1)
         yaml_str.append(str(obj))
         yaml_str.append("\n")
     elif isinstance(obj, float):
-        yaml_str.append(float(obj))
+        yaml_str.append(str(obj))
         yaml_str.append("\n")
     else:
-        raise TypeError
+        obj_str = str(obj)
+        if not "\n" in obj_str:
+            yaml_str.append(obj_str)
+        else:
+            yaml_str.append(type(obj))
+        yaml_str.append("\n")

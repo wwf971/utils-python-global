@@ -10,7 +10,7 @@ def start_thread(func, *args, dependent=False, join=False, args_dict=None, **kwa
         kwargs.update(args_dict)
 
     thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-    thread.setDaemon(dependent) # the entire Python program exits when only dependent threads are left
+    thread.setDaemon(dependent) # dependent=True --> the entire Python program exits when only dependent threads are left
     thread.start()
     if join:
         thread.join() # wait for child exit

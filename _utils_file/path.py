@@ -56,6 +56,14 @@ def get_script_dir_path(__file__):
     dir_path_script += "/"
     return dir_path_script
 
+def get_dir_name_of_dir_path(dir_path: str):
+    if dir_path.endswith("/"):
+        dir_path = dir_path.rstrip("/")
+    if dir_path.endswith("\\"):
+        dir_path = dir_path.rstrip("\\")
+    dir_name = Path(dir_path).name
+    return dir_name
+
 def get_dir_path_of_file_path(file_path: str):
     dir_path_obj = Path(file_path).parent
     return dir_path_obj.__str__() + "/"

@@ -26,6 +26,12 @@ from .utils import (
     get_activation_func_class
 )
 
+def get_random_tensor_uniform(shape, start, end, device=None):
+    tensor = torch.FloatTensor(*shape).uniform_(start, end)
+    if device is not None:
+        tensor = tensor.to(device)
+    return tensor
+
 def torch_tensor_to_image_file(tensor, file_path_save, shape="chw", value_range=[0.0, 1.0]):
     assert len(list(tensor.size())) == 3
     array = torch_tensor_to_np_array(tensor)

@@ -1,15 +1,14 @@
 import sys, os, pathlib
-DirPathCurrent = os.path.dirname(os.path.realpath(__file__)) + "/"
-DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + "/"
-DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + "/"
-DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + "/"
+dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
+dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
+dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
 sys.path += [
-    DirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent
+    dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
 ]
-from _utils_file import (
-    get_dir_path_of_file_path,
-    get_file_path_without_suffix,
-)
+
+from _utils_import import _utils_file
+
 from _utils_torch.utils import print_torch_module
 def unit_test_mlp():
     import sys, os, pathlib
@@ -25,7 +24,7 @@ def unit_test_mlp():
     # example usage:
     model = MLP().init(10, 20, 30, 40).build()
     print(model)
-    base_dir_path = get_dir_path_of_file_path(__file__)
+    base_dir_path = _utils_file.get_dir_path_of_file_path(__file__)
     save_file_path = base_dir_path + "mlp.dat"
     model_2 = model.to_file(save_file_path).from_file(save_file_path)
     print(model_2)

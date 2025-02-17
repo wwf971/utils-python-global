@@ -15,6 +15,14 @@ def get_local_timezone():
     local_time_zone = datetime.datetime.utcnow().astimezone().tzinfo
     return local_time_zone # <class 'datetime.timezone'>
 
+def get_local_timezone_hour() -> int:
+    timezone_local = get_local_timezone()
+    utc_offset_src = timezone_local.utcoffset(datetime.datetime.now())
+    _timezone_hour = utc_offset_src.total_seconds() / 3600  # Convert to hours
+    timezone_hour = round(_timezone_hour)
+    assert -0.1 < timezone_hour - _timezone_hour < 0.1
+    return timezone_hour
+
 def get_timezone(timezone_str, backend="pytz"):
     backend = backend.lower()
     if isinstance(timezone_str, str):

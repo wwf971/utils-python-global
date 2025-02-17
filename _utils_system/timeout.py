@@ -1,17 +1,13 @@
 
 import _thread # thread in python 2
-def quit_function(fn_name):
-    # print to stderr and flush immediately
-    print('{0} took too long'.format(fn_name), file=sys.stderr)
-    sys.stderr.flush() # flush stderr buffer
-    _thread.interrupt_main() # raise a KeyboardInterrupt
+import sys
 
-def run_func_with_timeout(func, *args, timeout, backend="wrapt", **kwargs):
+def run_func_with_timeout(func, timeout, *args, backend="wrapt", **kwargs):
     backend = backend.lower()
     if backend in ["wrapt"]:
-        return run_func_with_timeout_wrapt(func, *args, timeout, **kwargs)
+        return run_func_with_timeout_wrapt(func, timeout, *args, **kwargs)
     elif backend in ["thread"]:
-        return run_func_with_timeout_thread(func, *args, timeout, **kwargs)
+        return run_func_with_timeout_thread(func, timeout, *args, **kwargs)
     elif backend in ["concurrent"]:
         # timeout: in seconds
         import concurrent.futures
@@ -29,7 +25,7 @@ def run_func_with_timeout(func, *args, timeout, backend="wrapt", **kwargs):
     else:
         raise Exception
 
-def run_func_with_timeout_wrapt(func, *args, timeout, **kwargs):
+def run_func_with_timeout_wrapt(func, timeout, *args, **kwargs):
     # bug: cause error if some objects could not be properly serialized and deserialized by pickle
     # feature: effectively interrupt things like time.sleep(10) on Windows
 
@@ -46,9 +42,15 @@ def run_func_with_timeout_wrapt(func, *args, timeout, **kwargs):
     # except Exception: # exception from func
     #     return False, traceback.format_exc()
 
+def _kill_thread(fn_name):
+    # print to stderr and flush immediately
+    print('{0} took too long'.format(fn_name), file=sys.stderr)
+    sys.stderr.flush() # flush stderr buffer
+    _thread.interrupt_main() # raise a KeyboardInterrupt
+
 def run_func_with_timeout_thread(func, *args, timeout, **kwargs):
     import threading
-    timer = threading.Timer(timeout, quit_function, args=[func.__name__])
+    timer = threading.Timer(timeout, _kill_thread, args=[func.__name__])
     timer.start()
     try:
         result = func(*args, **kwargs)

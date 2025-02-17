@@ -7,9 +7,9 @@ from .path import (
     dir_path_to_unix_style,
     file_path_to_unix_style,
     dir_path_to_win_style,
-    get_dir_path_of_file_path,
+    get_dir_name_of_dir_path,
     get_dir_path_of_dir_path, get_parent_dir_path,
-    get_file_name_of_file_path,
+    get_file_name_of_file_path, get_dir_path_of_file_path,
     get_file_name_and_suffix,
     get_file_path_and_suffix,
     get_file_name_suffix,
@@ -92,14 +92,14 @@ def to_absolute_dir_path(dir_path):
         dir_path = os.path.expanduser(dir_path)
     return os.path.abspath(dir_path) + "/"
 
-def list_all_file_name(dir_path, _yield=True):
-    if _yield:
-        for f in os.listdir(dir_path):
-            if os.path.isfile(os.path.join(dir_path, f)):
-                yield f
-    else:
-        file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
-        return file_name_list
+def get_all_file_name(dir_path):
+    file_name_list = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
+    return file_name_list
+
+def list_all_file_name(dir_path):
+    for f in os.listdir(dir_path):
+        if os.path.isfile(os.path.join(dir_path, f)):
+            yield f
 
 def list_all_file_path(dir_path, recur=False):
     if recur:
@@ -437,6 +437,10 @@ from .remove import (
     remove_file_if_name_match_pattern,
     remove_dir_if_name_match_pattern,   
 )
+delete_file = remove_file
+delete_files = remove_files
+delete_dir = remove_dir
+delete_dir_if_exist = remove_dir_if_exist
 
 from .content import (
     get_file_byte_num, get_file_size,
@@ -454,6 +458,5 @@ from ._gzip import (
     is_gz_file,
     extract_gz_file,
 )
-
 
 from .user import get_user_download_folder

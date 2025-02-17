@@ -1,4 +1,4 @@
-from _utils_import import _utils_file
+from _utils_import import _utils_file, Dict
 
 import re
 def get_model_file_path_by_epoch(dir_path_instance, epoch, pattern = r"model-epoch(.*)\.dat"):    
@@ -21,12 +21,16 @@ def get_model_file_path_by_epoch(dir_path_instance, epoch, pattern = r"model-epo
         return _utils_file.dir_path_to_unix_style(dir_path_instance) + file_name_list[0]
     else:
         raise Exception
-    
-def set_dir_path_instance(args, dir_path_base):
+
+def set_dir_path_instance(args: Dict, dir_path_base):
     # dir_path_instance: directory path to store current experiment data)
     if not args.hasattr("dir_path_instance"):
         import _utils_time
         time_str = _utils_time.get_current_time_str_ymd8_hms8()
-        dir_path_instance = dir_path_base + "experiment/" + time_str + "/"
+        dir_name_instance = time_str
+        dir_path_instance = dir_path_base + "experiment/" + dir_name_instance + "/"
     _utils_file.create_dir_if_not_exist(dir_path_instance)
-    args.setattr(dir_path_instance=dir_path_instance)
+    args.setattr(
+        dir_path_instance=dir_path_instance,
+        dir_name_instance=dir_name_instance
+    )

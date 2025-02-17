@@ -23,11 +23,11 @@ from ._str import (
 
 from ._json import (
     json_str_to_dict,
-    dict_to_json_file,
+    obj_to_json_file, dict_to_json_file,
 )
 
 from ._yaml import (
-    to_yaml_file,
+    to_yaml_file, obj_to_yaml_file,
     from_yaml_file
 )
 

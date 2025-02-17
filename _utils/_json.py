@@ -11,8 +11,9 @@ def json_str_to_dict_test():
     print(json_dict.name, json_dict.hometown.name, json_dict.hometown.id)
     return
 
-def dict_to_json_file(_dict, file_path_save):
+def obj_to_json_file(_dict, file_path_save):
     _utils_file.create_dir_for_file_path(file_path_save)
     with open(file_path_save, "w") as json_file:
         json.dump(_dict, json_file, indent=4)  # indent using space
     return
+dict_to_json_file = obj_to_json_file

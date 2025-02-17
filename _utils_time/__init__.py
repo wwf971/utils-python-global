@@ -14,6 +14,7 @@ from .timer import Timer, Pauser
 from .lib_datetime import (
     datetime_obj_to_time_str,
     get_local_timezone,
+    get_local_timezone_hour,
     datetime_obj_change_timezone,
     get_timezone, get_local_timezone,
 )
@@ -38,7 +39,14 @@ def get_current_time_str(
     unix_stamp_current = get_current_unix_stamp() + offset
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S")
     return time_str_current # YYmmdd_hhmmss
-    
+
+def unix_stamp_to_time_str_ymd8_hms8(
+    unix_stamp,
+    timezone="local",
+):
+    time_str = unix_stamp_to_time_str(unix_stamp, timezone=timezone, format="%Y%m%d_%H%M%S%f")
+    return time_str[:-4] # YYmmdd_hhmmss(ms2digit)
+
 def get_current_time_str_ymd8_hms8(
     offset=0, # unit: second
     timezone="local",
@@ -46,3 +54,4 @@ def get_current_time_str_ymd8_hms8(
     unix_stamp_current = get_current_unix_stamp() + offset
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S%f")
     return time_str_current[:-4] # YYmmdd_hhmmss(ms2digit)
+

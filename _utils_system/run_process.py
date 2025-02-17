@@ -1,22 +1,41 @@
 import _utils_system
-import subprocess
+import os, subprocess
 
-def start_process(cmd_line, on_output, print_output=False, return_output=False, dependent=False, join=False, backend="subprocess", **kwargs):
+def start_process(
+    cmd_line, dir_path_console=None,
+    on_output=None,
+    print_output=False,
+    return_output=False,
+    dependent=False,
+    join=False,
+    backend="subprocess",
+    **kwargs
+):
     backend = backend.lower()
     if backend == "subprocess":
         if join:
-            run_cmd_line_subprocess(
-                cmd_line=cmd_line, on_output=on_output, print_output=print_output, return_output=return_output,
-                dependent=dependent
+            return run_cmd_line_subprocess(
+                cmd_line=cmd_line, dir_path_console=dir_path_console,
+                on_output=on_output, print_output=print_output, return_output=return_output,
+                dependent=dependent,
+                **kwargs
             )
         else:
-            raise NotImplementedError
+            return _utils_system.start_thread(
+                run_cmd_line_subprocess,
+                cmd_line=cmd_line, on_output=on_output, print_output=print_output, return_output=return_output,
+                dependent=dependent, # --> start_thread
+                args_dict={"dependent": dependent} # --> start_process
+            )
         return
     else:
         raise Exception
-    return
 
-def run_cmd_line_subprocess(cmd_line, on_output=None, print_output=True, return_output=False, dependent=True):
+def run_cmd_line_subprocess(
+    cmd_line, dir_path_console=None,
+    on_output=None, print_output=True, return_output=False,
+    dependent=True, verbose=True
+):
     if isinstance(cmd_line, list):
         pass
     elif isinstance(cmd_line, str):
@@ -50,7 +69,8 @@ def run_cmd_line_subprocess(cmd_line, on_output=None, print_output=True, return_
 
     if on_output:
         on_output("cmd_line: %s"%cmd_line)
-    print("cmd_line: %s"%cmd_line)
+    if verbose:
+        print("cmd_line: %s"%cmd_line)
 
     if dependent and _utils_system.is_win():
         if _utils_system.is_win():
@@ -64,11 +84,15 @@ def run_cmd_line_subprocess(cmd_line, on_output=None, print_output=True, return_
                 win32job.SetInformationJobObject(hJob, win32job.JobObjectExtendedLimitInformation, extended_info)
             except Exception:
                 pass
+    
+    if dir_path_console is None:
+        dir_path_console = os.getcwd()
 
     # create the subprocess
     if dependent:
         process = subprocess.Popen(
             cmd_line,
+            cwd=dir_path_console,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             # text=True, # set to True to get str instead of bytes
@@ -78,6 +102,7 @@ def run_cmd_line_subprocess(cmd_line, on_output=None, print_output=True, return_
     else: # independent process
         process = subprocess.Popen(
             cmd_line,
+            cwd=dir_path_console,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             # text=True, # set to True to get str instead of bytes

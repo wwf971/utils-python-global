@@ -70,7 +70,7 @@ class Dict(dict):
         try:
             return self[key]
         except KeyError:
-            raise AttributeError(f"'AttrDict' object has no attribute '{key}'")
+            raise AttributeError(f"'Dict' object has no attribute '{key}'")
     def __setattr__(self, key, value):
         """
         will be called when setting attribtue in this way: DictObj.a = b
@@ -147,6 +147,10 @@ class Dict(dict):
             else:
                 self[key] = value
         return self
+    def hasattr(self, key):
+        return hasattr(self, key)
+    def getattr(self, key):
+        return self.get(self, key)
     def setattr(self, key=None, value=None, **kwargs):
         if len(kwargs) > 0:
             assert key is None and value is None
@@ -155,8 +159,6 @@ class Dict(dict):
             return self
         self[key] = value
         return self
-    def hasattr(self, key):
-        return hasattr(self, key)
     def copy():
         return Dict(super().copy())
 
