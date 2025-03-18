@@ -10,13 +10,14 @@ from ._size import (
     num_to_str_1024
 )
 
-from ._str import (
+from _utils_str import (
     get_alphabet_az,
     get_alphabet_AZ,
     get_alphabet_09,
     get_alphabet_az_AZ,
     get_random_str,
     get_random_str_az_AZ,
+    get_random_str_AZ_09,
     get_random_str_az_AZ_09,
     binary_string_to_int,
 )

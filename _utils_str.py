@@ -23,6 +23,10 @@ def get_random_str_az_AZ(length):
     alphabet = string.ascii_letters  # Use letters from 'a-z', 'A-Z'
     return get_random_str(length, alphabet=alphabet)
 
+def get_random_str_AZ_09(length):
+    alphabet = get_alphabet_AZ() + get_alphabet_09()
+    return get_random_str(length, alphabet=alphabet)
+
 def get_random_str(length, alphabet:list=None):
     if alphabet is None:
         alphabet = get_alphabet_az_AZ_09()

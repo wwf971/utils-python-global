@@ -446,7 +446,8 @@ from .content import (
     get_file_byte_num, get_file_size,
     get_file_size_str,
     get_file_md5,
-    have_same_content
+    have_same_content, files_have_same_content,
+    dirs_have_same_content
 )
 
 from .zip import (

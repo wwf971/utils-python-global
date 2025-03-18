@@ -40,9 +40,14 @@ def get_file_path_current_no_suffix(__file__: str):
     file_path_script = os.path.abspath(__file__)
     return _utils_file.get_file_path_no_suffix(file_path_script)
 
-def change_file_path_current_suffix(__file__: str, append_before_suffix=""):
+def change_file_path_current_suffix(__file__: str, suffix=None, append_before_suffix=""):
     file_path_script = os.path.abspath(__file__)
-    file_path_script_no_suffix, suffix = _utils_file.get_file_name_and_suffix(file_path_script)
+    file_path_script_no_suffix, _suffix = _utils_file.get_file_name_and_suffix(file_path_script)
+    assert _suffix is not None
+    
+    if suffix is None: # use current suffix
+        suffix = _suffix
+
     return file_path_script_no_suffix + append_before_suffix + "." + suffix
 
 def get_script_dir_path(__file__):

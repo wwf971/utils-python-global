@@ -17,8 +17,8 @@
 			"dir_path_1 = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
 			"dir_path_2 = pathlib.Path(dir_path_1).parent.absolute().__str__() + \"/\"",
 			"dir_path_3 = pathlib.Path(dir_path_2).parent.absolute().__str__() + \"/\"",
-			"dir_path_4 = pathlib.Path(dir_path_4).parent.absolute().__str__() + \"/\"",
-			"dir_path_5 = pathlib.Path(dir_path_3).parent.absolute().__str__() + \"/\"",
+			"dir_path_4 = pathlib.Path(dir_path_3).parent.absolute().__str__() + \"/\"",
+			"dir_path_5 = pathlib.Path(dir_path_4).parent.absolute().__str__() + \"/\"",
 			"sys.path += [",
 			"    dir_path_current, dir_path_1, dir_path_2 , dir_path_3, dir_path_4, dir_path_5",
 			"]"
