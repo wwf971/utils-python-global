@@ -20,18 +20,18 @@ from ._print import (
 )
 
 from .pipe import PipeOut
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from io import BytesIO
 
-def read_from_bytes_io(buffer: BytesIO):
+def read_from_bytes_io(buffer: BytesIO, clear_buf=True):
     buffer.seek(0)  # move cursor to the beginning
-    data = buffer.read()  # Read the contents
+    data = buffer.read()  # read the contents
     if not data:
         return None
     buffer.seek(0)  # move cursor to the beginning again
-    buffer.truncate(0)  # clear the contents of the buffer
+    if clear_buf:
+        buffer.truncate(0)  # clear the contents of the buffer
     return data
 read_from_string_io = read_from_bytes_io # works for both BytesIO and StringIO
 
