@@ -27,7 +27,7 @@ from ._json import (
     obj_to_json_file, dict_to_json_file,
 )
 
-from ._yaml import (
+from _utils_yaml import (
     to_yaml_file, obj_to_yaml_file,
     from_yaml_file
 )
