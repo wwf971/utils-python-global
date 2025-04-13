@@ -6,12 +6,14 @@ from _utils_import import _utils_file, _utils_system
 import _utils_io
 from io import StringIO, BytesIO
 
-def run_func_with_output_to_file(func,
-    file_path_stdout, *args, file_path_stderr=None, backend="dup",
-    pipe_prev=None, **kwargs
+def run_func_with_output_to_file(
+    func, file_path_stdout, 
+    args=(), kwargs:dict={}, file_path_stderr=None, backend:str="dup",
+    pipe_prev=None, **_kwargs
 ):
+    kwargs.update(_kwargs)
     backend = backend.lower()
-    if backend == "dup":
+    if backend == "dup": # lower level implementation
         return run_func_with_output_to_file_dup(
             func, *args,
             file_path_stdout=file_path_stdout, file_path_stderr=file_path_stderr,
@@ -26,7 +28,6 @@ def run_func_with_output_to_file(func,
         )
     else:
         raise ValueError(backend)
-    return
 
 def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_stderr=None, pipe_prev=None, print_to_stdout=False, **kwargs):
     def print_bytes_to_f(_bytes, f):
@@ -118,6 +119,121 @@ def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_st
     os.dup2(fd_stderr_origin, 2) # restore stdout to the terminal
     os.close(fd_stderr_origin)
     return result
+
+from typing import Optional
+class StdOutAndStdErrToFile:
+    def __init__(
+        self,
+        file_path_stdout: str,
+        file_path_stderr: Optional[str] = None,
+        pipe_prev=None, pipe_prev_out=None, pipe_prev_err=None,
+        print_to_stdout=False
+    ):
+        self.file_path_stdout = file_path_stdout
+        self.file_path_stderr = file_path_stderr
+        self.pipe_prev = pipe_prev
+        self.pipe_prev_out = pipe_prev_out
+        self.pipe_prev_err = pipe_prev_err
+        self.print_to_stdout = print_to_stdout
+
+        self.thread_list = []
+        self._result = None
+
+    def _print_bytes_to_f(self, _bytes, f):
+        f.write(_bytes)
+        f.flush()
+        return True
+
+    def _print_bytes_to_stdout(self, _bytes):
+        if not self.print_to_stdout:
+            return True
+        try:
+            os.write(self._fd_stdout_origin, _bytes)
+        except Exception:
+            return False
+        return True
+
+    def _listen_thread(self, fd_read, file_path, pipe_prev_list=None):
+        with open(file_path, "wb") as f:
+            for pipe_prev in pipe_prev_list:
+                if pipe_prev is not None:
+                    if isinstance(pipe_prev, BytesIO):
+                        out_bytes = _utils_io.read_from_bytes_io(pipe_prev)
+                    elif isinstance(pipe_prev, StringIO):
+                        out_bytes = _utils_io.read_from_string_io(pipe_prev)
+                    else:
+                        pass  # TODO
+                    if out_bytes is not None:
+                        self._print_bytes_to_f(out_bytes, f)
+            while True:
+                out_bytes = os.read(fd_read, 1024)
+                if not self._print_bytes_to_f(out_bytes, f): break
+                if not self._print_bytes_to_stdout(out_bytes): break
+
+    def __enter__(self):
+        self._fd_stdout_origin = os.dup(1)
+        self._fd_stderr_origin = os.dup(2)
+
+        if self.file_path_stderr is None:
+            self._fd_read, fd_write = os.pipe()
+            os.dup2(fd_write, 1)
+            os.dup2(fd_write, 2)
+        else:
+            self._fd_read_out, fd_write_out = os.pipe()
+            self._fd_read_err, fd_write_err = os.pipe()
+            os.dup2(fd_write_out, 1)
+            os.dup2(fd_write_err, 2)
+
+        # avoid WinError on Windows
+        sys.stdout.write = lambda z: os.write(sys.stdout.fileno(), z.encode() if hasattr(z, 'encode') else z)
+        sys.stderr.write = lambda z: os.write(sys.stderr.fileno(), z.encode() if hasattr(z, 'encode') else z)
+
+        _utils_file.create_dir_for_file_path(self.file_path_stdout)
+
+        if self.file_path_stderr is None:
+            pipe_prev_list = []
+            if self.pipe_prev:
+                pipe_prev_list.append(self.pipe_prev)
+            if self.pipe_prev_out:
+                pipe_prev_list.append(self.pipe_prev_out)
+            if self.pipe_prev_err:
+                pipe_prev_list.append(self.pipe_prev_err)
+
+            thread = _utils_system.start_thread(
+                self._listen_thread, fd_read=self._fd_read, file_path=self.file_path_stdout,
+                pipe_prev=pipe_prev_list, dependent=True, join=False
+            )
+            self.thread_list.append(thread)
+        else:
+            pipe_prev_out_list = []
+            if self.pipe_prev:
+                pipe_prev_out_list.append(self.pipe_prev)
+            if self.pipe_prev_out:
+                pipe_prev_out_list.append(self.pipe_prev_out)
+            thread_stdout = _utils_system.start_thread(
+                self._listen_thread, fd_read=self._fd_read_out, file_path=self.file_path_stdout,
+                pipe_prev_list=pipe_prev_out_list, dependent=True, join=False
+            )
+            pipe_prev_err_list = []
+            if self.pipe_prev_err:
+                pipe_prev_err_list.append(self.pipe_prev_err)
+            thread_stderr = _utils_system.start_thread(
+                self._listen_thread, fd_read=self._fd_read_err, file_path=self.file_path_stderr,
+                pipe_prev_list=pipe_prev_err_list, dependent=True, join=False
+            )
+            self.thread_list.extend([thread_stdout, thread_stderr])
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None: # exit due to exception
+            traceback_str = ''.join(traceback.format_exception(exc_type, exc_val, exc_tb))
+            print(traceback_str, file=sys.stderr) # exception_str --> sys.stderr --> buf
+
+        for thread in self.thread_list:
+            thread.join(0.2)
+
+        os.dup2(self._fd_stdout_origin, 1)
+        os.dup2(self._fd_stderr_origin, 2)
+        os.close(self._fd_stdout_origin)
+        os.close(self._fd_stderr_origin)
 
 def run_func_with_output_to_file_simple(func, file_path_stdout, *args, file_path_stderr=None, **kwargs):
     # might not correctly redirect output from low-level c library to file

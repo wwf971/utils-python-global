@@ -9,6 +9,15 @@
 		],
 		"description": "import pyqt components"
 	},
+
+	"log-file-path": {
+		"prefix": ["log file path"], // 在snippet列表中显示的名称
+		"body": [
+			"file_path_stdout = _utils_file.get_file_path_current_no_suffix(__file__) + \"-stdout.txt\"",
+			"file_path_stderr = _utils_file.get_file_path_current_no_suffix(__file__) + \"-stderr.txt\""
+		],
+		"description": "log file path" // 在snippet列表中以小字显示
+	},
 	"sys.path add path": {
 		"prefix": ["add path to sys.path"], // 在snippet列表中显示的名称
 		"body": [

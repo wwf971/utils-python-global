@@ -22,7 +22,7 @@ def remove_dir_if_exist(file_path):
     if _utils_file.dir_exist(file_path):
         remove_dir(file_path)
 
-def remove_subdir_if_empty(dir_path_current, recur=True):
+def remove_subdir_if_empty(dir_path_current, recur=True, pipe_out=None):
     def remove_dir_if_empty(dir_path, dir_path_rel, pipe_out=None, **kwargs):
         if _utils_file.is_dir_emtpy(dir_path):
             _utils_file.remove_dir(dir_path)
@@ -34,7 +34,8 @@ def remove_subdir_if_empty(dir_path_current, recur=True):
         dir_path_current=dir_path_current,\
         func=None,
         func_dir=remove_dir_if_empty,
-        recur=recur
+        recur=recur,
+        pipe_out=pipe_out
     )
 remove_empty_subdir = remove_subdir_if_empty
 

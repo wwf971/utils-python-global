@@ -6,13 +6,15 @@ from .file_io import (
     str_to_text_file,
     run_func_with_output_to_file,
     run_func_with_output_to_file_dup,
-    run_func_with_output_to_file_simple
+    run_func_with_output_to_file_simple,
+    StdOutAndStdErrToFile
 )
 from .file_io_cr import (
     run_func_with_output_to_file_dup_cr
 )
 from .buf_io import (
-    run_func_with_output_to_buf
+    run_func_with_output_to_buf,
+    StdOutAndStdErrToBuf
 )
 from ._print import (
     print_to_str,
