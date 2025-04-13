@@ -21,6 +21,10 @@ from ._print import (
     print_str_to_pipe
 )
 
+from .redirect import (
+    RedirectStdOutAndStdErrToBytesIO
+)
+
 from .pipe import PipeOut
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

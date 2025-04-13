@@ -46,12 +46,20 @@ def _print_str_to_pipe(
         _str = "\n".join(str_list)
         if IsEndWithNewLine:
             _str = _str + "\n"
-    if hasattr(pipe, "buffer"):
+
+    if hasattr(pipe, "write"):
+        # <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+        pipe.write(_str)
+    elif hasattr(pipe, "buffer"):
         pipe.buffer.write(_str.encode(encoding))
     else:
-        pipe.write(_str)
+        raise Exception
+
     if flush and hasattr(pipe, "flush"):
-        pipe.flush()
+        try:
+            pipe.flush()
+        except Exception:
+            pass
 
 def write_utf8_to_stdout(str_print, indent:int=None):
     if indent is not None:

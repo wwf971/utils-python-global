@@ -1,4 +1,5 @@
 from _utils_import import np, torch, nn, F
+from _utils_import import _utils_file
 import _utils_torch
 from _utils import (
     Dict,
@@ -9,12 +10,9 @@ from _utils import (
 from .utils import (
     np_array_to_torch_tensor
 )
-import _utils_file
 
 # a lightweight wrapper of torch.nn.Module
 class TorchModuleWrapper(nn.Module):
-    """
-    """
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.config = Dict()
@@ -212,6 +210,10 @@ class TorchModuleWrapper(nn.Module):
         self.device = device
         self.to(device)
         return self
+    def get_param_num(self):
+        return get_torch_module_param_num(self)
+
+
 TorchModule = TorchModuleWrapper
 
 def print_module_param(model: torch.nn.Module, stdout=None):
@@ -235,8 +237,8 @@ def print_torch_module_submodule(model: torch.nn.Module, pipe_out=None):
         pipe_out.print("%s %s"%(name, child))    
     return
 
-def get_torch_module_param_num(Module: torch.nn.Module):
-    param_num = sum(p.numel() for p in Module.parameters())
+def get_torch_module_param_num(module: torch.nn.Module):
+    param_num = sum(p.numel() for p in module.parameters())
     # print(f"Total number of parameters: {total_params}")
     return param_num
 

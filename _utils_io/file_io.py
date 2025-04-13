@@ -29,7 +29,12 @@ def run_func_with_output_to_file(
     else:
         raise ValueError(backend)
 
-def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_stderr=None, pipe_prev=None, print_to_stdout=False, **kwargs):
+def run_func_with_output_to_file_dup(
+    func, file_path_stdout, file_path_stderr=None,
+    file_mode="wb", args=(),
+    pipe_prev=None, print_to_stdout=False, **kwargs
+):
+    assert file_mode in ["ab", "wb"]
     def print_bytes_to_f(_bytes, f):
         f.write(_bytes)
         f.flush() # ensure data is written immediately
@@ -44,7 +49,7 @@ def run_func_with_output_to_file_dup(func, file_path_stdout, *args, file_path_st
         return True
 
     def listen_thread(fd_read, file_path, pipe_prev=None):
-        with open(file_path, "wb") as f:
+        with open(file_path, file_mode) as f:
             if pipe_prev is not None:
                 if isinstance(pipe_prev, BytesIO):
                     out_bytes = _utils_io.read_from_bytes_io(pipe_prev)
@@ -127,7 +132,8 @@ class StdOutAndStdErrToFile:
         file_path_stdout: str,
         file_path_stderr: Optional[str] = None,
         pipe_prev=None, pipe_prev_out=None, pipe_prev_err=None,
-        print_to_stdout=False
+        print_to_stdout=False,
+        file_mode="wb"
     ):
         self.file_path_stdout = file_path_stdout
         self.file_path_stderr = file_path_stderr
@@ -135,7 +141,8 @@ class StdOutAndStdErrToFile:
         self.pipe_prev_out = pipe_prev_out
         self.pipe_prev_err = pipe_prev_err
         self.print_to_stdout = print_to_stdout
-
+        self.file_mode = file_mode
+        assert self.file_mode in ["ab", "wb"]
         self.thread_list = []
         self._result = None
 
@@ -154,7 +161,7 @@ class StdOutAndStdErrToFile:
         return True
 
     def _listen_thread(self, fd_read, file_path, pipe_prev_list=None):
-        with open(file_path, "wb") as f:
+        with open(file_path, self.file_mode) as f:
             for pipe_prev in pipe_prev_list:
                 if pipe_prev is not None:
                     if isinstance(pipe_prev, BytesIO):

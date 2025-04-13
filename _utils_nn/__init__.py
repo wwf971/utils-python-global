@@ -1,5 +1,4 @@
 from __future__ import annotations
-from _utils_import import DLUtils
 from _utils import (
     Dict,
     class_instance_from_class_path,
@@ -39,13 +38,13 @@ class Module():
         self.param[Name] = Value
         setattr(self, Name, Value)
         return self
-    def from_file(self, FilePath):
-        FilePath = DLUtils.file.CheckFileExists(FilePath)
+    def from_file(self, file_path):
+        _utils_file.check_file_exist(file_path)
         ModuleDict = DLUtils.file.BinaryFileToObj(ModuleDict)
-    def to_file(self, FilePath):
-        FilePath = DLUtils.EnsureFileDir(FilePath)
+    def to_file(self, file_path):
+        file_path = _utils_file.create_dir_for_file_path(file_path)
         ModuleDict = self.ToDict()
-        DLUtils.file.ObjToBinaryFile(ModuleDict, FilePath)
+        _utils_file.obj_to_binary_file(ModuleDict, file_path)
         return self
     def from_dict(self, ModuleDict: dict):
         self.config = ModuleDict["config"]
@@ -82,10 +81,10 @@ def dict_to_module(ModuleDict):
     module.FromDict(ModuleDict)
     return module
 
-def file_to_module(FilePath):
+def file_to_module(file_path):
     import _utils_file
-    FilePath = _utils_file.file_exist(FilePath)
-    ModuleDict = DLUtils.file.BinaryFileToObj(FilePath)
+    file_path = _utils_file.file_exist(file_path)
+    ModuleDict = DLUtils.file.BinaryFileToObj(file_path)
     assert isinstance(ModuleDict, dict)
     return dict_to_module(ModuleDict)
 
