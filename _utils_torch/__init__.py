@@ -6,14 +6,15 @@ from _utils_torch.wrapper import(
     ModuleList, TorchModule,
     init_torch_module_from_dict,
     get_torch_module_config,
-    torch_module_from_file,
+    load_module_from_file,
     create_torch_module,
+    load_module_from_dict,
     get_torch_module_param_num
 )
 
 from .mlp import (
     MLP, MLPParallel,
-    build_mlp,
+    create_mlp,
 )
 
 from .utils import (
@@ -23,7 +24,8 @@ from .utils import (
     torch_tensor_to_np_array,
     check_tensor_shape,
     to_one_hot,
-    get_activation_func_class
+    get_activation_func_class,
+    copy_param
 )
 
 def get_random_tensor_uniform(shape, start, end, device=None):

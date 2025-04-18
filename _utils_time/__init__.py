@@ -25,20 +25,29 @@ from .unix import (
     get_current_unix_stamp,
     get_current_unix_stamp_int,
     unix_stamp_to_time_str,
-    unix_stamp_to_time_str_local
+    unix_stamp_to_time_str_local,
+    get_unix_stamp_from_ymd_hms
 )
 
-def get_current_time_str(
+def get_time_str_current(
     offset=0, # unit: second
     timezone="local",
     format=None
 ):
     if format is None:
-        return get_current_time_str_ymd8_hms8(offset=offset, timezone=timezone)
+        return get_time_str_current_ymd8_hms8(offset=offset, timezone=timezone)
 
     unix_stamp_current = get_current_unix_stamp() + offset
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S")
     return time_str_current # YYmmdd_hhmmss
+
+def get_time_str_current_local():
+    from datetime import datetime, timezone, timedelta
+    timezone_int = get_local_timezone_hour()
+    unix_stamp = get_current_unix_stamp_int()
+    now = datetime.now(timezone(timedelta(hours=timezone_int)))
+    time_str = now.strftime(f'%Y/%m/%d %H:%M UTC{timezone_int:+03d} UNIX{unix_stamp:+d}')
+    return time_str
 
 def unix_stamp_to_time_str_ymd8_hms8(
     unix_stamp,
@@ -47,7 +56,7 @@ def unix_stamp_to_time_str_ymd8_hms8(
     time_str = unix_stamp_to_time_str(unix_stamp, timezone=timezone, format="%Y%m%d_%H%M%S%f")
     return time_str[:-4] # YYmmdd_hhmmss(ms2digit)
 
-def get_current_time_str_ymd8_hms8(
+def get_time_str_current_ymd8_hms8(
     offset=0, # unit: second
     timezone="local",
 ):

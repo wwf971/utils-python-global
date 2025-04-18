@@ -50,5 +50,5 @@ def find_max_element_less_than(target, _list, is_list_sorted=True):
     return element, mid
 
 from .sample import (
-    sample_from_gaussian_01
+    sample_from_gaussian_01, sample_from_norm_01
 )

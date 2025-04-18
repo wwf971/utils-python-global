@@ -12,6 +12,8 @@ def get_activation_func_class(func_str: str):
         return nn.Sigmoid
     elif func_str in ["none", "identity"]:
         return nn.Identity
+    elif func_str in ["relu_tanh"]:
+        return lambda :nn.Sequential(nn.ReLU(), nn.Tanh()) # range: (0, 1)
     else:
         raise ValueError
 
@@ -54,3 +56,8 @@ def print_torch_module(model: torch.nn.Module, pipe_out=None):
             ))
             with pipe_out.increased_indent():
                 print_torch_module(SubModule, pipe_out=pipe_out)
+
+
+def copy_param(module_src, module_dst):
+    for param_src, param_dst in zip(module_src.parameters(), module_dst.parameters()):
+        param_dst.data.copy_(param_src.data)

@@ -19,7 +19,7 @@ from _utils_str import (
     get_random_str_az_AZ,
     get_random_str_AZ_09,
     get_random_str_az_AZ_09,
-    binary_string_to_int,
+    str_01_to_int,
 )
 
 from ._json import (

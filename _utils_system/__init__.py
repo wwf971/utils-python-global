@@ -73,6 +73,10 @@ from .run_process import (
     run_cmd_line_subprocess,
 )
 
+from .run_repeat import (
+    run_repeat
+)
+
 from .timeout import (
     run_func_with_timeout,
     run_func_with_timeout_multiple_trial,

@@ -47,6 +47,7 @@ class PipeOut:
         return
     def increased_indent(self):
         return _PipeOutIncreaseIndent(self)
+    inc_indent = increased_indent
     def increase_indent(self):
         self.indent += 1
         return self
@@ -57,6 +58,7 @@ class PipeOut:
     def print_with_increased_indent(self, *args, **kwargs):
         result = self.print(*args, indent=self.indent + 1, **kwargs)
         return result
+    print_with_inc_indent = print_with_increased_indent
     def print(self, *args, indent=None, file=None, **kwargs):
         if indent is None:
             indent = self.indent
@@ -86,7 +88,6 @@ class PipeOut:
         self.print(_str, end="")
     def write_bytes(self, _bytes: str, encoding='utf-8'):
         print_bytes_to_pipe(self.pipe, _bytes)
-
 
 if __name__ == "__main__":
     import sys, os, pathlib

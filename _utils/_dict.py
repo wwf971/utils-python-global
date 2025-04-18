@@ -8,14 +8,27 @@ def class_path_from_class_instance(Instance):
     qualname = cls.__qualname__
     return f"{module}.{qualname}"
 
-def class_instance_from_class_path(ClassPath: str, *args, **kwargs):
+def class_instance_from_class_path(class_path: str, *args, **kwargs):
     import importlib
     # split the class_path into module path and class name
-    module_path, ClassName = ClassPath.rsplit('.', 1)
-    # import the module
-    module = importlib.import_module(module_path)
+    module_path, class_name = class_path.rsplit('.', 1)
+    try:
+        # import the module
+        module = importlib.import_module(module_path)
+    except Exception:
+        module = None
+        module_path_map = kwargs.get('module_path_map')
+        if module_path_map:
+            module_path_new = module_path_map.get(module_path)
+            if module_path_new:
+                module = importlib.import_module(module_path_new)
+        if module is None:
+            raise Exception
+    if 'module_path_map' in kwargs:
+        kwargs.pop('module_path_map')
+
     # get the class
-    cls = getattr(module, ClassName)
+    cls = getattr(module, class_name)
     # create an instance of the class
     instance = cls(*args, **kwargs)
     return instance
@@ -23,21 +36,22 @@ def class_instance_from_class_path(ClassPath: str, *args, **kwargs):
 import argparse
 
 class List(list):
-    def __init__(self, list_like=None, *args):
+    def __init__(self, list_like, *args):
         super().__init__()
-        if list_like is not None:
-            for _ in list_like:
-                if isinstance(_, dict):
-                    self.append(Dict(_))
-                elif isinstance(_, argparse.Namespace):
-                    self.append(Dict(_))
-                else:
-                    self.append(_)
-        elif len(args) > 0:
-            for arg in args:
-                self.append(arg)
+        # if list_like is not None:
+        #     for _ in list_like:
+        #         if isinstance(_, dict):
+        #             self.append(Dict(_))
+        #         elif isinstance(_, argparse.Namespace):
+        #             self.append(Dict(_))
+        #         else:
+        #             self.append(_)
+        if len(args) == 0:
+            args = list_like
         else:
-            pass
+            args = [list_like] + list(args)
+        for arg in args:
+            self.append(arg)
     
 class Dict(dict):
     """

@@ -122,13 +122,13 @@ def list_all_file_name_with_name_pattern(dir_path, pattern: str, recur=False, _y
     dir_path = dir_path_to_unix_style(dir_path)
 
     if _yield:
-        for file_name in list_all_file_path(dir_path):
-            if pattern_compiled.match(file_name) is None:
+        for file_name in list_all_file_name(dir_path):
+            if pattern_compiled.match(file_name) is not None:
                 yield file_name
     else:
         file_name_list = []
-        for file_name in list_all_file_path(dir_path):
-            if pattern_compiled.match(file_name) is None:
+        for file_name in list_all_file_name(dir_path):
+            if pattern_compiled.match(file_name) is not None:
                 file_name_list.append(file_name)
         return file_name_list
 list_all_file_name_with_pattern = list_all_file_name_with_name_pattern
@@ -141,12 +141,12 @@ def list_all_file_path_with_name_pattern(dir_path, pattern: str, recur=False, _y
 
     if _yield:
         for file_name in list_all_file_path(dir_path):
-            if pattern_compiled.match(file_name) is None:
+            if pattern_compiled.match(file_name) is not None:
                 yield file_name
     else:
         file_name_list = []
         for file_name in list_all_file_path(dir_path):
-            if pattern_compiled.match(file_name) is None:
+            if pattern_compiled.match(file_name) is not None:
                 file_name_list.append(file_name)
         return file_name_list
 
@@ -228,7 +228,7 @@ def visit_tree(dir_path_current, func=None, recur=True, verbose=False, dir_path_
         dir_path_rel = ""
     if verbose:
         print(dir_path_current)
-    if func is not None:
+    if func: # func to address file
         for file_name in list_all_file_name(dir_path_current):
             func(
                 dir_path_current=dir_path_current,
@@ -243,7 +243,7 @@ def visit_tree(dir_path_current, func=None, recur=True, verbose=False, dir_path_
                 dir_path_rel=dir_path_rel + dir_name, # dir_name ends with "/"
                 **kwargs
             )
-            if func_dir is not None:
+            if func_dir:
                 func_dir(
                     dir_path=dir_path_current + dir_name,
                     dir_path_rel=dir_path_rel + dir_name,
@@ -280,7 +280,7 @@ def change_file_path_suffix(file_path:str, suffix:str):
     return file_path_new
 
 def change_file_name_suffix(file_name:str, suffix:str):
-    return change_file_name_suffix(file_path=file_name, suffix=suffix)
+    return change_file_path_suffix(file_path=file_name, suffix=suffix)
 
 def to_file(obj, file_path):
     file_path = create_dir_for_file_path(file_path)

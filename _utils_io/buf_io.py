@@ -7,13 +7,13 @@ import traceback
 
 from typing import Any, Optional, Tuple, Callable
 
-def run_func_with_output_to_buf(func, args=(), kwargs:dict={}, print_to_stdout=False, pipe_prev=None, **_kwargs) -> Tuple[BytesIO, Any]:
+def run_func_with_output_to_buf(func, args=(), kwargs:dict={}, print_to_shell=False, pipe_prev=None, **_kwargs) -> Tuple[BytesIO, Any]:
     kwargs.update(_kwargs)
     def print_bytes_to_buf(_bytes:bytes, buf: BytesIO):
         buf.write(_bytes)
         return True
     def print_bytes_to_stdout(_bytes):
-        if not print_to_stdout:
+        if not print_to_shell:
             return True
         try:
             os.write(fd_stdout_origin, _bytes)
@@ -75,10 +75,10 @@ class StdOutAndStdErrToBuf:
     def __init__(
         self,
         separate_stdout_stderr: bool = True,
-        print_to_stdout: bool = False,
+        print_to_shell: bool = False,
         pipe_prev: Optional[BytesIO] = None,
     ):
-        self.print_to_stdout = print_to_stdout
+        self.print_to_shell = print_to_shell
         self.pipe_prev = pipe_prev
         self.func_return: Any = None
         self.separate_stdout_stderr = separate_stdout_stderr
@@ -124,7 +124,7 @@ class StdOutAndStdErrToBuf:
                     join=False,
                 )
             ]
-            return self.buf_out, self.buf_err
+            return self
         else:
             self.buf = BytesIO()
             self.thread_list = [
@@ -137,7 +137,7 @@ class StdOutAndStdErrToBuf:
                     join=False,
                 )
             ]
-            return self.buf
+            return self
 
     def listen_thread_func(self, fd_read, buf, pipe_prev=None):
         def print_bytes_to_buf(_bytes: bytes, buf: BytesIO):
@@ -145,7 +145,7 @@ class StdOutAndStdErrToBuf:
             return True
 
         def print_bytes_to_stdout(_bytes):
-            if not self.print_to_stdout:
+            if not self.print_to_shell:
                 return True
             try:
                 os.write(self.fd_stdout_origin, _bytes)
@@ -179,7 +179,10 @@ class StdOutAndStdErrToBuf:
         if exc_type is not None: # exit due to exception
             traceback_str = ''.join(traceback.format_exception(exc_type, exc_val, exc_tb))
             print(traceback_str, file=sys.stderr) # exception_str --> sys.stderr --> buf
-        
+            self.exit_with_exception = True
+        else:
+            self.exit_with_exception = False
+
         for thread in self.thread_list:
             thread.join(0.2)  # wait to flush all output
 

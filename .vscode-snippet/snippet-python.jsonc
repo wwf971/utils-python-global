@@ -13,8 +13,8 @@
 	"log-file-path": {
 		"prefix": ["log file path"], // 在snippet列表中显示的名称
 		"body": [
-			"file_path_stdout = _utils_file.get_file_path_current_no_suffix(__file__) + \"-stdout.txt\"",
-			"file_path_stderr = _utils_file.get_file_path_current_no_suffix(__file__) + \"-stderr.txt\"",
+			"file_path_stdout = _utils_file.get_file_path_current_no_suffix(__file__) + \"~stdout.txt\"",
+			"file_path_stderr = _utils_file.get_file_path_current_no_suffix(__file__) + \"~stderr.txt\"",
 			"dir_path_base = _utils_file.get_dir_path_current(__file__)"
 		],
 		"description": "log file path" // 在snippet列表中以小字显示
@@ -113,15 +113,5 @@
 			"import mujoco_py",
 		],
 		"description": "set env variable and import mujoco_py"
-	},
-
-	// example
-	"parser": {
-		"prefix": "parser",
-		"body": [
-			"console.log('$1');", // $1也可以替换为{$1:content}
-			"$2"
-		],
-		"description": "Log output to console"
 	},
 }

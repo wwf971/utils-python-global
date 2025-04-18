@@ -29,7 +29,7 @@ class YAMLDict:
 
     def __getattr__(self, name): # only triggered when accessing non-existent attribute
         # but not applicable for magic methods
-        return object.__getattr__(self.__dict__['yaml_dict'],  name)
+        return getattr(self.__dict__['yaml_dict'], name)
 
     def __getitem__(self, key):
         return self.yaml_dict[key]
@@ -123,6 +123,8 @@ def _to_yaml_str_local(obj, indent, yaml_str:list, parent=None, parent_index=-1)
             _to_yaml_str_local(
                 value, indent + 2, yaml_str, parent=obj, parent_index=index
             )
+    # elif isinstance(obj, np.ndarray):
+        # pass
     elif isinstance(obj, str):
         yaml_str.append(obj)
         yaml_str.append("\n")
@@ -137,5 +139,5 @@ def _to_yaml_str_local(obj, indent, yaml_str:list, parent=None, parent_index=-1)
         if not "\n" in obj_str:
             yaml_str.append(obj_str)
         else:
-            yaml_str.append(type(obj))
+            yaml_str.append(str(type(obj)))
         yaml_str.append("\n")

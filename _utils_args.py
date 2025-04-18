@@ -11,12 +11,12 @@ def str2bool(arg_value):
 
 import argparse
 class CustomArgumentParser(argparse.ArgumentParser):
-	def add_bool_arg(self, arg_name: str, default: bool=False, help=None):
+	def add_bool_arg(self, arg_name: str, default: bool=False, help=None, **kwargs):
 		if arg_name.startswith("--"):
 			arg_name = arg_name.lstrip("--")
 		if default:
-			self.add_argument('--' + arg_name, nargs="?", const=True, type=str2bool, default=True, help=help)
+			self.add_argument('--' + arg_name, nargs="?", const=True, type=str2bool, default=True, help=help, **kwargs)
 		else:
-			self.add_argument('--' + arg_name, nargs="?", const=True, type=str2bool, default=False, help=help)
+			self.add_argument('--' + arg_name, nargs="?", const=True, type=str2bool, default=False, help=help, **kwargs)
 def get_parser() -> CustomArgumentParser:
 	return CustomArgumentParser()

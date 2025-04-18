@@ -1,5 +1,4 @@
 from __future__ import annotations
-import sys
 
 from .file_io import (
     text_file_to_str,

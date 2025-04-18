@@ -6,9 +6,10 @@ import re
 from pathlib import Path
 from _utils_import import shutil
 
-def move_file(file_path_source, file_path_target):
+def move_file(file_path_source, file_path_target, overwrite=False):
     assert _utils_file.file_exist(file_path_source)
-    assert not _utils_file.file_exist(file_path_target)
+    if not overwrite:
+        assert not _utils_file.file_exist(file_path_target)
     _utils_file.create_dir_for_file_path(file_path_target)
     shutil.move(file_path_source, file_path_target)
     # Path(file_path_source).rename(file_path_target)

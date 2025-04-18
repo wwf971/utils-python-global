@@ -40,14 +40,20 @@ class MLP(ModuleList):
             self.add_submodule("layer-%d"%layer_index, layer)
         return self
     
-def build_mlp(layer_shape, nonlinear_func, nonlinear_func_output=None):
+def create_mlp(layer_shape, nonlinear_func, nonlinear_func_output=None) -> ModuleList:
+    module = _utils_torch.ModuleList()
     layer_list = []
     if nonlinear_func_output is None:
         nonlinear_func_output = nonlinear_func
     for j in range(len(layer_shape)-1):
+        module.add_torch_module(
+            f"{j}", nn.Linear,
+            in_features=layer_shape[j],
+            out_features=layer_shape[j+1],
+        )
         nonlinear_module = _utils_torch.get_activation_func_class(nonlinear_func if j < len(layer_shape)-2 else nonlinear_func_output)
-        layer_list += [nn.Linear(layer_shape[j], layer_shape[j+1]), nonlinear_module()]
-    return nn.Sequential(*layer_list)
+        module.add_torch_module(f"{j}_nonlinear", nonlinear_module)
+    return module
 
 class MLPParallelLayer(TorchModuleWrapper):
     def init(self, **kwargs):

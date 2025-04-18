@@ -2,14 +2,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import sys, os
 import traceback
-from _utils_import import _utils_file, _utils_system
-import _utils_io
+from _utils_import import _utils_file, _utils_system, _utils_io
 from io import StringIO, BytesIO
 
 def run_func_with_output_to_file(
     func, file_path_stdout, 
     args=(), kwargs:dict={}, file_path_stderr=None, backend:str="dup",
-    pipe_prev=None, **_kwargs
+    pipe_prev=None, file_mode="wb", **_kwargs
 ):
     kwargs.update(_kwargs)
     backend = backend.lower()
@@ -17,7 +16,7 @@ def run_func_with_output_to_file(
         return run_func_with_output_to_file_dup(
             func, *args,
             file_path_stdout=file_path_stdout, file_path_stderr=file_path_stderr,
-            pipe_prev=pipe_prev,
+            pipe_prev=pipe_prev, file_mode=file_mode,
             **kwargs
         )
     elif backend == "simple":
@@ -32,7 +31,7 @@ def run_func_with_output_to_file(
 def run_func_with_output_to_file_dup(
     func, file_path_stdout, file_path_stderr=None,
     file_mode="wb", args=(),
-    pipe_prev=None, print_to_stdout=False, **kwargs
+    pipe_prev=None, print_to_shell=False, **kwargs
 ):
     assert file_mode in ["ab", "wb"]
     def print_bytes_to_f(_bytes, f):
@@ -40,7 +39,7 @@ def run_func_with_output_to_file_dup(
         f.flush() # ensure data is written immediately
         return True
     def print_bytes_to_stdout(_bytes):
-        if not print_to_stdout:
+        if not print_to_shell:
             return True
         try:
             os.write(fd_stdout_origin, _bytes)
@@ -88,16 +87,16 @@ def run_func_with_output_to_file_dup(
 
     _utils_file.create_dir_for_file_path(file_path_stdout)
     if file_path_stderr is None:
-        _listen_thread = _utils_system.start_thread(
+        listen_thread = _utils_system.start_thread(
             listen_thread, fd_read=fd_read, file_path=file_path_stdout, pipe_prev=pipe_prev,
             dependent=True, join=False
         )
     else:
-        _listen_thread_stdout = _utils_system.start_thread(
+        listen_thread_stdout = _utils_system.start_thread(
             listen_thread, fd_read=fd_read_stdout, file_path=file_path_stdout, pipe_prev=pipe_prev,
             dependent=True, join=False
         )
-        _listen_thread_stderr = _utils_system.start_thread(
+        listen_thread_stderr = _utils_system.start_thread(
             listen_thread, fd_read=fd_read_stderr, file_path=file_path_stderr, pipe_prev=pipe_prev,
             dependent=True, join=False
         )
@@ -113,10 +112,10 @@ def run_func_with_output_to_file_dup(
             pass
     
     if file_path_stderr is None:
-        _listen_thread.join(0.2) # wait for thread to handle all outputs
+        listen_thread.join(0.2) # wait for thread to handle all outputs
     else:
-        _listen_thread_stdout.join(0.2)
-        _listen_thread_stderr.join(0.2)
+        listen_thread_stdout.join(0.2)
+        listen_thread_stderr.join(0.2)
 
     # restore
     os.dup2(fd_stdout_origin, 1) # restore stdout to the terminal
@@ -132,15 +131,18 @@ class StdOutAndStdErrToFile:
         file_path_stdout: str,
         file_path_stderr: Optional[str] = None,
         pipe_prev=None, pipe_prev_out=None, pipe_prev_err=None,
-        print_to_stdout=False,
+        print_to_shell=False,
         file_mode="wb"
     ):
         self.file_path_stdout = file_path_stdout
         self.file_path_stderr = file_path_stderr
+        _utils_file.create_dir_for_file_path(file_path_stdout)
+        if file_path_stderr:
+            _utils_file.create_dir_for_file_path(file_path_stderr)
         self.pipe_prev = pipe_prev
         self.pipe_prev_out = pipe_prev_out
         self.pipe_prev_err = pipe_prev_err
-        self.print_to_stdout = print_to_stdout
+        self.print_to_shell = print_to_shell
         self.file_mode = file_mode
         assert self.file_mode in ["ab", "wb"]
         self.thread_list = []
@@ -152,7 +154,7 @@ class StdOutAndStdErrToFile:
         return True
 
     def _print_bytes_to_stdout(self, _bytes):
-        if not self.print_to_stdout:
+        if not self.print_to_shell:
             return True
         try:
             os.write(self._fd_stdout_origin, _bytes)
@@ -160,7 +162,7 @@ class StdOutAndStdErrToFile:
             return False
         return True
 
-    def _listen_thread(self, fd_read, file_path, pipe_prev_list=None):
+    def listen_thread(self, fd_read, file_path, pipe_prev_list=None):
         with open(file_path, self.file_mode) as f:
             for pipe_prev in pipe_prev_list:
                 if pipe_prev is not None:
@@ -207,8 +209,8 @@ class StdOutAndStdErrToFile:
                 pipe_prev_list.append(self.pipe_prev_err)
 
             thread = _utils_system.start_thread(
-                self._listen_thread, fd_read=self._fd_read, file_path=self.file_path_stdout,
-                pipe_prev=pipe_prev_list, dependent=True, join=False
+                self.listen_thread, fd_read=self._fd_read, file_path=self.file_path_stdout,
+                pipe_prev_list=pipe_prev_list, dependent=True, join=False
             )
             self.thread_list.append(thread)
         else:
@@ -218,14 +220,14 @@ class StdOutAndStdErrToFile:
             if self.pipe_prev_out:
                 pipe_prev_out_list.append(self.pipe_prev_out)
             thread_stdout = _utils_system.start_thread(
-                self._listen_thread, fd_read=self._fd_read_out, file_path=self.file_path_stdout,
+                self.listen_thread, fd_read=self._fd_read_out, file_path=self.file_path_stdout,
                 pipe_prev_list=pipe_prev_out_list, dependent=True, join=False
             )
             pipe_prev_err_list = []
             if self.pipe_prev_err:
                 pipe_prev_err_list.append(self.pipe_prev_err)
             thread_stderr = _utils_system.start_thread(
-                self._listen_thread, fd_read=self._fd_read_err, file_path=self.file_path_stderr,
+                self.listen_thread, fd_read=self._fd_read_err, file_path=self.file_path_stderr,
                 pipe_prev_list=pipe_prev_err_list, dependent=True, join=False
             )
             self.thread_list.extend([thread_stdout, thread_stderr])

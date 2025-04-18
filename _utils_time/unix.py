@@ -43,10 +43,16 @@ def datetime_obj_to_unix_stamp(datetime_obj) -> float:
 # def datetime_obj_to_unix_stamp(DataTimeObj):
 #     return round(time.mktime(DataTimeObj.timetuple()))
 
+def get_unix_stamp_from_ymd_hms(y, m, d, h=0, min=0, sec=0, ms=0, timezone=None) -> float:
+    if not timezone:
+        timezone = datetime.timezone.utc
+    datetime_obj = datetime.datetime(y, m, d, h, min, sec, ms * 1000, tzinfo=timezone)
+    return datetime_obj.timestamp()
+
 def get_current_unix_stamp() -> float:
     # return type: float, with millisecond precision.
     return datetime_obj_to_unix_stamp(
-        datetime.datetime.utcnow() # caution. should use Greenwich Mean Time(GMT) here.
+        datetime.datetime.utcnow() # caution: should use Greenwich Mean Time(GMT) here.
     )
 
 def get_current_unix_stamp_int() -> int: # get unix time stamp

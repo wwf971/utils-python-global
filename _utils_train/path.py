@@ -26,7 +26,7 @@ def set_dir_path_instance(args: Dict, dir_path_base):
     # dir_path_instance: directory path to store current experiment data)
     if not args.hasattr("dir_path_instance"):
         import _utils_time
-        time_str = _utils_time.get_current_time_str_ymd8_hms8()
+        time_str = _utils_time.get_time_str_current_ymd8_hms8()
         dir_name_instance = time_str
         dir_path_instance = dir_path_base + "experiment/" + dir_name_instance + "/"
     _utils_file.create_dir_if_not_exist(dir_path_instance)
