@@ -4,6 +4,7 @@ from pathlib import Path
 from _utils_import import _utils, pickle, Dict
 import _utils_file
 from .path import (
+    get_dir_path_cmd,
     dir_path_to_unix_style,
     file_path_to_unix_style,
     dir_path_to_win_style,
@@ -20,7 +21,12 @@ from .path import (
     get_dir_path_parent,
     get_file_path_current,
     get_file_path_current_no_suffix,
-    change_file_path_current_suffix
+    change_file_path_current_suffix,
+    get_ancestor_dir_path_with_dir_name
+)
+
+from .search import(
+    search_dir_path_with_dir_name
 )
 
 def is_file_path(file_path: str):
@@ -86,6 +92,11 @@ def change_file_path_if_exist(file_path: str):
         index += 1
     assert not file_exist(file_path_new)
     return file_path_new
+
+def to_absolute_file_path(dir_path):
+    if "~" in dir_path:
+        dir_path = os.path.expanduser(dir_path)
+    return os.path.abspath(dir_path)
 
 def to_absolute_dir_path(dir_path):
     if "~" in dir_path:
@@ -304,12 +315,21 @@ def get_file_create_unix_stamp(file_path):
         try:
             return stat.st_birthtime
         except AttributeError:
-            # We're probably on Linux. No easy way to get creation dates here,
+            # we're probably on Linux. No easy way to get creation dates here,
             # so we'll settle for when its content was last modified.
             return stat.st_mtime
     else:
         raise NotImplementedError
     return unix_stamp_create
+
+def get_file_create_time_str(file_path, timezone_int="local"):
+    import _utils_time
+    time_stamp = get_file_create_unix_stamp(file_path)
+    if timezone_int == "local":
+        timezone_int = _utils_time.get_timezone_local_int()
+    time_str = _utils_time.unix_stamp_to_time_str(time_stamp, timezone=timezone_int, format="%Y%m%d_%H%M%S%f")[:-4]
+    return time_str + "{:+02}".format(timezone_int)
+
 
 def get_file_latest_create(dir_path: str):
     file_path_list = _utils_file.list_all_file_path(dir_path)

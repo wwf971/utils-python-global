@@ -11,17 +11,18 @@ def datetime_obj_to_time_str(datetime_obj, timezone: str=None, format="%Y%m%d_%H
     datetime_obj_new = datetime_obj_change_timezone(datetime_obj, timezone=timezone)
     return datetime_obj_new.strftime(format)
 
-def get_local_timezone():
+def get_timezone_local():
     local_time_zone = datetime.datetime.utcnow().astimezone().tzinfo
     return local_time_zone # <class 'datetime.timezone'>
 
-def get_local_timezone_hour() -> int:
-    timezone_local = get_local_timezone()
+def get_timezone_local_hour() -> int:
+    timezone_local = get_timezone_local()
     utc_offset_src = timezone_local.utcoffset(datetime.datetime.now())
     _timezone_hour = utc_offset_src.total_seconds() / 3600  # Convert to hours
     timezone_hour = round(_timezone_hour)
     assert -0.1 < timezone_hour - _timezone_hour < 0.1
     return timezone_hour
+get_timezone_local_int = get_timezone_local_hour
 
 def get_timezone(timezone_str, backend="pytz"):
     backend = backend.lower()
@@ -84,5 +85,5 @@ def datetime_obj_change_timezone(datetime_obj: datetime.datetime, timezone:str=N
     return datetime_obj_new # datetime_obj and datetime_obj_new refer to same time point
 
     # datetime_obj_utc = datetime_obj_utc.replace(tzinfo=_timezone_utc)
-    # _timezone = get_local_timezone(timezone)
+    # _timezone = get_timezone_local(timezone)
     # return datetime_obj_local

@@ -42,3 +42,14 @@ class Pauser:
     def __exit__(self, exc_type, exc_value, traceback):
         # for param in self.parent.q.parameters(): param.requires_grad = True # unlock q param
         self.parent.start()
+
+
+
+if __name__ == "__main__":
+    timer = Timer().start()
+    for i in range(5):
+        time.sleep(0.5)
+        with timer.pause():
+            time.sleep(1.0)
+
+    timer.report_time()

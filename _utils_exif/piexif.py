@@ -35,6 +35,8 @@ class ExifInfo:
     def get_exif_dict(self):
         exif_dict = {}
         for category, subdict in self.exif_dict_origin.items():
+            if category in ['1st', 'thumbnail']:
+                continue
             if subdict is not None:
                 for key, value in subdict.items():
                     assert key not in exif_dict
@@ -47,8 +49,8 @@ class ExifInfo:
         return self.get_exif_dict().items()
     def is_empty(self):
         return len(self.get_exif_dict()) == 0
-    def add_tag(self, key:int, value):
-        add_exif_tag(self.exif_dict_origin, key, value)
+    def add_tag(self, key:int, value, subdict_name=None):
+        add_exif_tag(self.exif_dict_origin, key, value, subdict_name=subdict_name)
         self.update_exif_dict()
     def get_tag(self, tag: int):
         if tag in self.exif_dict:
@@ -172,7 +174,14 @@ def add_exif_gps_tag(exif_dict, key: int, value):
         raise Exception
     return exif_dict
 
-def add_exif_tag(exif_dict, key: int, value):
+def add_exif_tag(exif_dict, key: int, value, subdict_name=None):
+    if subdict_name is not None:
+        # assert subdict_name in ['0th', '1st', 'Exif', 'GPS', 'Interop']
+        assert subdict_name in exif_dict
+        exif_dict[subdict_name][key] = value
+        return
+        
+
     # 34665(0x8769): ExifOffset
     if key in [
         0x0100, # 256(0x0100): width

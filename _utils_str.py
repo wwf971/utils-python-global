@@ -90,6 +90,16 @@ def int_to_str_01(int_value, digit_num: int=None, prefix: str=None):
     return str_01
 int_to_binary_str = int_to_str_01
 
+def str_01_to_bytes(_str):
+    try:
+        _int = int(_str[::-1], 2)
+        # why [::-1]?
+        # # int('1010', 2) --> 10, not 5
+    except Exception:
+        return
+    _bytes = _int.to_bytes(8, 'little')
+    return _bytes
+
 def bytes_to_str_01(_bytes: bytes, reverse=False, space_every=None) -> str:
     if space_every:
         if reverse:
@@ -171,3 +181,24 @@ def remove_extra_whitespace(_str: str):
     _str_new = _str_new.lstrip('\n')
     _str_new = _str_new.rstrip('\n')
     return _str_new
+
+
+def split_by_group(_str, re_match_result):
+    group_spans = {i: re_match_result.span(i) for i in range(1, len(re_match_result.groups()) + 1)}
+    slices = []
+    group_slice_index = {} # to find slice index of group i --> group_slice_index[i]
+
+    last_index = 0
+    sorted_spans = sorted(group_spans.items(), key=lambda x: x[1][0])
+
+    for group_index, (start, end) in sorted_spans:
+        if last_index < start:
+            slices.append(_str[last_index:start])  # non-group part
+        slices.append(_str[start:end])              # group part
+        group_slice_index[group_index] = len(slices) - 1
+        last_index = end
+
+    if last_index < len(_str):
+        slices.append(_str[last_index:])  # trailing non-group part
+
+    return slices, group_slice_index

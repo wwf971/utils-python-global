@@ -1,0 +1,44 @@
+{
+
+    // 将当前文件的indent从2 space改为4 space
+        // 需要安装settings cycler和multicommand插件
+    "settings.cycle": [
+        {
+            "id": "tabSizeTo2",
+            "overrideWorkspaceSettings": true,
+            "values": [
+            { "editor.tabSize": 2 }
+            ]
+        },
+        {
+            "id": "tabSizeTo4",
+            "overrideWorkspaceSettings": true,
+            "values": [
+            { "editor.tabSize": 4 }
+            ]
+        }
+    ],
+    "multiCommand.commands": [
+        {
+            "command": "multiCommand.indent_2_to_4_space", 
+            "sequence": [
+                {
+                    "command": "settings.cycle.tabSizeTo2"
+                },
+                "editor.action.indentationToTabs",
+                {
+                    "command": "settings.cycle.tabSizeTo4" // 实测需要等待一小段时间才能生效.
+                },
+                "editor.action.indentationToSpaces"
+            ],
+            "interval": 300,  // tabSizeTo2和tabSizeTo4需要等待一小段时间生效
+        }
+    ],
+    // keybindnigs.json
+    // {
+    //     "key": "ctrl+0",
+    //     "command": "multiCommand.indent_2_to_4_space",
+    //     "when": "editorTextFocus"
+    // }
+
+}

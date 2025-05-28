@@ -4,52 +4,48 @@ import _utils_train
 
 from tensorboard.backend.event_processing import event_accumulator # pip install tensorboard
 class TensorboardWrapper():
-    def __init__(self, dir_path=None):
-        if dir_path is not None:
-            self.init(dir_path)
-
+    def __init__(self, dir_path_base=None):
+        if dir_path_base is not None:
+            self.init(dir_path_base)
         from collections import defaultdict
         self._cache_float = defaultdict(lambda:_utils_train.FloatLog())
         self._cache_int   = defaultdict(lambda:_utils_train.IntLog())
-
-    def init(self, dir_path):
-        self.dir_path_tensorboard = dir_path
-        dir_path = _utils_file.dir_path_to_unix_style(dir_path)
-        _utils_file.create_dir_if_not_exist(dir_path)
+    def init(self, dir_path_base):
+        self.dir_path_base = dir_path_base
+        dir_path_base = _utils_file.dir_path_to_unix_style(dir_path_base)
+        _utils_file.create_dir_if_not_exist(dir_path_base)
         from torch.utils.tensorboard import SummaryWriter
-        self.writer = SummaryWriter(log_dir=dir_path)
-        self.file_path_tensorboard = self.get_file_path_tensorboard_from_dir_path(dir_path)
+        self.writer = SummaryWriter(log_dir=dir_path_base)
+        self.file_path_tensorboard = self.get_file_path_tensorboard_from_dir_path(dir_path_base)
         print("file_path_tensorboard: %s"%self.file_path_tensorboard)
+        # name of log file is automatically generated. could not be modified.
         if self.file_path_tensorboard is None:
             raise Exception
-    def cache_float(self, global_step=None, batch_size=None, **kwargs):
+    def cache_float(self, step_index=None, batch_size=None, **kwargs):
         for key, value in kwargs.items():
             self._cache_float[key].append(value, batch_size)
             return
-    def cache_int(self, global_step=None, batch_size=None, **kwargs):
+    def cache_int(self, step_index=None, batch_size=None, **kwargs):
         for key, value in kwargs.items():
             self._cache_float[key].append(value, batch_size)
             return
-    def cache_flush(self, global_step):
+    def cache_flush(self, step_index):
         _dict = dict()
         for key, value in dict(self._cache_float).items():
             _dict[key] = value.report_avg()
             value.clear()
         self.add_float(
-            global_step=global_step,
+            step_index=step_index,
             **_dict
         )
-
         _dict = dict()
         for key, value in dict(self._cache_int).items():
             _dict[key] = value.report_avg()
             value.clear()
-        
         self.add_int(
-            global_step=global_step,
+            step_index=step_index,
             **_dict
         )
-
         return
     def get_file_path_tensorboard_from_dir_path(self, dir_path):
         file_path_list = []
@@ -82,9 +78,9 @@ class TensorboardWrapper():
         else:
             batch_index = global_step - epoch_begin_step
             return epoch_index, batch_index
-    def load_from_instance_dir(self, dir_path_instance):
-        dir_path_instance = _utils_file.dir_path_to_unix_style(dir_path_instance)
-        dir_path = dir_path_instance + "log/"
+    def load_from_instance_dir(self, dir_path_base):
+        dir_path_base = _utils_file.dir_path_to_unix_style(dir_path_base)
+        dir_path = dir_path_base + "log/"
         _utils_file.check_dir_exist(dir_path)
         self.file_path_tensorboard = self.get_file_path_tensorboard_from_dir_path(dir_path)
         print("file_path_tensorboard: %s"%self.file_path_tensorboard)
@@ -101,16 +97,14 @@ class TensorboardWrapper():
         self.load_ea()
     def get_file_path_tensorboard(self):
         return self.file_path_tensorboard
-    def add_int(self, global_step=None, **kwargs):
+    def add_int(self, step_index, **kwargs):
         for key, value in kwargs.items():
-            self.writer.add_scalar(
-                key, value, global_step=global_step 
-            )
-    def add_float(self, global_step=None, **kwargs):
+            self.writer.add_scalar(key, value, global_step=step_index)
+        return self
+    def add_float(self, step_index, **kwargs):
         for key, value in kwargs.items():
-            self.writer.add_scalar(
-                key, value, global_step=global_step 
-            )
+            self.writer.add_scalar(key, value, global_step=step_index )
+        return self
     def flush(self):
         # make sure that data is saved to disk
         self.writer.flush()
@@ -118,6 +112,12 @@ class TensorboardWrapper():
         return self.ea.Tags().get('scalars', [])
     def get_event_float(self, name):
         return self.ea.Scalars(name)
+    def get_float(self, name):
+        event_list = self.get_event_float(name)
+        return [event.value for event in event_list], [event.step for event in event_list]
+    def get_int(self, name):
+        event_list = self.get_event_int(name)
+        return [event.value for event in event_list], [event.step for event in event_list]
     def get_event_int(self, name):
         return self.ea.Scalars(name)
     def reload(self):
@@ -141,17 +141,16 @@ class TensorboardWrapper():
         for tag_type in tags:
             print(f"{tag_type}: {tags[tag_type]}")
 
-def init_tensorboard(dir_path_instance) -> TensorboardWrapper:
-    # build SummaryWriter to record train curves
-    import shutil
-    dir_path_instance = _utils_file.dir_path_to_unix_style(dir_path_instance)
-    dir_path_tensorboard = dir_path_instance + "log/"
+def init_tensorboard(dir_path_base) -> TensorboardWrapper:
+    # build SummaryWriter to record train data
+    dir_path_base = _utils_file.dir_path_to_unix_style(dir_path_base)
+    dir_path_tensorboard = dir_path_base + "log/"
     log = TensorboardWrapper(dir_path_tensorboard)
-    # name of log file is automatically generated. could not be modified.
-        # 2024-09-06 17:05:36.515603: I tensorflow/core/util/port.cc:110] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-        # 2024-09-06 17:05:36.576936: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
-        # To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
-        # DEBUG:tensorflow:Falling back to TensorFlow client; we recommended you install the Cloud TPU client directly with pip install cloud-tpu-client.
-        # 2024-09-06 17:05:38.596909: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
     # writer.add_scalar('test', 1.0, global_step=0) # test
+    return log
+
+
+def load_tensorboard(dir_path_base):
+    log = TensorboardWrapper()
+    log.load_from_instance_dir(dir_path_base)
     return log

@@ -1,20 +1,74 @@
 {
     "html-template": {  // 在snippet列表中显示的名称
-        "prefix": "html-template",
+            "prefix": "html-template",
+            "body": [
+                "<!DOCTYPE html>",
+                "<html lang=\"en\">",
+                "<head>",
+                "    <meta charset=\"UTF-8\">",
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
+                "    <title>Minimal HTML Template</title>",
+                "</head>",
+                "<body>",
+                "    <h1>Hello, World!</h1>",
+                "    <p>This is a minimal HTML template.</p>",
+                "</body>",
+                "</html>"
+            ],
+            "description": "html-template"
+    },
+    "vue 2": {
+        "prefix": "vue 2",
         "body": [
-          "<!DOCTYPE html>",
-          "<html lang=\"en\">",
-          "<head>",
-          "    <meta charset=\"UTF-8\">",
-          "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">",
-          "    <title>Minimal HTML Template</title>",
-          "</head>",
-          "<body>",
-          "    <h1>Hello, World!</h1>",
-          "    <p>This is a minimal HTML template.</p>",
-          "</body>",
-          "</html>"
+            "<script src=\"https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js\"></script>"
         ],
-        "description": "html-template"
+        "description": "vue 2"
+    },
+    "vue 2 js": {
+        "prefix": "js-vue 2",
+        "body": [
+            "new Vue({",
+            "    el: '#app',",
+            "    data: {",
+            "      message: 'Hello from Vue 2!'",
+            "    }",
+            "});"
+        ],
+        "description": "vue 2 js"
+    },
+    "import axios": {
+        "prefix": "axios",
+        "body": [
+            "<script src=\"https://unpkg.com/axios/dist/axios.min.js\"></script>"
+        ],
+        "description": "import axios"
+    },
+    "css-external": {
+        "prefix": "css-external",
+        "body": [
+            "<link rel=\"stylesheet\" href=\"common.css\">"
+        ],
+        "description": "css-external"
+    },
+    "js-external": {
+        "prefix": "js-external",
+        "body": [
+            "<script src=\"common.js\"></script>"
+        ],
+        "description": "js-external"
+    },
+    "import-d3.js": {
+        "prefix": "import-d3.js",
+        "body": [
+            "<script src=\"https://d3js.org/d3.v7.min.js\"></script>"
+        ],
+        "description": "import-d3.js"
+    },
+    "unicode-insert": {
+        "prefix": "unicode-insert",
+        "body": [
+            "&#x26A0;"
+        ],
+        "description": "unicode-insert"
     }
 }

@@ -18,21 +18,18 @@ def run_repeat(
     func, args=(), kwargs={},
     config: Dict=None
 ):
-    if not config.hasattr("parent"):
-        config.parent = Dict()
+    if not config.hasattr("parent"): config.parent = Dict()
     config.parent.setdefault("file_path_stdout", _utils_file.get_file_path_current_no_suffix(__file__) + "~stdout.txt")
     config.parent.setdefault("file_path_stderr", _utils_file.get_file_path_current_no_suffix(__file__) + "~stderr.txt")
     config.parent.setdefault("file_path_info",   _utils_file.get_file_path_current_no_suffix(__file__) + "~info.txt")
 
-    if not config.hasattr("child"):
-        dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-        config.child = Dict()
+    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+    if not config.hasattr("child"): config.child = Dict()
     config.child.setdefault("file_path_stdout", dir_path_current + "log.txt",)
     config.child.setdefault("file_path_stderr", dir_path_current + "log-err.txt",)
     config.child.setdefault("file_path_info",   dir_path_current + "log-info.txt")
 
-    if not config.hasattr("run"):
-        config.run = Dict()
+    if not config.hasattr("run"): config.run = Dict()
     config.run.setdefault("num", 100)
     config.run.setdefault("interval", 5)
     config.run.setdefault("interval_inc", None)

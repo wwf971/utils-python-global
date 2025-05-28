@@ -1,0 +1,12 @@
+{
+	"cite-something": {
+	"prefix": "cite-something",
+	"body": [
+		"% avoid error in tex->bib->tex->tex compilation",
+		"\\cite{kanosue1979number}.",
+		"\\bibliographystyle{plain}",
+		"\\bibliography{../ref}"
+	],
+	"description": "cite-something"
+	}
+}

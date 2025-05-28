@@ -1,5 +1,6 @@
 import _utils_system
 import os, subprocess
+from _utils_import import Dict
 
 def start_process(
     cmd_line, dir_path_console=None,
@@ -30,6 +31,7 @@ def start_process(
         return
     else:
         raise Exception
+run_cmd_line = start_process
 
 def run_cmd_line_subprocess(
     cmd_line, dir_path_console=None,
@@ -138,6 +140,6 @@ def run_cmd_line_subprocess(
     exit_code = process.returncode
 
     if return_output:
-        return exit_code, stdout_bytes, stderr_bytes
+        return Dict(exit_code=exit_code, stdout=stdout_bytes, stderr=stderr_bytes)
     else:
-        return exit_code
+        return Dict(exit_code=exit_code)

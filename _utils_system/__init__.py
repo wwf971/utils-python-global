@@ -69,7 +69,7 @@ from .run_thread import (
 )
 
 from .run_process import (
-    start_process,
+    run_cmd_line, start_process,
     run_cmd_line_subprocess,
 )
 

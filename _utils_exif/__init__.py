@@ -1,13 +1,3 @@
-
-import sys, os, pathlib
-dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
-dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
-dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
-sys.path += [
-    dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
-]
-
 import _utils_exif.piexif as piexif
 import _utils_exif.pil as pil
 def get_exif(img_file_path, backend="exifread", verbose=False):

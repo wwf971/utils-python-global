@@ -13,16 +13,17 @@ import _utils_import
 from .timer import Timer, Pauser
 from .lib_datetime import (
     datetime_obj_to_time_str,
-    get_local_timezone,
-    get_local_timezone_hour,
+    get_timezone_local,
+    get_timezone_local_hour, get_timezone_local_int,
     datetime_obj_change_timezone,
-    get_timezone, get_local_timezone,
+    get_timezone, get_timezone_local,
 )
 
 from .unix import (
     get_unix_stamp_base_datetime_obj,
     unix_stamp_to_datetime_obj,
     get_current_unix_stamp,
+    get_current_unix_stamp_float,
     get_current_unix_stamp_int,
     unix_stamp_to_time_str,
     unix_stamp_to_time_str_local,
@@ -43,7 +44,7 @@ def get_time_str_current(
 
 def get_time_str_current_local():
     from datetime import datetime, timezone, timedelta
-    timezone_int = get_local_timezone_hour()
+    timezone_int = get_timezone_local_hour()
     unix_stamp = get_current_unix_stamp_int()
     now = datetime.now(timezone(timedelta(hours=timezone_int)))
     time_str = now.strftime(f'%Y/%m/%d %H:%M UTC{timezone_int:+03d} UNIX{unix_stamp:+d}')
@@ -54,7 +55,7 @@ def unix_stamp_to_time_str_ymd8_hms8(
     timezone="local",
 ):
     time_str = unix_stamp_to_time_str(unix_stamp, timezone=timezone, format="%Y%m%d_%H%M%S%f")
-    return time_str[:-4] # YYmmdd_hhmmss(ms2digit)
+    return time_str[:-4] # YYmmdd_hhmmss(ms_2digit)
 
 def get_time_str_current_ymd8_hms8(
     offset=0, # unit: second
@@ -62,5 +63,5 @@ def get_time_str_current_ymd8_hms8(
 ):
     unix_stamp_current = get_current_unix_stamp() + offset
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S%f")
-    return time_str_current[:-4] # YYmmdd_hhmmss(ms2digit)
+    return time_str_current[:-4] # YYmmdd_hhmmss(ms_2digit)
 

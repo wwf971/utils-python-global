@@ -34,6 +34,7 @@ def get_device():
 
 from ._tensorboard import (
     init_tensorboard,
+    load_tensorboard,
     TensorboardWrapper
 )
 

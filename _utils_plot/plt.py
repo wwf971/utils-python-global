@@ -22,10 +22,6 @@ else:
     Rectangle = _utils_import.lazy_from_import("matplotlib.patches", "Rectangle")
     image = _utils_import.lazy_import("matplotlib.image")
 
-from .ticks import (
-    set_yticks_int,
-    calc_ticks_int,
-)
 from .scatter_with_dist import (
     plot_scatter_with_dist
 )

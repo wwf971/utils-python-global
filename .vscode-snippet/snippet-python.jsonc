@@ -1,15 +1,5 @@
 {
 	// 在utils-python-global/snippet-python.jsonc中进行改动, 然后copy到python.json
-
-
-	"pyqt": {
-		"prefix": ["pyqt import"], // 在snippet列表中显示的名称
-		"body": [
-			"from PyQt5 import QtWidgets, QtGui, QtCore",
-		],
-		"description": "import pyqt components"
-	},
-
 	"log-file-path": {
 		"prefix": ["log file path"], // 在snippet列表中显示的名称
 		"body": [
@@ -35,51 +25,35 @@
 		],
 		"description": "sys.path add path" // 在snippet列表中以小字显示
 	},
-	"sys.path add path-2": {
-		"prefix": ["add path to sys.path"], // 在snippet列表中显示的名称
-		"body": [
-			"import sys, os, pathlib",
-			"dir_path_current = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
-			"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
-			"dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + \"/\"",
-			"dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + \"/\"",
-			"sys.path += [",
-			"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
-			"]"
-		],
-		"description": "sys.path add path" // 在snippet列表中以小字显示
-	},
+	// "sys.path add path-2": {
+	// 	"prefix": ["add path to sys.path"], // 在snippet列表中显示的名称
+	// 	"body": [
+	// 		"import sys, os, pathlib",
+	// 		"dir_path_current = os.path.dirname(os.path.realpath(__file__)) + \"/\"",
+	// 		"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
+	// 		"dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + \"/\"",
+	// 		"dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + \"/\"",
+	// 		"sys.path += [",
+	// 		"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
+	// 		"]"
+	// 	],
+	// 	"description": "sys.path add path" // 在snippet列表中以小字显示
+	// },
 	"sys.path add path(jupyter)": {
 		"prefix": ["add path to sys.path(jupyter)"], // 在snippet列表中显示的名称
 		"body": [
 			// "from __future__ import annotations",
 			"import sys, os, pathlib",
 			"dir_path_current = os.path.abspath('') + \"/\"",
-			"dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
-			"dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + \"/\"",
-			"dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + \"/\"",
+			"dir_path_1 = pathlib.Path(dir_path_current).parent.absolute().__str__() + \"/\"",
+			"dir_path_2 = pathlib.Path(dir_path_1).parent.absolute().__str__() + \"/\"",
+			"dir_path_3 = pathlib.Path(dir_path_2).parent.absolute().__str__() + \"/\"",
 			"sys.path += [",
-			"\tdir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent",
+			"\tdir_path_current, dir_path_1, dir_path_2, dir_path_3",
 			"]"
 		],
 		"description": "sys.path add path(jupyter)"
 	},
-	// "sys.path add path(jupyter)": {
-	// 	"prefix": ["sys.path add path(jupyter)"], // 在snippet列表中显示的名称
-	// 	"body": [
-	// 		// "from __future__ import annotations",
-	// 		"import sys, os, pathlib",
-	// 		"DirPathCurrent = os.path.abspath('') + \"/\"",
-	// 		"DirPathParent = pathlib.Path(DirPathCurrent).parent.absolute().__str__() + \"/\"",
-	// 		"DirPathGrandParent = pathlib.Path(DirPathParent).parent.absolute().__str__() + \"/\"",
-	// 		"DirPathGreatGrandParent = pathlib.Path(DirPathGrandParent).parent.absolute().__str__() + \"/\"",
-	// 		"sys.path += [",
-	// 		"\tDirPathCurrent, DirPathParent, DirPathGrandParent, DirPathGreatGrandParent",
-	// 		"]",
-	// 		"$2"
-	// 	],
-	// 	"description": "sys.path add path(jupyter)"
-	// },
 	"argparse": {
 		"prefix": "parse_args()", // 在snippet列表中显示的名称
 		"body": [
@@ -114,4 +88,58 @@
 		],
 		"description": "set env variable and import mujoco_py"
 	},
+	"pyqt": {
+		"prefix": ["pyqt import"], // 在snippet列表中显示的名称
+		"body": [
+			"from PyQt5 import QtWidgets, QtGui, QtCore",
+		],
+		"description": "import pyqt components"
+	},
+	"mongo-api": {
+		"prefix": "mongo-api",
+		"body": [
+			"def mongo_api(data):",
+			"    try:",
+			"        con = get_con()",
+			"        if con is None:",
+			"            return Dict(is_success=False, message=\"connection to mongodb database failed.\")",
+			"        collection = con[\"main\"][\"file\"]",
+			"        result = collection.insert_one(doc)",
+			"        if not (result.acknowledged and result.inserted_id):",
+			"            return Dict(is_success=False, message=f\"insert failed\")",
+			"        return Dict(is_success=True)",
+			"    except Exception:",
+			"        # traceback.print_exc()",
+			"        return Dict(is_success=False, message=traceback.format_exc())ess=False, message=traceback.format_exc())"
+		],
+		"description": "mongo-api"
+	},
+	"mongo-find": {
+		"prefix": "mongo-find",
+		"body": [
+			"doc = collection.find_one({\"id\": file_id})",
+			"if not doc:",
+			"    return Dict(is_success=False, message=f\"data not found in database\")"
+		],
+		"description": "mongo-find"
+	},
+	"mongo-update": {
+		"prefix": "mongo-upate",
+		"body": [
+			"result = collection.update_one(",
+			"    {\"id\": file_id},",
+			"    {\"$set\": {\"name\": file_name_new}}",
+			")"
+		],
+		"description": "mongo-update"
+	},
+	"mongo-delete": {
+		"prefix": "mongo-delete",
+		"body": [
+			"result = collection.delete_one({\"id\": file_id})",
+			"if result.deleted_count != 1:",
+			"    return Dict(is_success=False, message=f\"file(id={file_id}) failed to be deleted. deleted_count={result.deleted_count}\")"
+		],
+		"description": "mongo-delete"
+	}
 }

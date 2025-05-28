@@ -43,6 +43,13 @@ def image_file_to_jpg(file_path, file_path_save=None, quality:int=90, backend="p
     else:
         raise NotImplementedError
 
+def avif_to_jpg(file_path, file_path_save=None, quality:int=90, backend="pil"):
+    backend = backend.lower()
+    if backend in ["pil"]:
+        return read_image_file_pil(file_path=file_path, file_path_save=file_path_save, quality=quality)
+    else:
+        raise NotImplementedError
+
 def get_test_image_np_float01(name="lenna", backend="pil"):
     backend = backend.lower()
     import os

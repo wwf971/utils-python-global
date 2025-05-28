@@ -17,12 +17,12 @@ import datetime
 # unix_stamp: float.
 
 def get_unix_stamp_base_datetime_obj() -> datetime.datetime:
-    if globals().get("TimeStampBase") is None:
-        global unix_stamp_base
-        unix_stamp_base = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
-        return unix_stamp_base
-    else:
-        return unix_stamp_base
+    from datetime import timezone, timedelta
+    global unix_stamp_base
+    unix_stamp_base = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+    tz = timezone(timedelta(hours=0))
+    unix_stamp_base = unix_stamp_base.replace(tzinfo=tz)
+    return unix_stamp_base
 
 def unix_stamp_to_datetime_obj(unix_stamp: float) -> datetime.datetime:
     # unix_stamp: float or int. unit: second.
@@ -54,6 +54,7 @@ def get_current_unix_stamp() -> float:
     return datetime_obj_to_unix_stamp(
         datetime.datetime.utcnow() # caution: should use Greenwich Mean Time(GMT) here.
     )
+get_current_unix_stamp_float = get_current_unix_stamp
 
 def get_current_unix_stamp_int() -> int: # get unix time stamp
     return math.ceil(get_current_unix_stamp())
@@ -72,7 +73,8 @@ def unix_stamp_to_time_str(unix_stamp: float, timezone: str="local", format="%Y%
         # 0. parse timezone
         if isinstance(timezone, int):
             assert -12 <= timezone <= 12
-            _timezone = _utils_time.get_timezone(timezone, backend="pytz")
+            # _timezone = _utils_time.get_timezone(timezone, backend="pytz")
+            _timezone = datetime.timezone(datetime.timedelta(hours=timezone))
         else:
             raise NotImplementedError
         # 1. turn unix_stamp to datetime object
@@ -98,4 +100,5 @@ def unix_stamp_to_time_str_local(unix_stamp: float, format="%Y%m%d_%H%M%S%f"):
     return time_str
 
 def unix_stamp_to_time_str_utc(unix_stamp:float, format="%Y%m%d_%H%M%S%f"):
-    return datetime.datetime.utcfromtimestamp(unix_stamp).strftime(format)
+    datetime_obj_utc = unix_stamp_to_datetime_obj(unix_stamp)
+    return datetime_obj_utc.strftime(format)

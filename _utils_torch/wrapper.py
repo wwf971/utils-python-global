@@ -19,16 +19,16 @@ class TorchModuleWrapper(nn.Module):
         self.config = Dict()
         if len(args) + len(kwargs) > 0:
             self.init(*args, **kwargs)
-    def init(self, **kwargs):
+    def init(self, *args, **kwargs):
         self._has_init = True
         self.config.update(kwargs)
         return self
     def has_init(self):
         return hasattr(self, "_has_init") and self._has_init
-    def build(self):
+    def build(self, **kwargs):
         for name, child in dict(self.named_children()).items():
             if isinstance(child, TorchModuleWrapper):
-                child.build()
+                child.build(**kwargs)
             elif isinstance(child, torch.nn.Module):
                 build_torch_module(child)
             else:
@@ -217,9 +217,13 @@ class TorchModuleWrapper(nn.Module):
         return self
     # def __repr__(self):
     #     return PrintTorchModule(self)
-    def set_device(self, device):
+    def set_device(self, device, is_root=True):
         self.device = device
-        self.to(device)
+        if is_root:
+            self.to(device)
+        for submodule in self.children(): # get direct submodules
+            if isinstance(submodule, TorchModuleWrapper):
+                submodule.set_device(device, is_root=False)
         return self
     def get_param_num(self) -> int:
         return get_torch_module_param_num(self)
@@ -424,7 +428,7 @@ class ModuleList(TorchModuleWrapper):
                     name, submodule
                 )
         return self
-    def build(self):
+    def build(self, **kwargs):
         self.module_list = []
         for name, child in self.named_children():
             self.module_list.append(child)

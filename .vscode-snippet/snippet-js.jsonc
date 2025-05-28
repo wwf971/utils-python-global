@@ -1,0 +1,30 @@
+{
+    "vue 2 js": {
+        "prefix": "js-vue 2",
+        "body": [
+            "new Vue({",
+            "    el: '#app',",
+            "    data: {",
+            "      message: 'Hello from Vue 2!'",
+            "    }",
+            "    methods: {",
+            "    }",
+            "});"
+        ],
+        "description": "vue 2 js"
+    },
+    "url-go-to": {
+        "prefix": "url-go-to",
+        "body": [
+            "window.location.href = \"/file\";"
+        ],
+        "description": "url-go-to"
+    },
+    "url-replace": {
+        "prefix": "url-replace",
+        "body": [
+            "window.location.replace(\"/file\");"
+        ],
+        "description": "url-replace"
+    }
+}

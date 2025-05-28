@@ -2,6 +2,10 @@ from pathlib import Path
 import os
 import _utils_file
 
+def get_dir_path_cmd():
+    dir_path_cmd = os.getcwd()
+    return _utils_file.dir_path_to_unix_style(dir_path_cmd)
+    
 def file_path_to_unix_style(file_path: str):
     file_path = file_path.replace("\\", "/")
     if "~" in file_path: # handle ~ in file path
@@ -120,3 +124,23 @@ def is_equiv_file_path(path_1, path_2):
     # return os.path.samefile(file_path_1, file_path_2)
         # both file and dir path ok
         # raise error if path_1 or path_2 don't exist
+
+def get_ancestor_dir_path_with_dir_name(dir_path_current, dir_name, strict=False):
+    dir_path_current = _utils_file.dir_path_to_unix_style(dir_path_current)
+    num, num_max = 0, 50
+    while num < num_max:
+        dir_name_current = _utils_file.get_dir_name_of_dir_path(dir_path_current)
+
+        if strict:
+            if dir_name == dir_name_current:
+                return dir_path_current
+        else:
+            if dir_name.lower() in dir_name_current.lower():
+                return dir_path_current
+        
+        dir_path_parent  = _utils_file.get_dir_path_of_dir_path(dir_path_current)
+        if dir_path_parent == dir_path_current:
+            return None
+        dir_path_current = dir_path_parent
+        num += 1
+    return None
