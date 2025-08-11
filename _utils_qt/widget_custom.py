@@ -1,5 +1,6 @@
 import _utils_qt
 from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtWidgets import QMainWindow
 import math
 
 class WidgetCustom(QtWidgets.QWidget):
@@ -162,11 +163,11 @@ class WidgetDebug(
         # self.setFrameStyle(QtWidgets.QFrame.StyledPanel | QtWidgets.QFrame.Plain)
             # QWidget does not have this method. only QFrame has this method.
         # self.setLinewidth(1)
-    # def setCentralWidget(self, widget):
-    #     QMainWindow.setCentralWidget(widget)
-    #     return self
-        self.draw_grid = draw_grid
 
+        self.draw_grid = draw_grid
+    # def setCentralWidget(self, widget):
+    #     QMainWindow.setCentralWidget(self, widget)
+    #     return self
     def set_border_prop(self, border_color, border_width):
         # set border color
         self.add_to_style_sheet(

@@ -15,6 +15,7 @@ from .lib_datetime import (
     datetime_obj_to_time_str,
     get_timezone_local,
     get_timezone_local_hour, get_timezone_local_int,
+    get_timezone_local_hour_str,
     datetime_obj_change_timezone,
     get_timezone, get_timezone_local,
 )
@@ -26,6 +27,7 @@ from .unix import (
     get_current_unix_stamp_float,
     get_current_unix_stamp_int,
     unix_stamp_to_time_str,
+    unix_stamp_to_ymd8_hms8,
     unix_stamp_to_time_str_local,
     get_unix_stamp_from_ymd_hms
 )
@@ -65,3 +67,5 @@ def get_time_str_current_ymd8_hms8(
     time_str_current = unix_stamp_to_time_str(unix_stamp_current, timezone=timezone, format="%Y%m%d_%H%M%S%f")
     return time_str_current[:-4] # YYmmdd_hhmmss(ms_2digit)
 
+def timezone_int_to_str(timezone_int: int):
+    return f"{timezone_int:+02d}"

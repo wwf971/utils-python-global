@@ -22,6 +22,7 @@ from .utils import (
     print_torch_module,
     np_array_to_torch_tensor,
     torch_tensor_to_np_array,
+    torch_tensor_to_np_array_nested,
     check_tensor_shape,
     to_one_hot,
     get_activation_func_class,
@@ -70,3 +71,4 @@ def save_images_as_grid(img: torch.Tensor, file_path_save):
     img = torch.reshape(img, (C, row_num * H, col_num * W))
     img_pil = transforms.ToPILImage()(img)
     img_pil.save(file_path_save)
+

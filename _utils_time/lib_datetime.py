@@ -24,6 +24,11 @@ def get_timezone_local_hour() -> int:
     return timezone_hour
 get_timezone_local_int = get_timezone_local_hour
 
+def get_timezone_local_hour_str():
+    timezone_local_hour = get_timezone_local_hour()
+    # GMT+09 --> "+09", "UTC-05" --> "-05"
+    return f"{timezone_local_hour:+03d}"
+
 def get_timezone(timezone_str, backend="pytz"):
     backend = backend.lower()
     if isinstance(timezone_str, str):

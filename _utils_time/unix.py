@@ -52,12 +52,17 @@ def get_unix_stamp_from_ymd_hms(y, m, d, h=0, min=0, sec=0, ms=0, timezone=None)
 def get_current_unix_stamp() -> float:
     # return type: float, with millisecond precision.
     return datetime_obj_to_unix_stamp(
-        datetime.datetime.utcnow() # caution: should use Greenwich Mean Time(GMT) here.
+        datetime.datetime.now(datetime.timezone.utc)  # Using now() with UTC timezone to get offset-aware datetime
+            # caution: should use Greenwich Mean Time(GMT) here.
     )
 get_current_unix_stamp_float = get_current_unix_stamp
 
 def get_current_unix_stamp_int() -> int: # get unix time stamp
     return math.ceil(get_current_unix_stamp())
+
+def unix_stamp_to_ymd8_hms8(unix_stamp: float, timezone_int: int=None) -> str:
+    time_str = unix_stamp_to_time_str(unix_stamp, timezone=timezone_int, format="%Y%m%d_%H%M%S%f")
+    return time_str[:-4]
 
 def unix_stamp_to_time_str(unix_stamp: float, timezone: str="local", format="%Y%m%d_%H%M%S%f"):
     # unix_stamp始终是以UTC 1970/01/01为基准的.
@@ -91,9 +96,9 @@ def unix_stamp_to_time_str_local(unix_stamp: float, format="%Y%m%d_%H%M%S%f"):
     # 1. turn unix_stamp to datetime object
     datetime_obj = unix_stamp_to_datetime_obj(unix_stamp)
     
-    # localize to UTC
-    import pytz
-    datetime_obj = pytz.utc.localize(datetime_obj) # set timezone to gmt+0 for datetimeobj
+    # # localize to UTC
+    # import pytz
+    # datetime_obj = pytz.utc.localize(datetime_obj) # set timezone to gmt+0 for datetimeobj
 
     # 2. set timezone for datetime object, and then generate time_str
     time_str = _utils_time.datetime_obj_to_time_str(datetime_obj, timezone="local", format=format)

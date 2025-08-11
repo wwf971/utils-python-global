@@ -171,7 +171,7 @@ def list_all_file_path_in_tree(dir_path, order="depth_first"):
     else:
         raise ValueError(order)
 
-    dir_path = _utils_file.check_file_exist(dir_path)
+    dir_path = _utils_file.check_dir_exist(dir_path)
     dir_path = _utils_file.dir_path_to_unix_style(dir_path)
     dir_path_list = deque([dir_path])
 
@@ -180,7 +180,7 @@ def list_all_file_path_in_tree(dir_path, order="depth_first"):
         for file_name in _utils_file.list_all_file_name(dir_path_current):
             yield dir_path_current + file_name
         for dir_name in _utils_file.list_all_dir_name(dir_path_current):
-            dir_path_list.append(dir_path_current + dir_name + "/")
+            dir_path_list.append(dir_path_current + dir_name)
 
 def list_all_dir_name(dir_path, _yield=True):
     if _yield:
@@ -191,15 +191,42 @@ def list_all_dir_name(dir_path, _yield=True):
         dir_name_list = [f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
         return dir_name_list
 
-def list_all_dir_path(dir_path, _yield=True):
+def list_all_dir_path(dir_path, _yield=True, recur=False):
+    def _get_all_dirs(current_path):
+        """Helper function to recursively get all directory paths"""
+        dirs = []
+        try:
+            for f in os.listdir(current_path):
+                full_path = os.path.join(current_path, f)
+                if os.path.isdir(full_path):
+                    path_normed = dir_path_to_unix_style(full_path) + "/"
+                    dirs.append(path_normed)
+                    if recur:
+                        dirs.extend(_get_all_dirs(full_path))
+        except (PermissionError, OSError):
+            # Skip directories we can't access
+            pass
+        return dirs
+    
     if _yield:
-        for f in os.listdir(dir_path):
-            if os.path.isdir(os.path.join(dir_path, f)):
-                yield dir_path + "/" + f + "/" 
-    else:  
+        def _yield_dirs(current_path):
+            """Helper generator for yielding directory paths"""
+            try:
+                for f in os.listdir(current_path):
+                    full_path = os.path.join(current_path, f)
+                    if os.path.isdir(full_path):
+                        path_normed = dir_path_to_unix_style(full_path) + "/"
+                        yield path_normed
+                        if recur:
+                            yield from _yield_dirs(full_path)
+            except (PermissionError, OSError):
+                # Skip directories we can't access
+                pass
+        
+        yield from _yield_dirs(dir_path)
+    else:
         dir_path = dir_path_to_unix_style(dir_path)
-        dir_path_list = [dir_path + "/" + f + "/" for f in os.listdir(dir_path) if os.path.isdir(os.path.join(dir_path, f))]
-        return dir_path_list
+        return _get_all_dirs(dir_path)
 
 def list_all_dir_name_and_path(dir_path, _yield=True):
     if _yield:
@@ -330,7 +357,6 @@ def get_file_create_time_str(file_path, timezone_int="local"):
     time_str = _utils_time.unix_stamp_to_time_str(time_stamp, timezone=timezone_int, format="%Y%m%d_%H%M%S%f")[:-4]
     return time_str + "{:+02}".format(timezone_int)
 
-
 def get_file_latest_create(dir_path: str):
     file_path_list = _utils_file.list_all_file_path(dir_path)
     if len(file_path_list) == 0:
@@ -353,6 +379,14 @@ def get_file_modify_unix_stamp(file_path): # last modified time
     unix_stamp_modify = os.path.getmtime(file_path) # last modified time
     return unix_stamp_modify
 get_file_last_modify_time = get_file_modify_unix_stamp
+
+def get_file_modify_time_str(file_path, timezone_int="local"):
+    import _utils_time
+    time_stamp = get_file_modify_unix_stamp(file_path)
+    if timezone_int == "local":
+        timezone_int = _utils_time.get_timezone_local_int()
+    time_str = _utils_time.unix_stamp_to_time_str(time_stamp, timezone=timezone_int, format="%Y%m%d_%H%M%S%f")[:-4]
+    return time_str + "{:+02}".format(timezone_int)
 
 def get_dir_config(dir_path, recur=True):
     dir_path = _utils_file.dir_path_to_unix_style(dir_path)
@@ -406,6 +440,7 @@ def binary_file_to_obj(file_path):
     with open(file_path, 'rb') as f:
         obj = pickle.load(f, encoding='bytes')
     return obj
+load_pkl = binary_file_to_obj
 
 def natural_sort(file_name_list, _nsre=None)->list:
     if _nsre is None:
@@ -416,6 +451,12 @@ def natural_sort(file_name_list, _nsre=None)->list:
             for text in _nsre.split(file_name)
         ]
     return sorted(file_name_list, key=to_key)
+
+def file_to_base64(file_path):
+    import base64
+    with open(file_path, 'rb') as image_file:
+        img_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+        return img_base64
 
 import _utils_import
 from typing import TYPE_CHECKING
@@ -438,14 +479,22 @@ else:
     dict_to_json_file = _utils_import.lazy_from_import("_utils", "dict_to_json_file")
     json_str_to_dict = _utils_import.lazy_from_import("_utils", "json_str_to_dict")
 
+
 from .move import (
-    move_file, copy_file, rename_file,
+    move_file, move_file_verbose,
+    copy_file, copy_file_verbose,
+    copy_dir_by_time_modify,
+    copy_file_by_time_modify,
+    rename_file, rename_file_verbose,
+    rename_dir,
+    move_dir,
     move_file_overwrite,
     move_if_file_name_match_pattern,
 )
 
 from .remove import (
-    remove_file, remove_files,
+    remove_file, remove_file_verbose, delete_file_verbose,
+    remove_files,
     remove_dir,
     remove_dir_if_exist,
     clear_dir,

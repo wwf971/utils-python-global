@@ -1,13 +1,6 @@
 # 基于piexif库实现的一系列图像exif相关函数
 from __future__ import annotations
-import sys, os, pathlib
-dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
-dir_path_grand_parent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
-dir_path_great_grand_parent = pathlib.Path(dir_path_grand_parent).parent.absolute().__str__() + "/"
-sys.path += [
-    dir_path_current, dir_path_parent, dir_path_grand_parent, dir_path_great_grand_parent
-]
+
 import _utils_import
 from _utils_import import _utils_file, Im
 from typing import TYPE_CHECKING
@@ -16,6 +9,11 @@ if TYPE_CHECKING:
     import piexif # pip install piexif
 else:
     piexif = _utils_import.lazy_import("piexif")
+
+def get_exif(file_path_img):
+    img_pil = Im.open(file_path_img)
+    exif_info = ExifInfo(img_pil=img_pil)
+    return exif_info.get_exif_dict_flat()
 
 class ExifInfo:
     def __init__(self, file_path_img=None, img_pil=None):
@@ -26,37 +24,77 @@ class ExifInfo:
             self.from_img_pil(img_pil)
     def from_img_file(self, file_path_img):
         self.exif_dict_origin = get_exif_dict(file_path_img)
-        self.exif_dict = self.get_exif_dict()
+        self.exif_dict_flat = self.get_exif_dict_flat()
         return self
     def from_img_pil(self, img_pil):
-        self.exif_dict_origin = piexif.load(img_pil.info['exif'])
-        self.exif_dict = self.get_exif_dict()
+        exif = img_pil.info.get('exif')
+        if exif is None:
+            if hasattr(self, "file_path_img"):
+                print(f"WARN. Image file {self.file_path_img} does not contain exif information.")
+            self.exif_dict_origin = get_empty_exif_dict()
+        else:
+            self.exif_dict_origin = piexif.load(exif)
+        self.exif_dict_flat = self.get_exif_dict_flat()
         return self
-    def get_exif_dict(self):
-        exif_dict = {}
+    def get_exif_dict_flat(self):
+        exif_dict_flat = {}
         for category, subdict in self.exif_dict_origin.items():
             if category in ['1st', 'thumbnail']:
                 continue
             if subdict is not None:
                 for key, value in subdict.items():
-                    assert key not in exif_dict
-                    exif_dict[key] = value
-        return exif_dict
+                    assert key not in exif_dict_flat
+                    exif_dict_flat[key] = value
+        return exif_dict_flat
     def update_exif_dict(self):
-        self.exif_dict = self.get_exif_dict()
+        self.exif_dict_flat = self.get_exif_dict_flat()
         return self
     def items(self):
-        return self.get_exif_dict().items()
+        return self.get_exif_dict_flat().items()
     def is_empty(self):
-        return len(self.get_exif_dict()) == 0
+        return len(self.get_exif_dict_flat()) == 0
+    def has_tag(self, tag: int, tag_type: str=None):
+        if tag_type is None:
+            return tag in self.exif_dict_flat
+        else:
+            assert tag_type in ["0th", "Exif", "GPS", "Interop", "1st"]
+            return tag in self.exif_dict_origin[tag_type]
+    def set_tag(self, tag: int, tag_type: str, value):
+        assert tag_type in ["0th", "Exif", "GPS", "Interop", "1st"]
+        if self.exif_dict_origin.get(tag_type) is None:
+            self.exif_dict_origin[tag_type] = {}
+        self.exif_dict_origin[tag_type][tag] = value
+        self.update_exif_dict()
+        return self
+    def append_to_tag(self, tag: int, tag_type: str, value):
+        assert tag_type in ["0th", "Exif", "GPS", "Interop", "1st"]
+        if self.exif_dict_origin.get(tag_type) is None:
+            self.exif_dict_origin[tag_type] = {}
+        value_current = self.exif_dict_origin[tag_type].get(tag)
+        if value_current is None:
+            self.exif_dict_origin[tag_type][tag] = value
+        else:
+            self.exif_dict_origin[tag_type][tag] = value_current + value
+        self.update_exif_dict()
+        return self
+    def remove_tag(self, tag: int):
+        assert self.has_tag(tag)
+        self.remove_tag_if_exist()
     def add_tag(self, key:int, value, subdict_name=None):
         add_exif_tag(self.exif_dict_origin, key, value, subdict_name=subdict_name)
         self.update_exif_dict()
-    def get_tag(self, tag: int):
-        if tag in self.exif_dict:
-            return self.exif_dict[tag]
-        else:
+    def get_tag(self, tag: int, tag_type: str=None):
+        if tag_type is None:
+            for subdict in self.exif_dict_origin.values():
+                if tag in subdict:
+                    return subdict[tag]
             return None
+        else:
+            assert tag_type in ["0th", "Exif", "GPS", "Interop", "1st"]
+            if tag in self.exif_dict_origin[tag_type]:
+                return self.exif_dict_origin[tag_type][tag]
+            else:
+                return None
     def print_exif_origin(self, pipe_out=None):
         if pipe_out is None:
             import _utils_io
@@ -81,8 +119,8 @@ class ExifInfo:
                 pipe_out.print("0x%04x(%05d): %s"%(int(key), int(key), value))
         return
     def get_time(self):
-        if 0x0132 in self.exif_dict:
-            return self.exif_dict[0x0132] # "DateTime"
+        if 0x0132 in self.exif_dict_flat:
+            return self.exif_dict_flat[0x0132] # "DateTime"
     def get_dict(self):
         return self.exif_dict_origin
         # exif_dict = {
@@ -101,11 +139,7 @@ class ExifInfo:
             # b"wwf-oneplus" # device name
         self.update_exif_dict()
         return self
-    def has_tag(self, tag: int):
-        return tag in self.exif_dict
-    def remove_tag(self, tag: int):
-        assert self.has_tag(tag)
-        self.remove_tag_if_exist()
+    
     def remove_tag_if_exist(self, tag: int):
         for name, subdict in self.exif_dict_origin.items():
             if not isinstance(subdict, dict):
@@ -119,16 +153,44 @@ class ExifInfo:
         return self
 
 class ImageWithExifInfo:
-    def __init__(self, file_path_img=None):
+    def __init__(self, file_path_img=None, img_pil=None):
         self.file_path_img = file_path_img
-        img_pil = Im.open(file_path_img)
+        if img_pil is None:
+            img_pil = Im.open(file_path_img)
         self.exif_info = ExifInfo(img_pil=img_pil)
         self.img_pil = img_pil
-    def to_file(self, file_path_save: str):
+    def get_tag(self, tag: int, tag_type: str=None):
+        return self.exif_info.get_tag(tag, tag_type)
+    def has_tag(self, tag: int, tag_type: str=None):
+        return self.exif_info.has_tag(tag, tag_type)
+    def set_exif_tag(self, tag, tag_type, value):
+        assert tag_type in ["0th", "Exif", "GPS", "Interop", "1st"]
+        self.exif_info.set_tag(tag, tag_type, value)
+        return self
+    def append_to_exif_tag(self, tag, tag_type, value):
+        assert tag_type in ["0th", "Exif", "GPS", "Interop", "1st"]
+        self.exif_info.append_to_tag(tag, tag_type, value)
+        return self
+    def to_file(self, file_path_save: str, overwrite=False):
+        self.ensure_valid_exif_dict_origin()
         exif_bytes = piexif.dump(self.exif_info.exif_dict_origin)
-        assert not _utils_file.file_exist(file_path_save)
+        if not overwrite:
+            assert not _utils_file.file_exist(file_path_save)
         self.img_pil.save(file_path_save, exif=exif_bytes) 
         return file_path_save
+    def ensure_valid_exif_dict_origin(self):
+        # if val := self.exif_info.exif_dict_origin.get("Exif", {}).get(37500): # python > 3.8
+        val = self.exif_info.exif_dict_origin.get("Exif", {}).get(37500) # marker note
+        if val is not None:
+            if isinstance(val, tuple):
+                self.exif_info.exif_dict_origin["Exif"][37500] = bytes(val)
+
+        # if val := self.exif_info.exif_dict_origin.get("Exif", {}).get(37500): # python > 3.8
+        val = self.exif_info.exif_dict_origin.get("Exif", {}).get(41729) # marker note
+        if val is not None:
+            if isinstance(val, int):
+                self.exif_info.exif_dict_origin["Exif"][41729] = bytes([val])
+
     to_img_file = to_file
 
 def get_empty_exif_dict():
@@ -136,6 +198,7 @@ def get_empty_exif_dict():
     return {
         "0th":{},
         "Exif":{},
+            # 0x9286: # UserComment
         "GPS":{},
         "Interop":{},
         "1st":{},
@@ -180,7 +243,6 @@ def add_exif_tag(exif_dict, key: int, value, subdict_name=None):
         assert subdict_name in exif_dict
         exif_dict[subdict_name][key] = value
         return
-        
 
     # 34665(0x8769): ExifOffset
     if key in [
@@ -303,6 +365,17 @@ def add_device_name_to_exif(file_path_img, device_name, file_path_save, verbose=
         assert get_exif_tag(exif_dict_new) == device_name_bytes
 
 if __name__=="__main__":
+    import sys, os, pathlib
+    dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
+    dir_path_1 = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
+    dir_path_2 = pathlib.Path(dir_path_1).parent.absolute().__str__() + "/"
+    dir_path_3 = pathlib.Path(dir_path_2).parent.absolute().__str__() + "/"
+    dir_path_4 = pathlib.Path(dir_path_3).parent.absolute().__str__() + "/"
+    dir_path_5 = pathlib.Path(dir_path_4).parent.absolute().__str__() + "/"
+    sys.path += [
+        dir_path_current, dir_path_1, dir_path_2 , dir_path_3, dir_path_4, dir_path_5
+    ]
+
     file_path_img = r"\\192.168.128.4\Data\待处理\←wwf-x17\8f37d6fdd2788a67c93bf6251565a8a3536686343.jpg@!web-comment-note.avif"
     file_path_img = r"\\192.168.128.4\Data\待处理\←wwf-oneplus\WeiXin\mmexport1670321117441.jpg"
     file_path_img = r"\\192.168.128.4\Data\Image\Scan\Scan20240925_18213897.jpg"

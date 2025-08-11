@@ -1,13 +1,18 @@
-import _utils_exif.piexif as piexif
+
+# pip install exifread
+# pip install piexif
+
+import _utils_exif.piexif as _utils_exif_piexif
 import _utils_exif.pil as pil
-def get_exif(img_file_path, backend="exifread", verbose=False):
+
+def get_exif(img_file_path, backend="piexif", verbose=False):
     backend = backend.lower()
     if backend in ["exifread"]:
-        get_exif_exifread(img_file_path, verbose=verbose)
+        return get_exif_exifread(img_file_path, verbose=verbose)
     elif backend in ["pil", "PIL"]:
-        pil.get_exif(img_file_path, verbose)
+        return pil.get_exif(img_file_path, verbose)
     elif backend in ["piexif"]:
-        get_exif(img_file_path)
+        return _utils_exif_piexif.get_exif(img_file_path)
     else:
         raise ValueError
 

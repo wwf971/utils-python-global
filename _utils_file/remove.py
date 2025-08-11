@@ -8,6 +8,16 @@ def remove_file(file_path):
     file_path_obj.unlink() # missing_ok=False for Python>=3.4
 delete_file = remove_file
 
+def remove_file_verbose(file_path, pipe_out=None):
+    if pipe_out is None:
+        import _utils_io
+        pipe_out = _utils_io.PipeOut()
+    pipe_out.print("FILE_REMOVE")
+    remove_file(file_path)
+    with pipe_out.increased_indent():
+        pipe_out.print("file_path: %s"%file_path)
+delete_file_verbose = remove_file_verbose
+
 def remove_files(*file_path_list):
     for file_path in file_path_list:
         remove_file(file_path)
