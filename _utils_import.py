@@ -5,8 +5,8 @@ check import time:
 
 import sys, os, pathlib
 dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
-dir_path_parent = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
-dir_path_grandparent = pathlib.Path(dir_path_parent).parent.absolute().__str__() + "/"
+dir_path_1 = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
+dir_path_2 = pathlib.Path(dir_path_1).parent.absolute().__str__() + "/"
 sys.path += [
     dir_path_current,
     dir_path_current + "/utils-python-global",
