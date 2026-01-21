@@ -61,7 +61,7 @@ class TensorboardWrapper():
             None
         return file_path
     def log_epoch_begin(self, epoch_index, global_step):
-        self.add_int(epoch_begin=epoch_index, global_step=global_step)
+        self.add_int(epoch_begin=epoch_index, step_index=global_step)
     def get_epoch_begin_step_list(self):
         if hasattr(self, "epoch_begin_step_list"):
             return self.epoch_begin_step_list

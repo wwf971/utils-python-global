@@ -202,3 +202,16 @@ def split_by_group(_str, re_match_result):
         slices.append(_str[last_index:])  # trailing non-group part
 
     return slices, group_slice_index
+
+
+def strip_head_and_tail_white_chars(line):
+    """
+    Remove leading and trailing whitespace characters from a string.
+    
+    Args:
+        line (str): Input string to be stripped
+        
+    Returns:
+        str: String with leading and trailing whitespace removed
+    """
+    return line.strip()

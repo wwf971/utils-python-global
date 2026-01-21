@@ -7,10 +7,14 @@ import sys, os, pathlib
 dir_path_current = os.path.dirname(os.path.realpath(__file__)) + "/"
 dir_path_1 = pathlib.Path(dir_path_current).parent.absolute().__str__() + "/"
 dir_path_2 = pathlib.Path(dir_path_1).parent.absolute().__str__() + "/"
-sys.path += [
+paths_to_add = [
     dir_path_current,
     dir_path_current + "/utils-python-global",
 ]
+for path in paths_to_add:
+    if os.path.isdir(path):
+        sys.path.append(path)
+
 try:
     from _utils_import_path import sys_path_list
 except Exception:

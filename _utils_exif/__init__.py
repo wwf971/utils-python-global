@@ -2,7 +2,7 @@
 # pip install exifread
 # pip install piexif
 
-import _utils_exif.piexif as _utils_exif_piexif
+import _utils_exif._piexif as _utils_exif_piexif
 import _utils_exif.pil as pil
 
 def get_exif(img_file_path, backend="piexif", verbose=False):

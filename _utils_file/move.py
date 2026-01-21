@@ -202,9 +202,10 @@ def copy_dir_by_time_modify(
                 if verbose and pipe_out:
                     pipe_out.print(f"Skipping excluded directory: {dir_name}")
                 continue
-                
-            next_source = current_source + dir_name + "/"
-            next_target = current_target + dir_name + "/"
+            
+            # dir name already ends with "/"
+            next_source = current_source + dir_name
+            next_target = current_target + dir_name
             
             if not dir_exist(next_target):
                 os.makedirs(next_target, exist_ok=True)

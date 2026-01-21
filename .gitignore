@@ -1,1 +1,4 @@
-setup.sh
+/setup.sh
+__pycache__/
+.vscode/
+copy_to_dest.py
