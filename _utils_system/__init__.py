@@ -24,7 +24,7 @@ def is_macos():
     global _is_macos
     if _is_macos is None:
         _platform = platform.platform().lower()
-        _is_macos = "darwin" in _platform
+        _is_macos = "darwin" in _platform or "macos" in _platform
     return _is_macos
 
 def get_monitor_num():
